@@ -1,17 +1,66 @@
 import Link from "next/link";
-import { getElectionsWithPlatforms, getMayoralHistory } from "@/lib/api";
+import {
+  getElections,
+  getElectionsWithPlatforms,
+  getMayoralHistory,
+} from "@/lib/api";
+
+const TYPE_ZH: Record<string, string> = {
+  presidential: "總統",
+  legislative: "立委",
+  mayoral: "縣市長",
+  council: "議員",
+};
 
 export default async function HomePage() {
   // 平行抓取（容錯 fallback）
-  const [withPlatforms, mayoralHistory] = await Promise.all([
+  const [withPlatforms, mayoralHistory, allElections] = await Promise.all([
     getElectionsWithPlatforms().catch(() => []),
     getMayoralHistory().catch(() => []),
+    getElections().catch(() => []),
   ]);
 
   const latestPlatformElection = withPlatforms[0];
 
+  // 找下一場選舉
+  const today = new Date().toISOString().slice(0, 10);
+  const upcoming = allElections
+    .filter((e) => e.date >= today)
+    .sort((a, b) => a.date.localeCompare(b.date));
+  const nextDate = upcoming[0]?.date;
+  const nextDateElections = nextDate
+    ? upcoming.filter((e) => e.date.slice(0, 10) === nextDate.slice(0, 10))
+    : [];
+  const nextTypes = Array.from(
+    new Set(nextDateElections.map((e) => TYPE_ZH[e.type] || e.type)),
+  );
+  const daysToNext = nextDate ? daysUntil(nextDate) : null;
+
   return (
     <>
+      {/* ── 倒數帶 ── */}
+      {nextDate && daysToNext !== null && (
+        <Link
+          href="/elections"
+          className="block bg-ink text-paper hover:bg-accent-red transition-colors"
+        >
+          <div className="mx-auto max-w-6xl px-4 sm:px-6 py-3 flex flex-wrap items-baseline gap-x-4 gap-y-1 text-sm">
+            <span className="tracking-[0.2em] uppercase text-xs opacity-70">
+              下一場選舉
+            </span>
+            <span className="font-serif text-base sm:text-lg font-bold">
+              {nextDate.slice(0, 10)}
+            </span>
+            <span className="opacity-90">
+              {nextTypes.slice(0, 4).join("、")}
+            </span>
+            <span className="ml-auto font-serif font-bold">
+              {daysToNext > 0 ? `倒數 ${daysToNext} 天` : "今天投票！"} →
+            </span>
+          </div>
+        </Link>
+      )}
+
       {/* ── Hero ── */}
       <section className="border-b border-rule">
         <div className="mx-auto max-w-6xl px-4 sm:px-6 py-16 sm:py-24">
@@ -109,6 +158,14 @@ export default async function HomePage() {
       </section>
     </>
   );
+}
+
+function daysUntil(dateStr: string): number {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const target = new Date(dateStr.slice(0, 10) + "T00:00:00");
+  const ms = target.getTime() - today.getTime();
+  return Math.ceil(ms / (1000 * 60 * 60 * 24));
 }
 
 function FeatureCard({
