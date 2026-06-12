@@ -114,3 +114,28 @@ export interface MayoralHistory {
   party_name: string | null;
   votes: number;
 }
+
+export interface LegislatorMember {
+  kind: "regional" | "highland" | "lowland" | "party_list";
+  district: string;
+  candidate: string;
+  party: string;
+  color_hex: string | null;
+  votes: number;
+}
+
+export interface LegislaturePartyTotal {
+  name: string;
+  color_hex: string | null;
+  regional: number;
+  aboriginal: number;
+  party_list: number;
+  total: number;
+}
+
+export interface LegislatureComposition {
+  year: string;
+  total_seats: number;
+  parties: LegislaturePartyTotal[];
+  members: LegislatorMember[];
+}
