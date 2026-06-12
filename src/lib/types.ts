@@ -1,0 +1,116 @@
+// 與 FastAPI 端點對應的 TypeScript 型別
+
+export interface Election {
+  election_id: number;
+  name: string;
+  type: "presidential" | "legislative" | "mayoral" | "council" | string;
+  date: string;
+  status: string;
+  description: string | null;
+  theme_id: string | null;
+}
+
+export interface Party {
+  party_id: number;
+  name: string;
+  abbreviation: string | null;
+  color_hex: string | null;
+}
+
+export interface Candidate {
+  candidate_id: number;
+  name: string;
+  party_name: string | null;
+  abbreviation: string | null;
+  color_hex: string | null;
+  district: string | null;
+  votes: number | null;
+  elected: number | null;
+}
+
+export interface CandidateDetail extends Candidate {
+  background: string | null;
+  platform: string | null;
+}
+
+export interface CandidateSearchResult {
+  name: string;
+  district: string | null;
+  role: string | null;
+  date: string;
+  election_name: string;
+  election_type: string;
+  party_name: string | null;
+  votes: number | null;
+  elected: number | null;
+}
+
+export interface ElectionResult {
+  district: string | null;
+  candidate_name: string;
+  party_name: string | null;
+  color_hex: string | null;
+  votes: number;
+  elected: number;
+}
+
+export interface District {
+  district: string;
+}
+
+export interface Platform {
+  seq: number;
+  content: string;
+  candidate_id?: number | null;
+  candidate_name?: string | null;
+  party_name?: string | null;
+  color_hex?: string | null;
+}
+
+export interface PlatformSource {
+  source_type: string;
+  url: string | null;
+  local_path: string | null;
+  description: string | null;
+  fetched_at: string | null;
+}
+
+export interface PlatformImage {
+  local_path: string;
+  url: string | null;
+  description: string | null;
+}
+
+export interface CandidatePlatformStatus {
+  candidate_id: number;
+  candidate_name: string;
+  party_name: string | null;
+  color_hex: string | null;
+  district: string | null;
+  votes: number | null;
+  elected: number | null;
+  platform_count: number;
+  image_count: number;
+}
+
+export interface PresidentialTrend {
+  date: string;
+  candidate_name: string;
+  party_name: string | null;
+  votes: number;
+}
+
+export interface PartyListTrend {
+  date: string;
+  party_name: string;
+  votes: number;
+  elected: number | null;
+}
+
+export interface MayoralHistory {
+  date: string;
+  district: string | null;
+  candidate_name: string;
+  party_name: string | null;
+  votes: number;
+}
