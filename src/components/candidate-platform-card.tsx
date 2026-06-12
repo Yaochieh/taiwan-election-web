@@ -2,6 +2,7 @@ import {
   getCandidatePlatformImages,
   getCandidatePlatformSources,
   bulletinImageUrl,
+  candidatePhotoUrl,
 } from "@/lib/api";
 import type { CandidatePlatformStatus, Platform } from "@/lib/types";
 import { partyColor, formatVotes, votePct } from "@/lib/format";
@@ -32,43 +33,64 @@ export async function CandidatePlatformCard({
   const hasImage = status.image_count > 0;
   const noContent = !hasText && !hasImage;
 
+  const photoUrl = candidatePhotoUrl(status.photo_path);
+
   return (
     <article className="border-t-2 border-ink pt-8 relative">
       {/* ── Header ── */}
-      <header className="flex flex-wrap items-baseline gap-x-4 gap-y-2 mb-5">
-        {elected && (
-          <span className="text-accent-red font-serif text-sm font-bold">
-            ★ 當選
-          </span>
+      <header className="flex gap-4 mb-5">
+        {/* 照片 */}
+        {photoUrl ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={photoUrl}
+            alt={`${status.candidate_name} 大頭照`}
+            className="w-20 h-24 sm:w-24 sm:h-28 object-cover border border-rule shrink-0 bg-rule/30"
+            loading="lazy"
+          />
+        ) : (
+          <div className="w-20 h-24 sm:w-24 sm:h-28 border border-rule shrink-0 bg-rule/30 flex items-center justify-center">
+            <span className="font-serif text-3xl text-ink-soft">
+              {status.candidate_name.slice(0, 1)}
+            </span>
+          </div>
         )}
-        <h2 className="font-serif text-3xl sm:text-4xl font-bold leading-tight">
-          <span style={{ color }}>{status.candidate_name}</span>
-        </h2>
-        <span className="text-sm text-ink-soft">
-          {status.party_name || "無黨籍"}
-        </span>
-        {districtLabel && (
-          <span className="text-sm text-ink-soft">· {districtLabel}</span>
-        )}
-        {status.votes != null && status.votes > 0 && (
+        {/* 文字資訊 */}
+        <div className="flex-1 flex flex-wrap items-baseline gap-x-4 gap-y-2 min-w-0">
+          {elected && (
+            <span className="text-accent-red font-serif text-sm font-bold">
+              ★ 當選
+            </span>
+          )}
+          <h2 className="font-serif text-3xl sm:text-4xl font-bold leading-tight">
+            <span style={{ color }}>{status.candidate_name}</span>
+          </h2>
           <span className="text-sm text-ink-soft">
-            · 得票 {formatVotes(status.votes)}
-            {(() => {
-              const pct = votePct(status.votes, districtTotalVotes);
-              return pct ? (
-                <span className="ml-1 text-accent-red">（{pct}）</span>
-              ) : null;
-            })()}
+            {status.party_name || "無黨籍"}
           </span>
-        )}
-        {/* status pill */}
-        <span className="ml-auto text-xs px-2 py-1 border border-rule">
-          {hasText
-            ? `文字政見 ${status.platform_count} 條`
-            : hasImage
-              ? `圖片政見 ${status.image_count} 張`
-              : "未刊登政見"}
-        </span>
+          {districtLabel && (
+            <span className="text-sm text-ink-soft">· {districtLabel}</span>
+          )}
+          {status.votes != null && status.votes > 0 && (
+            <span className="text-sm text-ink-soft">
+              · 得票 {formatVotes(status.votes)}
+              {(() => {
+                const pct = votePct(status.votes, districtTotalVotes);
+                return pct ? (
+                  <span className="ml-1 text-accent-red">（{pct}）</span>
+                ) : null;
+              })()}
+            </span>
+          )}
+          {/* status pill */}
+          <span className="ml-auto text-xs px-2 py-1 border border-rule">
+            {hasText
+              ? `文字政見 ${status.platform_count} 條`
+              : hasImage
+                ? `圖片政見 ${status.image_count} 張`
+                : "未刊登政見"}
+          </span>
+        </div>
       </header>
 
       {/* ── 文字政見 ── */}

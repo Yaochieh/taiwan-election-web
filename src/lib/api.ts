@@ -99,3 +99,10 @@ export const bulletinImageUrl = (localPath: string): string => {
   const stripped = localPath.replace(/^data\/bulletin_images\//, "");
   return `${IMAGE_BASE}/${stripped}`;
 };
+
+const PHOTO_BASE = `${API_URL}/static/candidate_photos`;
+export const candidatePhotoUrl = (localPath: string | null | undefined): string | null => {
+  if (!localPath) return null;
+  const stripped = localPath.replace(/^data\/candidate_photos\//, "");
+  return `${PHOTO_BASE}/${stripped}`;
+};

@@ -90,6 +90,7 @@ export interface CandidatePlatformStatus {
   district: string | null;
   votes: number | null;
   elected: number | null;
+  photo_path: string | null;
   platform_count: number;
   image_count: number;
 }
