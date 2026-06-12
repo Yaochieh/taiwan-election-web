@@ -94,17 +94,31 @@ export async function CandidatePlatformCard({
             </p>
           )}
           {images.map((img) => (
-            <figure
-              key={img.local_path}
-              className="border border-rule bg-paper p-2"
-            >
+            <figure key={img.local_path} className="border border-rule bg-paper">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src={bulletinImageUrl(img.local_path)}
                 alt={`${status.candidate_name} 政見圖檔`}
-                className="w-full h-auto"
+                className="w-full h-auto p-2"
                 loading="lazy"
               />
+              {img.ocr_text && (
+                <details className="border-t border-rule p-3 text-sm group">
+                  <summary className="cursor-pointer hover:text-accent-red list-none flex items-baseline gap-2 text-ink-soft">
+                    <span className="transition-transform group-open:rotate-90">›</span>
+                    <span className="font-medium">展開政見文字</span>
+                    <span className="text-xs">
+                      （由 OCR 自動辨識，{img.ocr_text.length} 字）
+                    </span>
+                  </summary>
+                  <div className="mt-3 whitespace-pre-wrap leading-[1.85] text-ink">
+                    {img.ocr_text}
+                  </div>
+                  <p className="mt-3 text-xs text-ink-soft border-t border-rule pt-2">
+                    ⚠️ 文字由電腦自動辨識，可能有誤。請以上方原圖為準。
+                  </p>
+                </details>
+              )}
             </figure>
           ))}
         </div>

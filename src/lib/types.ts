@@ -79,6 +79,7 @@ export interface PlatformImage {
   local_path: string;
   url: string | null;
   description: string | null;
+  ocr_text: string | null;
 }
 
 export interface CandidatePlatformStatus {
