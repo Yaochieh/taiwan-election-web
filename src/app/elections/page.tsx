@@ -1,7 +1,9 @@
+import Link from "next/link";
 import { getElections } from "@/lib/api";
 import type { Election } from "@/lib/types";
+import { formatElectionLabelShort } from "@/lib/format";
 
-export const metadata = { title: "選舉時程 · 正至" };
+export const metadata = { title: "歷屆選舉 · 正至" };
 
 const TYPE_ZH: Record<string, string> = {
   presidential: "總統",
@@ -128,26 +130,35 @@ function ElectionDayRow({
   group: ElectionGroup;
   upcoming?: boolean;
 }) {
-  // 把同一天的選舉去重（按 type 合併）
-  const types = Array.from(
-    new Set(group.elections.map((e) => TYPE_ZH[e.type] || e.type)),
-  );
   return (
-    <article className="grid grid-cols-12 gap-4 py-5 border-b border-rule items-baseline">
-      <div className="col-span-12 sm:col-span-3 font-serif text-xl tabular-nums">
-        {group.date}
+    <article className="py-5 border-b border-rule">
+      <div className="flex flex-wrap items-baseline gap-x-6 gap-y-2 mb-3">
+        <div className="font-serif text-xl tabular-nums">{group.date}</div>
         {upcoming && (
-          <span className="ml-3 inline-block text-xs px-2 py-0.5 border border-accent-red text-accent-red">
-            UPCOMING
+          <span className="inline-block text-xs px-2 py-0.5 border border-accent-red text-accent-red">
+            即將舉行
           </span>
         )}
       </div>
-      <div className="col-span-12 sm:col-span-9 flex flex-wrap gap-x-6 gap-y-2">
-        {types.map((t) => (
-          <span key={t} className="text-sm">
-            <span className="text-ink-soft mr-2">·</span>
-            {t}選舉
-          </span>
+      <div className="flex flex-wrap gap-2">
+        {group.elections.map((e) => (
+          <Link
+            key={`${e.election_id}-${e.description || ""}`}
+            href={`/elections/${e.election_id}`}
+            className="group inline-flex items-baseline gap-2 px-3 py-1.5 border border-rule hover:border-ink hover:bg-ink hover:text-paper text-sm transition"
+          >
+            <span className="text-xs text-ink-soft group-hover:text-paper/80 tracking-widest">
+              {TYPE_ZH[e.type] || e.type}
+            </span>
+            <span>
+              {formatElectionLabelShort(e.date, e.name)}
+              {e.description && (
+                <span className="ml-1 text-xs opacity-80">
+                  · {e.description}
+                </span>
+              )}
+            </span>
+          </Link>
         ))}
       </div>
     </article>

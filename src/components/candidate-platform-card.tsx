@@ -4,20 +4,20 @@ import {
   bulletinImageUrl,
 } from "@/lib/api";
 import type { CandidatePlatformStatus, Platform } from "@/lib/types";
-import { partyColor } from "@/lib/format";
+import { partyColor, formatVotes, votePct } from "@/lib/format";
 
 export async function CandidatePlatformCard({
   status,
   platforms,
   electionId,
   districtLabel,
-  votesLabel,
+  districtTotalVotes,
 }: {
   status: CandidatePlatformStatus;
   platforms: Platform[];
   electionId: number;
   districtLabel: string;
-  votesLabel: string;
+  districtTotalVotes?: number;
 }) {
   const [images, sources] = await Promise.all([
     status.image_count > 0
@@ -51,7 +51,15 @@ export async function CandidatePlatformCard({
           <span className="text-sm text-ink-soft">· {districtLabel}</span>
         )}
         {status.votes != null && status.votes > 0 && (
-          <span className="text-sm text-ink-soft">· 得票 {votesLabel}</span>
+          <span className="text-sm text-ink-soft">
+            · 得票 {formatVotes(status.votes)}
+            {(() => {
+              const pct = votePct(status.votes, districtTotalVotes);
+              return pct ? (
+                <span className="ml-1 text-accent-red">（{pct}）</span>
+              ) : null;
+            })()}
+          </span>
         )}
         {/* status pill */}
         <span className="ml-auto text-xs px-2 py-1 border border-rule">

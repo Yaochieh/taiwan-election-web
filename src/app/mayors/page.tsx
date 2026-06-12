@@ -1,4 +1,5 @@
-import { getMayoralHistory } from "@/lib/api";
+import Link from "next/link";
+import { getMayoralHistory, getElections } from "@/lib/api";
 import { cleanDistrict, formatVotes, partyColor } from "@/lib/format";
 import { TaiwanMap } from "./taiwan-map";
 
@@ -10,7 +11,22 @@ export const metadata = {
 const MAJOR_PARTIES = ["民主進步黨", "中國國民黨"] as const;
 
 export default async function MayorsPage() {
-  const history = await getMayoralHistory().catch(() => []);
+  const [history, allElections] = await Promise.all([
+    getMayoralHistory().catch(() => []),
+    getElections().catch(() => []),
+  ]);
+
+  // year → mayoral election_id mapping
+  const yearToElectionId = new Map<string, number>();
+  for (const e of allElections) {
+    if (e.type === "mayoral") {
+      const year = e.date.slice(0, 4);
+      // 若同年多筆，優先取沒 description 的（主選舉）
+      if (!yearToElectionId.has(year) || !e.description) {
+        yearToElectionId.set(year, e.election_id);
+      }
+    }
+  }
 
   // 整理：以「縣市 × 年份」當 key
   type Cell = {
@@ -142,24 +158,42 @@ export default async function MayorsPage() {
                   </th>
                   {yearList.map((y) => {
                     const cell = grid.get(county)?.get(y);
+                    const electionId = yearToElectionId.get(y);
                     return (
                       <td
                         key={y}
                         className="text-center px-2 py-2 align-top"
                       >
                         {cell ? (
-                          <div>
-                            <div
-                              className="font-medium leading-tight"
-                              style={{ color: cell.color }}
-                              title={`${cell.candidate} (${cell.party || "無黨籍"})\n得票 ${formatVotes(cell.votes)}`}
+                          electionId ? (
+                            <Link
+                              href={`/elections/${electionId}`}
+                              className="block hover:bg-rule/40 px-2 py-1 transition"
+                              title={`${cell.candidate} (${cell.party || "無黨籍"})\n得票 ${formatVotes(cell.votes)}\n點擊看選舉詳情`}
                             >
-                              {cell.candidate}
+                              <div
+                                className="font-medium leading-tight"
+                                style={{ color: cell.color }}
+                              >
+                                {cell.candidate}
+                              </div>
+                              <div className="text-[10px] text-ink-soft mt-0.5">
+                                {(cell.party || "無黨籍").slice(0, 4)}
+                              </div>
+                            </Link>
+                          ) : (
+                            <div>
+                              <div
+                                className="font-medium leading-tight"
+                                style={{ color: cell.color }}
+                              >
+                                {cell.candidate}
+                              </div>
+                              <div className="text-[10px] text-ink-soft mt-0.5">
+                                {(cell.party || "無黨籍").slice(0, 4)}
+                              </div>
                             </div>
-                            <div className="text-[10px] text-ink-soft mt-0.5">
-                              {(cell.party || "無黨籍").slice(0, 4)}
-                            </div>
-                          </div>
+                          )
                         ) : (
                           <span className="text-ink-soft">—</span>
                         )}

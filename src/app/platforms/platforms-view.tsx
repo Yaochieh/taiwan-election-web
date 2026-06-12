@@ -3,9 +3,10 @@ import {
   getCandidatesStatus,
   getElectionDistricts,
   getElectionPlatforms,
+  getElectionResults,
 } from "@/lib/api";
 import type { Election } from "@/lib/types";
-import { cleanDistrict, formatVotes } from "@/lib/format";
+import { cleanDistrict, formatElectionLabelShort } from "@/lib/format";
 import { CandidatePlatformCard } from "@/components/candidate-platform-card";
 
 export async function PlatformsView({
@@ -21,11 +22,19 @@ export async function PlatformsView({
     return <p className="text-ink-soft">目前尚無政見資料。</p>;
   }
 
-  const [districts, candidates, allPlatforms] = await Promise.all([
+  const [districts, candidates, allPlatforms, results] = await Promise.all([
     getElectionDistricts(electionId),
     getCandidatesStatus(electionId, districtParam),
     getElectionPlatforms(electionId),
+    getElectionResults(electionId, districtParam).catch(() => []),
   ]);
+
+  // 計算「該選區總得票」用於百分比
+  const districtTotalVotes = new Map<string, number>();
+  for (const r of results) {
+    const key = r.district || "";
+    districtTotalVotes.set(key, (districtTotalVotes.get(key) || 0) + r.votes);
+  }
 
   const total = candidates.length;
   const withText = candidates.filter((c) => c.platform_count > 0).length;
@@ -55,7 +64,10 @@ export async function PlatformsView({
                     : "border-rule text-ink-soft hover:border-ink hover:text-ink")
                 }
               >
-                {e.date.slice(0, 4)} {e.name}
+                {formatElectionLabelShort(e.date, e.name)}
+                {e.description && (
+                  <span className="ml-1 text-xs opacity-75">({e.description})</span>
+                )}
               </Link>
             ))}
           </div>
@@ -113,6 +125,9 @@ export async function PlatformsView({
           const cPlatforms = allPlatforms.filter(
             (p) => p.candidate_id === c.candidate_id,
           );
+          const districtTotal = c.district
+            ? districtTotalVotes.get(c.district)
+            : undefined;
           return (
             <CandidatePlatformCard
               key={c.candidate_id}
@@ -120,7 +135,7 @@ export async function PlatformsView({
               platforms={cPlatforms}
               electionId={electionId}
               districtLabel={cleanDistrict(c.district) || c.district || ""}
-              votesLabel={formatVotes(c.votes)}
+              districtTotalVotes={districtTotal}
             />
           );
         })}

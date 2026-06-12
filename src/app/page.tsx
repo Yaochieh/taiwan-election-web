@@ -3,7 +3,10 @@ import {
   getElections,
   getElectionsWithPlatforms,
   getMayoralHistory,
+  getCandidatesStatus,
+  getPresidentialTrend,
 } from "@/lib/api";
+import { formatElectionLabelShort, partyColor, formatVotes } from "@/lib/format";
 
 const TYPE_ZH: Record<string, string> = {
   presidential: "總統",
@@ -13,16 +16,16 @@ const TYPE_ZH: Record<string, string> = {
 };
 
 export default async function HomePage() {
-  // 平行抓取（容錯 fallback）
-  const [withPlatforms, mayoralHistory, allElections] = await Promise.all([
+  const [withPlatforms, mayoralHistory, allElections, presidential] = await Promise.all([
     getElectionsWithPlatforms().catch(() => []),
     getMayoralHistory().catch(() => []),
     getElections().catch(() => []),
+    getPresidentialTrend().catch(() => []),
   ]);
 
   const latestPlatformElection = withPlatforms[0];
 
-  // 找下一場選舉
+  // 下一場選舉
   const today = new Date().toISOString().slice(0, 10);
   const upcoming = allElections
     .filter((e) => e.date >= today)
@@ -35,6 +38,49 @@ export default async function HomePage() {
     new Set(nextDateElections.map((e) => TYPE_ZH[e.type] || e.type)),
   );
   const daysToNext = nextDate ? daysUntil(nextDate) : null;
+
+  // 政見資料最豐富的選舉（取候選人數最多者）
+  const featuredCandidates = latestPlatformElection
+    ? await getCandidatesStatus(latestPlatformElection.election_id).catch(() => [])
+    : [];
+
+  // 政見涵蓋率
+  const total = featuredCandidates.length;
+  const withText = featuredCandidates.filter((c) => c.platform_count > 0).length;
+  const withImage = featuredCandidates.filter(
+    (c) => c.platform_count === 0 && c.image_count > 0,
+  ).length;
+  const covered = withText + withImage;
+  const coverRate = total > 0 ? Math.round((covered / total) * 100) : 0;
+
+  // 最近三場 + 突出當選候選人
+  const latestMayorByCounty = new Map<
+    string,
+    { candidate: string; party: string | null; year: string }
+  >();
+  for (const h of mayoralHistory) {
+    const county = h.district || "";
+    if (county === "地區(10, 0, 0)") continue;
+    const year = h.date.slice(0, 4);
+    if (!latestMayorByCounty.has(county) ||
+        latestMayorByCounty.get(county)!.year < year) {
+      latestMayorByCounty.set(county, {
+        candidate: h.candidate_name,
+        party: h.party_name,
+        year,
+      });
+    }
+  }
+
+  // 最近一屆總統各黨得票
+  const latestPresYear = presidential
+    .map((p) => p.date.slice(0, 4))
+    .sort()
+    .pop();
+  const latestPres = presidential
+    .filter((p) => p.date.startsWith(latestPresYear || ""))
+    .sort((a, b) => b.votes - a.votes);
+  const latestPresTotal = latestPres.reduce((a, b) => a + b.votes, 0);
 
   return (
     <>
@@ -51,9 +97,7 @@ export default async function HomePage() {
             <span className="font-serif text-base sm:text-lg font-bold">
               {nextDate.slice(0, 10)}
             </span>
-            <span className="opacity-90">
-              {nextTypes.slice(0, 4).join("、")}
-            </span>
+            <span className="opacity-90">{nextTypes.slice(0, 4).join("、")}</span>
             <span className="ml-auto font-serif font-bold">
               {daysToNext > 0 ? `倒數 ${daysToNext} 天` : "今天投票！"} →
             </span>
@@ -88,14 +132,14 @@ export default async function HomePage() {
                 href="/elections"
                 className="inline-flex items-center gap-2 px-5 py-3 border border-ink text-ink text-sm font-medium hover:bg-ink hover:text-paper transition"
               >
-                選舉時程
+                歷屆選舉
               </Link>
             </div>
           </div>
         </div>
       </section>
 
-      {/* ── 三大區塊 ── */}
+      {/* ── 平台收錄 三大區塊 ── */}
       <section className="mx-auto max-w-6xl px-4 sm:px-6 py-16">
         <h2 className="text-xs tracking-[0.2em] uppercase text-ink-soft mb-8">
           平台收錄
@@ -122,27 +166,101 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* ── 最近選舉橫幅 ── */}
+      {/* ── 政見焦點 ── */}
       {latestPlatformElection && (
-        <section className="border-y border-rule">
-          <div className="mx-auto max-w-6xl px-4 sm:px-6 py-12">
-            <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-6">
-              <div>
+        <section className="border-y border-rule bg-rule/30">
+          <div className="mx-auto max-w-6xl px-4 sm:px-6 py-16">
+            <div className="grid sm:grid-cols-12 gap-8">
+              <div className="sm:col-span-5">
                 <p className="text-xs tracking-[0.2em] uppercase text-ink-soft mb-3">
-                  最新政見資料
+                  政見焦點
                 </p>
-                <h3 className="font-serif text-3xl sm:text-4xl font-bold leading-tight">
-                  {latestPlatformElection.date.slice(0, 4)}
-                  {latestPlatformElection.name}
+                <h3 className="font-serif text-3xl sm:text-4xl font-bold leading-tight mb-3">
+                  {formatElectionLabelShort(
+                    latestPlatformElection.date,
+                    latestPlatformElection.name,
+                  )}
                 </h3>
+                <p className="text-sm text-ink-soft leading-relaxed">
+                  共 {total} 位候選人，其中 {covered} 位在公報上提交政見內容
+                  （文字 {withText} 位、圖片 {withImage} 位）。
+                </p>
+                <Link
+                  href={`/platforms?election=${latestPlatformElection.election_id}`}
+                  className="mt-6 inline-flex items-center gap-2 px-4 py-2 bg-ink text-paper text-sm hover:opacity-85 transition"
+                >
+                  查看所有政見 →
+                </Link>
               </div>
-              <Link
-                href="/platforms"
-                className="text-sm underline underline-offset-4 hover:text-accent-red transition shrink-0"
-              >
-                查看候選人政見 →
-              </Link>
+              <div className="sm:col-span-7 grid grid-cols-2 gap-2">
+                <CoverageStat
+                  label="候選人總數"
+                  value={total}
+                  color="text-ink"
+                />
+                <CoverageStat
+                  label="政見涵蓋率"
+                  value={`${coverRate}%`}
+                  color="text-accent-red"
+                />
+                <CoverageStat label="文字版" value={withText} color="text-ink" />
+                <CoverageStat label="圖片版" value={withImage} color="text-ink" />
+              </div>
             </div>
+          </div>
+        </section>
+      )}
+
+      {/* ── 最近一屆總統 ── */}
+      {latestPres.length > 0 && (
+        <section className="mx-auto max-w-6xl px-4 sm:px-6 py-16">
+          <p className="text-xs tracking-[0.2em] uppercase text-ink-soft mb-3">
+            最近一屆總統選舉
+          </p>
+          <h3 className="font-serif text-3xl sm:text-4xl font-bold leading-tight mb-8">
+            {latestPresYear} 年 第 {Math.floor(parseInt(latestPresYear!) / 4) - 489}{" "}
+            任總統選舉
+          </h3>
+          <div className="space-y-3">
+            {latestPres.map((p, idx) => {
+              const pct = (p.votes / latestPresTotal) * 100;
+              return (
+                <div
+                  key={p.candidate_name}
+                  className="border-b border-rule pb-3 last:border-0"
+                >
+                  <div className="flex flex-wrap items-baseline gap-x-3 mb-2">
+                    {idx === 0 && (
+                      <span className="text-accent-red font-bold text-sm">
+                        ★ 當選
+                      </span>
+                    )}
+                    <span
+                      className="font-serif text-xl font-bold"
+                      style={{ color: partyColor(p.party_name) }}
+                    >
+                      {p.candidate_name}
+                    </span>
+                    <span className="text-sm text-ink-soft">
+                      {p.party_name}
+                    </span>
+                    <span className="ml-auto text-sm tabular-nums">
+                      {formatVotes(p.votes)} 票
+                      <span className="ml-2 font-bold">{pct.toFixed(2)}%</span>
+                    </span>
+                  </div>
+                  <div className="w-full bg-rule h-2">
+                    <div
+                      className="h-2"
+                      style={{
+                        width: `${pct}%`,
+                        backgroundColor: partyColor(p.party_name),
+                      }}
+                    />
+                  </div>
+                </div>
+              );
+            })}
           </div>
         </section>
       )}
@@ -190,5 +308,26 @@ function FeatureCard({
       </h3>
       <p className="text-sm text-ink-soft leading-relaxed">{desc}</p>
     </Link>
+  );
+}
+
+function CoverageStat({
+  label,
+  value,
+  color,
+}: {
+  label: string;
+  value: string | number;
+  color: string;
+}) {
+  return (
+    <div className="bg-paper p-4">
+      <p className="text-xs tracking-widest uppercase text-ink-soft mb-2">
+        {label}
+      </p>
+      <p className={`font-serif text-3xl font-bold tabular-nums ${color}`}>
+        {value}
+      </p>
+    </div>
   );
 }

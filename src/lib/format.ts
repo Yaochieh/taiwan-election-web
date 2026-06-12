@@ -42,6 +42,65 @@ export function formatYear(date: string): string {
   return date.slice(0, 4);
 }
 
+/**
+ * 格式化選舉標籤，避免「2022 111年縣市長選舉」這種視覺混淆。
+ * 移除中文標題裡冗餘的「N 年」前綴，改為「2022 年 縣市長選舉（民國 111 年）」。
+ */
+export function formatElectionLabel(
+  date: string,
+  name: string,
+  description?: string | null,
+): string {
+  const year = date.slice(0, 4);
+  // 從 name 開頭剝掉「111年」「第 X 屆」這類前綴
+  const cleanName = name.replace(/^\d{2,3}年/, "").trim();
+  let label = `${year} 年 ${cleanName}`;
+  // 加民國年註記
+  const ad = parseInt(year, 10);
+  if (!Number.isNaN(ad)) {
+    const minguo = ad - 1911;
+    label += `（民國 ${minguo} 年）`;
+  }
+  if (description) {
+    label += ` · ${description}`;
+  }
+  return label;
+}
+
+/**
+ * 短版：給卡片標題用，例：「2022 年縣市長選舉」
+ */
+export function formatElectionLabelShort(
+  date: string,
+  name: string,
+): string {
+  const year = date.slice(0, 4);
+  const cleanName = name.replace(/^\d{2,3}年/, "").trim();
+  return `${year} 年${cleanName}`;
+}
+
+/**
+ * 格式化得票數 + 百分比。
+ */
+export function formatVotesWithPct(
+  votes: number | null | undefined,
+  total: number | null | undefined,
+): string {
+  if (votes == null) return "—";
+  const v = formatVotes(votes);
+  if (!total || total === 0) return v;
+  const pct = (votes / total) * 100;
+  return `${v}（${pct.toFixed(2)}%）`;
+}
+
+export function votePct(
+  votes: number | null | undefined,
+  total: number | null | undefined,
+): string | null {
+  if (votes == null || !total || total === 0) return null;
+  return `${((votes / total) * 100).toFixed(2)}%`;
+}
+
 export function partyColor(party: string | null | undefined, fallback?: string | null): string {
   if (!party) return fallback || "#777";
   // 黨色 fallback
