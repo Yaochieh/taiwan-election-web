@@ -37,6 +37,9 @@ interface TreemapPayload extends Node {
 function TreemapCell(props: unknown) {
   const p = props as TreemapPayload;
   if (!p.width || p.width < 1 || !p.height || p.height < 1) return null;
+  // Recharts 對根容器也會呼叫 content render，但不會帶我們的自訂欄位。
+  // 沒有 pct 表示是 root，直接不渲染（讓子節點自行渲染）。
+  if (typeof p.pct !== "number") return null;
 
   const showFull = p.width > 90 && p.height > 60;
   const showCompact = p.width > 50 && p.height > 38;
