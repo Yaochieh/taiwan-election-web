@@ -5,6 +5,7 @@ import {
   getPresidentialTrend,
   getPartyListTrend,
   getLegislatureComposition,
+  getLegislativeSeatTrend,
 } from "@/lib/api";
 import { partyColor, formatElectionLabelShort, cleanDistrict } from "@/lib/format";
 import { PARTY_INFO } from "@/lib/party-info";
@@ -19,13 +20,19 @@ export default async function PartyPage({
   const name = decodeURIComponent(encodedName);
   const info = PARTY_INFO[name];
 
-  const [mayoralHistory, presidential, partyList, legislature] =
+  const [mayoralHistory, presidential, partyList, legislature, legTrend] =
     await Promise.all([
       getMayoralHistory().catch(() => []),
       getPresidentialTrend().catch(() => []),
       getPartyListTrend().catch(() => []),
       getLegislatureComposition("2024").catch(() => null),
+      getLegislativeSeatTrend().catch(() => []),
     ]);
+
+  // 此黨歷年立委席次（區域+原住民）
+  const partyLegTrend = legTrend
+    .filter((r) => r.party === name)
+    .sort((a, b) => a.year.localeCompare(b.year));
 
   // 此黨歷年當選縣市長
   const mayors = mayoralHistory.filter((h) => h.party_name === name);
@@ -176,6 +183,45 @@ export default async function PartyPage({
                 </div>
               </article>
             ))}
+          </div>
+        </section>
+      )}
+
+      {/* 歷屆立委席次 */}
+      {partyLegTrend.length > 0 && (
+        <section className="mb-12">
+          <h2 className="font-serif text-2xl font-bold mb-4">
+            歷屆立委席次（區域 + 原住民）
+          </h2>
+          <div className="border-t-2 border-ink pt-3">
+            <div className="grid grid-cols-[60px_1fr_60px] gap-3 items-center">
+              {partyLegTrend.map((r) => {
+                const pct = (r.seats / 79) * 100;
+                return (
+                  <div key={r.year} className="contents">
+                    <div className="font-serif tabular-nums">{r.year}</div>
+                    <div className="flex h-7 bg-rule">
+                      <div
+                        className="flex items-center justify-end pr-2 text-paper text-xs font-bold"
+                        style={{
+                          width: `${pct}%`,
+                          backgroundColor: color,
+                        }}
+                      >
+                        {pct > 8 ? r.seats : ""}
+                      </div>
+                    </div>
+                    <div className="text-xs text-ink-soft tabular-nums">
+                      {r.seats} 席
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+            <p className="text-xs text-ink-soft mt-3">
+              基準：每屆 79 席（73 區域 + 3 山地 + 3 平地原住民），不含 34
+              席不分區。
+            </p>
           </div>
         </section>
       )}
