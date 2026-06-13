@@ -15,6 +15,7 @@ import {
 } from "@/lib/format";
 import { PersonLink, PartyLink } from "@/components/entity-links";
 import { VoteMap } from "./vote-map";
+import { ResultTreemap } from "./result-treemap";
 
 const TYPE_ZH: Record<string, string> = {
   presidential: "總統",
@@ -123,15 +124,62 @@ export default async function ElectionDetailPage({
               ? `${results.length / 2} 組正副總統候選人`
               : `${results.length} 筆候選人結果`}
           </p>
-          {election.type === "presidential" && hasCounties && (
-            <div className="border border-rule p-4 sm:p-6">
-              <h2 className="font-serif text-xl font-bold mb-4 border-b border-ink pb-2">
-                選票地域分佈
-              </h2>
-              <VoteMap results={results} isPresident={true} />
-            </div>
-          )}
-          {districtList.map((district) => {
+          {/* presidential：用全國加總畫一張大 treemap + 地圖；不再逐縣市列文字 */}
+          {election.type === "presidential" && (() => {
+            type ResultRow = (typeof results)[number];
+            const byCand = new Map<string, ResultRow & { total: number }>();
+            for (const r of results) {
+              const key = `${r.candidate_name}::${r.party_name}`;
+              const ex = byCand.get(key);
+              if (ex) ex.total += r.votes;
+              else byCand.set(key, { ...r, total: r.votes });
+            }
+            const aggregated = Array.from(byCand.values())
+              .map((r) => ({ ...r, votes: r.total }))
+              .sort((a, b) => b.votes - a.votes);
+            const seen = new Set<number>();
+            const items: { primary: ResultRow; running?: ResultRow }[] = [];
+            for (let i = 0; i < aggregated.length; i++) {
+              if (seen.has(i)) continue;
+              seen.add(i);
+              const pair: ResultRow[] = [aggregated[i]];
+              for (let j = i + 1; j < aggregated.length; j++) {
+                if (
+                  !seen.has(j) &&
+                  aggregated[j].votes === aggregated[i].votes &&
+                  aggregated[j].party_name === aggregated[i].party_name
+                ) {
+                  pair.push(aggregated[j]);
+                  seen.add(j);
+                  break;
+                }
+              }
+              items.push({ primary: pair[0], running: pair[1] });
+            }
+            const totalAll = items.reduce((a, b) => a + b.primary.votes, 0);
+            return (
+              <div className="space-y-8">
+                <div className="border border-rule p-4 sm:p-6">
+                  <h2 className="font-serif text-xl font-bold mb-3 border-b border-ink pb-2">
+                    全國得票分佈
+                  </h2>
+                  <p className="text-xs text-ink-soft mb-3 tabular-nums">
+                    總有效票 {formatVotes(totalAll)}　·　方塊面積 = 得票數
+                  </p>
+                  <ResultTreemap items={items} total={totalAll} isPresident />
+                </div>
+                {hasCounties && (
+                  <div className="border border-rule p-4 sm:p-6">
+                    <h2 className="font-serif text-xl font-bold mb-4 border-b border-ink pb-2">
+                      各縣市勝出政黨
+                    </h2>
+                    <VoteMap results={results} isPresident={true} />
+                  </div>
+                )}
+              </div>
+            );
+          })()}
+          {election.type !== "presidential" && districtList.map((district) => {
             const rows = byDistrict.get(district)!;
             const total = rows.reduce((a, b) => a + b.votes, 0);
             const label = cleanDistrict(district) || district;
@@ -183,6 +231,15 @@ export default async function ElectionDetailPage({
                     {formatVotes(total)} 票
                   </div>
                 </div>
+                {items.length > 1 && (
+                  <div className="mb-4">
+                    <ResultTreemap
+                      items={items}
+                      total={total}
+                      isPresident={false}
+                    />
+                  </div>
+                )}
                 <ol className="space-y-2">
                   {items.map((it, idx) => {
                     const r = it.primary;
