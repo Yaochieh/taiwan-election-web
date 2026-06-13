@@ -12,8 +12,27 @@ const TYPE_ZH: Record<string, string> = {
   council: "議員",
 };
 
-export default async function ElectionsPage() {
-  const elections = await getElections().catch(() => []);
+const FILTERS: { value: string; label: string }[] = [
+  { value: "all", label: "全部" },
+  { value: "presidential", label: "總統" },
+  { value: "legislative", label: "立委" },
+  { value: "mayoral", label: "縣市長" },
+  { value: "council", label: "議員" },
+];
+
+export default async function ElectionsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ type?: string }>;
+}) {
+  const params = await searchParams;
+  const typeFilter =
+    FILTERS.find((f) => f.value === params.type)?.value ?? "all";
+  const allElections = await getElections().catch(() => []);
+  const elections =
+    typeFilter === "all"
+      ? allElections
+      : allElections.filter((e) => e.type === typeFilter);
 
   const today = new Date().toISOString().slice(0, 10);
   const upcoming = elections.filter((e) => e.date >= today);
@@ -58,6 +77,26 @@ export default async function ElectionsPage() {
             </span>
           )}
         </p>
+        <div className="mt-5 flex flex-wrap gap-2">
+          {FILTERS.map((f) => {
+            const active = f.value === typeFilter;
+            const href = f.value === "all" ? "/elections" : `/elections?type=${f.value}`;
+            return (
+              <a
+                key={f.value}
+                href={href}
+                className={
+                  "text-xs px-3 py-1.5 border transition " +
+                  (active
+                    ? "bg-ink text-paper border-ink"
+                    : "border-rule hover:border-ink text-ink-soft hover:text-ink")
+                }
+              >
+                {f.label}
+              </a>
+            );
+          })}
+        </div>
       </header>
 
       {/* ── 倒數區塊 ── */}
