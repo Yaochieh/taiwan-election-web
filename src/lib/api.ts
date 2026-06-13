@@ -108,6 +108,15 @@ export const getMayoralHistory = () =>
 export const getLegislatureComposition = (year: string) =>
   fetcher<LegislatureComposition>(`/legislature/${year}`);
 
+export type LegislativeSeatTrend = {
+  year: string;
+  party: string;
+  color_hex: string | null;
+  seats: number;
+};
+export const getLegislativeSeatTrend = () =>
+  fetcher<LegislativeSeatTrend[]>("/legislature/trend/seats");
+
 // ── search ─────────────────────────────────────────────────
 export const search = (q: string, limit = 30) =>
   fetcher<SearchResult>(`/search?q=${encodeURIComponent(q)}&limit=${limit}`);

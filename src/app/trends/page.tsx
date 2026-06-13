@@ -1,6 +1,11 @@
-import { getPresidentialTrend, getPartyListTrend } from "@/lib/api";
+import {
+  getPresidentialTrend,
+  getPartyListTrend,
+  getLegislativeSeatTrend,
+} from "@/lib/api";
 import { PresidentialChart } from "./presidential-chart";
 import { PartyListChart } from "./party-list-chart";
+import { LegislativeChart } from "./legislative-chart";
 
 export const metadata = {
   title: "趨勢分析 · 正至",
@@ -8,9 +13,10 @@ export const metadata = {
 };
 
 export default async function TrendsPage() {
-  const [presidential, partyList] = await Promise.all([
+  const [presidential, partyList, legislative] = await Promise.all([
     getPresidentialTrend().catch(() => []),
     getPartyListTrend().catch(() => []),
+    getLegislativeSeatTrend().catch(() => []),
   ]);
 
   return (
@@ -41,7 +47,7 @@ export default async function TrendsPage() {
         <PresidentialChart data={presidential} />
       </section>
 
-      <section>
+      <section className="mb-16">
         <h2 className="font-serif text-2xl font-bold mb-3 flex items-baseline gap-3">
           立委不分區政黨票
           <span className="text-sm font-normal text-ink-soft">
@@ -52,6 +58,20 @@ export default async function TrendsPage() {
           2008 年起立委採並立制，選民可投政黨票。圖為各屆達 5% 門檻（或有過半席次政黨）得票率。
         </p>
         <PartyListChart data={partyList} />
+      </section>
+
+      <section>
+        <h2 className="font-serif text-2xl font-bold mb-3 flex items-baseline gap-3">
+          立委席次（區域 + 原住民）
+          <span className="text-sm font-normal text-ink-soft">
+            2008 — 2024（5 屆）
+          </span>
+        </h2>
+        <p className="text-sm text-ink-soft mb-6 max-w-2xl leading-relaxed">
+          每屆立委的 79 席（區域 73 + 山地 3 + 平地 3）各黨拿下多少。
+          不含 34 席不分區。
+        </p>
+        <LegislativeChart data={legislative} />
       </section>
     </div>
   );
