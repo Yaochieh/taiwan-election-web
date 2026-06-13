@@ -13,13 +13,13 @@ const SECTIONS = [
     href: "/data/turnout",
     title: "投票率",
     desc: "歷屆各類選舉投票率與選民結構。",
-    status: "△",
+    status: "✓",
   },
   {
     href: "/data/downloads",
     title: "開放資料",
     desc: "選舉結果、政見、候選人資料 CSV/JSON 下載。",
-    status: "△",
+    status: "✓",
   },
 ];
 

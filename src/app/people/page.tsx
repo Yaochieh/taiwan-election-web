@@ -7,13 +7,13 @@ const SECTIONS = [
     href: "/people/search",
     title: "搜尋",
     desc: "跨選舉搜尋候選人，看歷年參選紀錄。",
-    status: "△",
+    status: "✓",
   },
   {
     href: "/people/compare",
     title: "比較工具",
     desc: "並列比對兩位以上候選人的政見、得票與背景。",
-    status: "△",
+    status: "✓",
   },
 ];
 
@@ -39,7 +39,9 @@ export default function PeopleLanding() {
             href={s.href}
             className="group block border-t-2 border-ink pt-6 hover:border-accent-red transition"
           >
-            <p className="text-xs text-ink-soft mb-2">建置中</p>
+            <p className="text-xs text-ink-soft mb-2">
+              {s.status === "✓" ? "已上線" : "建置中"}
+            </p>
             <h2 className="font-serif text-2xl font-bold mb-3 group-hover:text-accent-red transition">
               {s.title} →
             </h2>
