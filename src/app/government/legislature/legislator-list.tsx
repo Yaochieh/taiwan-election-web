@@ -1,8 +1,15 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import type { LegislatorMember, LegislaturePartyTotal } from "@/lib/types";
 import { partyColor, cleanDistrict } from "@/lib/format";
+
+// 2024 第 11 屆立委 election_id
+const REGIONAL_ELECTION_ID = 51;
+const LOWLAND_ELECTION_ID = 53;
+const HIGHLAND_ELECTION_ID = 52;
+const PARTY_LIST_ELECTION_ID = 50;
 
 const KIND_LABELS: Record<string, string> = {
   regional: "區域",
@@ -114,13 +121,22 @@ export function LegislatorList({
         {filtered.map((m, i) => {
           const districtLabel = cleanDistrict(m.district) || m.district;
           const color = m.color_hex || partyColor(m.party);
-          // 不分區候選人姓名是「(政黨 第 N 順位)」
           const isPartyList = m.kind === "party_list";
-          return (
-            <article
-              key={`${m.candidate}-${m.district}-${i}`}
-              className="grid grid-cols-12 gap-2 py-3 border-b border-rule items-baseline"
-            >
+
+          // 對應到政見頁面的連結
+          let platformHref: string | null = null;
+          if (m.kind === "regional") {
+            platformHref = `/platforms?election=${REGIONAL_ELECTION_ID}&district=${encodeURIComponent(m.district)}`;
+          } else if (m.kind === "highland") {
+            platformHref = `/platforms?election=${HIGHLAND_ELECTION_ID}`;
+          } else if (m.kind === "lowland") {
+            platformHref = `/platforms?election=${LOWLAND_ELECTION_ID}`;
+          } else if (m.kind === "party_list") {
+            platformHref = `/platforms?election=${PARTY_LIST_ELECTION_ID}`;
+          }
+
+          const RowInner = (
+            <>
               <div className="col-span-5 sm:col-span-4">
                 <span className="font-medium" style={{ color }}>
                   {isPartyList ? m.party : m.candidate}
@@ -140,6 +156,27 @@ export function LegislatorList({
               <div className="col-span-12 sm:col-span-2 text-sm text-ink-soft sm:text-right">
                 {!isPartyList && districtLabel}
               </div>
+            </>
+          );
+
+          if (platformHref && !isPartyList) {
+            return (
+              <Link
+                key={`${m.candidate}-${m.district}-${i}`}
+                href={platformHref}
+                className="grid grid-cols-12 gap-2 py-3 px-2 -mx-2 border-b border-rule items-baseline hover:bg-rule/30 transition"
+                title={`點擊查看 ${m.candidate} 的政見`}
+              >
+                {RowInner}
+              </Link>
+            );
+          }
+          return (
+            <article
+              key={`${m.candidate}-${m.district}-${i}`}
+              className="grid grid-cols-12 gap-2 py-3 border-b border-rule items-baseline"
+            >
+              {RowInner}
             </article>
           );
         })}
