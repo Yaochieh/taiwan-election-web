@@ -1,5 +1,17 @@
 export const metadata = { title: "關於 · 正至" };
 
+function Stat({ label, value, desc }: { label: string; value: string; desc: string }) {
+  return (
+    <div className="border border-rule p-3">
+      <div className="text-[10px] tracking-widest uppercase text-ink-soft mb-1">
+        {label}
+      </div>
+      <div className="font-serif text-xl font-bold tabular-nums">{value}</div>
+      <div className="text-xs text-ink-soft">{desc}</div>
+    </div>
+  );
+}
+
 export default function AboutPage() {
   return (
     <div className="mx-auto max-w-6xl px-4 sm:px-6 py-12">
@@ -22,6 +34,21 @@ export default function AboutPage() {
           <p className="leading-[1.85] mt-3 text-ink-soft">
             平台名稱來自《大學》：「致知在格物，物格而后知至。」
             希望大家在做政治判斷之前，能先「致知」，了解事實。
+          </p>
+        </section>
+
+        <section>
+          <h2 className="font-serif text-2xl font-bold mb-3">目前資料覆蓋</h2>
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 text-sm">
+            <Stat label="收錄選舉" value="87 場" desc="1994 年起" />
+            <Stat label="候選人" value="9,008 位" desc="跨選舉聚合" />
+            <Stat label="得票紀錄" value="8,336 筆" desc="含縣市/選區層級" />
+            <Stat label="鄉鎮級得票" value="18,418 筆" desc="總統 1996–2024" />
+            <Stat label="政見全文" value="584 條" desc="OCR + PDF 解析" />
+            <Stat label="政黨" value="410 個" desc="含歷史小黨" />
+          </div>
+          <p className="text-xs text-ink-soft mt-3">
+            數字隨資料補入會持續成長；最新狀態以 GitHub commit 紀錄為準。
           </p>
         </section>
 
