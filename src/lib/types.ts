@@ -225,17 +225,26 @@ export interface PartyHistoryEntry {
   from_date: string;
 }
 
+export interface ProgressSource {
+  url: string | null;
+  source_type: string | null;
+  publisher: string | null;
+  authority_level: number | null;
+}
+
 export interface TargetProgress {
   recorded_at: string;
   current_value: number | null;
   note: string | null;
   source_url: string | null;
+  sources: ProgressSource[];
 }
 
 export interface PlatformTarget {
   target_id: number;
   person_name: string;
   election_id: number | null;
+  parent_target_id: number | null;
   category: string | null;
   title: string;
   description: string | null;
@@ -245,10 +254,13 @@ export interface PlatformTarget {
   target_value: number | null;
   target_date: string | null;
   status: string;
+  data_source_kind: string | null;
   source_url: string | null;
+  rank: number;
   election_name: string | null;
   election_date: string | null;
   progress: TargetProgress[];
   progress_pct: number | null;
   latest_value: number | null;
+  children: PlatformTarget[];
 }
