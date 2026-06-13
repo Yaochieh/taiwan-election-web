@@ -141,3 +141,53 @@ export interface LegislatureComposition {
   parties: LegislaturePartyTotal[];
   members: LegislatorMember[];
 }
+
+export interface SearchResult {
+  query: string;
+  total: number;
+  candidates: SearchCandidate[];
+  parties: SearchParty[];
+  elections: Election[];
+  platforms: SearchPlatform[];
+  ocr: SearchOcr[];
+}
+
+export interface SearchCandidate {
+  name: string;
+  election_count: number;
+  sample_election_id: number;
+  ever_elected: number;
+  parties: string | null;
+}
+
+export interface SearchParty {
+  party_id: number;
+  name: string;
+  abbreviation: string | null;
+  color_hex: string | null;
+}
+
+export interface SearchPlatform {
+  platform_id: number;
+  candidate_id: number;
+  election_id: number;
+  candidate_name: string;
+  party_name: string | null;
+  color_hex: string | null;
+  election_name: string;
+  election_date: string;
+  content: string;
+  snippet: string;
+}
+
+export interface SearchOcr {
+  candidate_id: number;
+  election_id: number;
+  candidate_name: string;
+  party_name: string | null;
+  color_hex: string | null;
+  election_name: string;
+  election_date: string;
+  local_path: string;
+  snippet: string;
+}

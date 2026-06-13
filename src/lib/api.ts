@@ -14,6 +14,7 @@ import type {
   District,
   ElectionResult,
   LegislatureComposition,
+  SearchResult,
 } from "./types";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
@@ -91,6 +92,10 @@ export const getMayoralHistory = () =>
 // ── legislature ─────────────────────────────────────────────
 export const getLegislatureComposition = (year: string) =>
   fetcher<LegislatureComposition>(`/legislature/${year}`);
+
+// ── search ─────────────────────────────────────────────────
+export const search = (q: string, limit = 30) =>
+  fetcher<SearchResult>(`/search?q=${encodeURIComponent(q)}&limit=${limit}`);
 
 // ── image URL helper ────────────────────────────────────────
 export const bulletinImageUrl = (localPath: string): string => {
