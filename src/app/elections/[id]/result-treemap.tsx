@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { Treemap, ResponsiveContainer } from "recharts";
 import type { ElectionResult } from "@/lib/types";
 import { partyColor, formatVotes } from "@/lib/format";
@@ -150,6 +151,11 @@ function TreemapCell(props: unknown) {
 }
 
 export function ResultTreemap({ items, total, isPresident }: Props) {
+  // mount guard：避免 SSR 渲染 recharts，因為 ResponsiveContainer 在 server
+  // 拿不到尺寸（width=-1）會導致水合不一致而報錯。
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
+
   const data: Node[] = items.map((it) => {
     const r = it.primary;
     const pct = total > 0 ? (r.votes / total) * 100 : 0;
@@ -166,8 +172,21 @@ export function ResultTreemap({ items, total, isPresident }: Props) {
 
   if (data.length === 0) return null;
 
+  const height = isPresident ? 320 : 260;
+
+  if (!mounted) {
+    return (
+      <div
+        className="border border-rule flex items-center justify-center text-ink-soft text-sm"
+        style={{ height }}
+      >
+        圖表載入中…
+      </div>
+    );
+  }
+
   return (
-    <div className="w-full" style={{ height: isPresident ? 320 : 260 }}>
+    <div className="w-full" style={{ height }}>
       <ResponsiveContainer width="100%" height="100%">
         <Treemap
           data={data}
