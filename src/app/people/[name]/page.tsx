@@ -14,6 +14,9 @@ import {
 import { TargetCard } from "@/components/target-card";
 import { PartyLink } from "@/components/entity-links";
 
+// 政見追蹤更新頻率較高，5 分鐘快取
+export const revalidate = 300;
+
 const TYPE_ZH: Record<string, string> = {
   presidential: "總統",
   legislative: "立委",
