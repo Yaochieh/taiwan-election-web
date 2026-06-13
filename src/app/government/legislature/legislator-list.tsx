@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import type { LegislatorMember, LegislaturePartyTotal } from "@/lib/types";
 import { partyColor, cleanDistrict } from "@/lib/format";
+import { PartyLink } from "@/components/entity-links";
 
 // 2024 第 11 屆立委 election_id
 const REGIONAL_ELECTION_ID = 51;
@@ -158,8 +159,8 @@ export function LegislatorList({
                   </>
                 )}
               </div>
-              <div className="col-span-3 sm:col-span-3 text-sm text-ink-soft">
-                {m.party}
+              <div className="col-span-3 sm:col-span-3 text-sm">
+                <PartyLink name={m.party} />
               </div>
               <div className="col-span-4 sm:col-span-3 text-sm text-ink-soft">
                 {KIND_LABELS[m.kind] || m.kind}

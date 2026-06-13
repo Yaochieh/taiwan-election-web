@@ -13,6 +13,7 @@ import {
   votePct,
   partyColor,
 } from "@/lib/format";
+import { PersonLink, PartyLink } from "@/components/entity-links";
 
 const TYPE_ZH: Record<string, string> = {
   presidential: "總統",
@@ -142,12 +143,11 @@ export default async function ElectionDetailPage({
                           {idx + 1}
                         </div>
                         <div className="col-span-10 sm:col-span-5">
-                          <span
+                          <PersonLink
+                            name={r.candidate_name}
+                            color={partyColor(r.party_name, r.color_hex)}
                             className="font-medium"
-                            style={{ color: partyColor(r.party_name, r.color_hex) }}
-                          >
-                            {r.candidate_name}
-                          </span>
+                          />
                           {r.elected === 1 && (
                             <span className="ml-2 text-xs text-accent-red font-bold">
                               ★ 當選
@@ -162,7 +162,7 @@ export default async function ElectionDetailPage({
                             </Link>
                           )}
                           <div className="text-xs text-ink-soft mt-0.5">
-                            {r.party_name || "無黨籍"}
+                            <PartyLink name={r.party_name} />
                           </div>
                         </div>
                         <div className="col-span-7 sm:col-span-3 text-sm tabular-nums">

@@ -2,6 +2,7 @@ import Link from "next/link";
 import { search } from "@/lib/api";
 import { partyColor, formatElectionLabelShort } from "@/lib/format";
 import { candidatePhotoUrl } from "@/lib/api";
+import { PersonLink, PartyLink } from "@/components/entity-links";
 
 export const metadata = { title: "搜尋 · 正至" };
 
@@ -88,13 +89,14 @@ export default async function SearchPage({
           </h2>
           <div className="flex flex-wrap gap-2">
             {result.parties.map((p) => (
-              <span
+              <Link
                 key={p.party_id}
-                className="inline-block px-3 py-1.5 text-sm border border-rule"
+                href={`/parties/${encodeURIComponent(p.name)}`}
+                className="inline-block px-3 py-1.5 text-sm border border-rule hover:border-ink transition"
                 style={{ color: p.color_hex || partyColor(p.name) }}
               >
                 {p.name}
-              </span>
+              </Link>
             ))}
           </div>
         </section>
@@ -145,13 +147,12 @@ export default async function SearchPage({
                 className="border-l-2 border-rule pl-4 hover:border-accent-red transition"
               >
                 <div className="flex flex-wrap items-baseline gap-x-2 text-sm mb-1">
-                  <span
+                  <PersonLink
+                    name={p.candidate_name}
+                    color={partyColor(p.party_name, p.color_hex)}
                     className="font-medium"
-                    style={{ color: partyColor(p.party_name, p.color_hex) }}
-                  >
-                    {p.candidate_name}
-                  </span>
-                  <span className="text-ink-soft">{p.party_name}</span>
+                  />
+                  <PartyLink name={p.party_name} className="text-ink-soft" />
                   <Link
                     href={`/platforms?election=${p.election_id}`}
                     className="ml-auto text-xs text-ink-soft hover:text-accent-red"
@@ -184,13 +185,12 @@ export default async function SearchPage({
                 className="border-l-2 border-rule pl-4 hover:border-accent-red transition"
               >
                 <div className="flex flex-wrap items-baseline gap-x-2 text-sm mb-1">
-                  <span
+                  <PersonLink
+                    name={o.candidate_name}
+                    color={partyColor(o.party_name, o.color_hex)}
                     className="font-medium"
-                    style={{ color: partyColor(o.party_name, o.color_hex) }}
-                  >
-                    {o.candidate_name}
-                  </span>
-                  <span className="text-ink-soft">{o.party_name}</span>
+                  />
+                  <PartyLink name={o.party_name} className="text-ink-soft" />
                   <Link
                     href={`/platforms?election=${o.election_id}`}
                     className="ml-auto text-xs text-ink-soft hover:text-accent-red"

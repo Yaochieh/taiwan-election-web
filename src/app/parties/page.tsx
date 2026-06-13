@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { getMayoralHistory, getPresidentialTrend, getPartyListTrend } from "@/lib/api";
 import { partyColor, formatVotes } from "@/lib/format";
 
@@ -159,12 +160,17 @@ export default async function PartiesPage() {
             >
               <div className="grid sm:grid-cols-12 gap-6">
                 <div className="sm:col-span-4">
-                  <h2
-                    className="font-serif text-3xl font-bold mb-1"
-                    style={{ color: info.color }}
+                  <Link
+                    href={`/parties/${encodeURIComponent(name)}`}
+                    className="block hover:opacity-80 transition"
                   >
-                    {name}
-                  </h2>
+                    <h2
+                      className="font-serif text-3xl font-bold mb-1 hover:underline underline-offset-4"
+                      style={{ color: info.color }}
+                    >
+                      {name}
+                    </h2>
+                  </Link>
                   <p className="text-sm text-ink-soft mb-3">
                     <span className="font-medium text-ink">{info.short}</span>
                     <span className="mx-2">·</span>

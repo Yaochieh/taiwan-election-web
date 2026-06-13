@@ -7,6 +7,7 @@ import {
 } from "@/lib/api";
 import type { CandidatePlatformStatus, Platform } from "@/lib/types";
 import { partyColor, formatVotes, votePct } from "@/lib/format";
+import { PartyLink } from "@/components/entity-links";
 
 export async function CandidatePlatformCard({
   status,
@@ -72,8 +73,8 @@ export async function CandidatePlatformCard({
               {status.candidate_name}
             </Link>
           </h2>
-          <span className="text-sm text-ink-soft">
-            {status.party_name || "無黨籍"}
+          <span className="text-sm">
+            <PartyLink name={status.party_name} />
           </span>
           {districtLabel && (
             <span className="text-sm text-ink-soft">· {districtLabel}</span>

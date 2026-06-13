@@ -12,6 +12,7 @@ import {
   partyColor,
 } from "@/lib/format";
 import { TargetCard } from "@/components/target-card";
+import { PartyLink } from "@/components/entity-links";
 
 const TYPE_ZH: Record<string, string> = {
   presidential: "總統",
@@ -98,15 +99,16 @@ export default async function PersonPage({
           <div className="flex flex-wrap items-baseline gap-2">
             {profile.party_history.slice().reverse().map((p, i) => (
               <span key={i} className="flex items-baseline gap-2">
-                <span
-                  className="px-3 py-1.5 text-sm border"
+                <Link
+                  href={`/parties/${encodeURIComponent(p.party)}`}
+                  className="px-3 py-1.5 text-sm border hover:underline underline-offset-4 transition"
                   style={{
                     color: p.color_hex || partyColor(p.party),
                     borderColor: p.color_hex || partyColor(p.party),
                   }}
                 >
                   {p.party}
-                </span>
+                </Link>
                 <span className="text-xs text-ink-soft">
                   自 {p.from_date.slice(0, 4)}
                 </span>
@@ -186,7 +188,7 @@ export default async function PersonPage({
                   )}
                 </div>
                 <div className="col-span-6 sm:col-span-3 text-sm">
-                  <span style={{ color }}>{r.party_name || "無黨籍"}</span>
+                  <PartyLink name={r.party_name} color={color} />
                   {elected && (
                     <span className="ml-2 text-xs text-accent-red font-bold">
                       ★ 當選

@@ -7,6 +7,7 @@ import {
   getPresidentialTrend,
 } from "@/lib/api";
 import { formatElectionLabelShort, partyColor, formatVotes } from "@/lib/format";
+import { PersonLink, PartyLink } from "@/components/entity-links";
 
 const TYPE_ZH: Record<string, string> = {
   presidential: "總統",
@@ -235,14 +236,13 @@ export default async function HomePage() {
                         ★ 當選
                       </span>
                     )}
-                    <span
+                    <PersonLink
+                      name={p.candidate_name}
+                      color={partyColor(p.party_name)}
                       className="font-serif text-xl font-bold"
-                      style={{ color: partyColor(p.party_name) }}
-                    >
-                      {p.candidate_name}
-                    </span>
-                    <span className="text-sm text-ink-soft">
-                      {p.party_name}
+                    />
+                    <span className="text-sm">
+                      <PartyLink name={p.party_name} />
                     </span>
                     <span className="ml-auto text-sm tabular-nums">
                       {formatVotes(p.votes)} 票

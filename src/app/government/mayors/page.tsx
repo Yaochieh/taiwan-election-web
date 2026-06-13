@@ -2,6 +2,7 @@ import Link from "next/link";
 import { getMayoralHistory, getElections } from "@/lib/api";
 import { cleanDistrict, formatVotes, partyColor } from "@/lib/format";
 import { TaiwanMap } from "./taiwan-map";
+import { PersonLink, PartyLink } from "@/components/entity-links";
 
 export const metadata = {
   title: "縣市長歷屆 · 正至",
@@ -223,11 +224,13 @@ export default async function MayorsPage() {
                     className="text-center px-4 py-2"
                     style={{ color: partyColor(p) }}
                   >
-                    {p === "民主進步黨"
-                      ? "民進黨"
-                      : p === "中國國民黨"
-                        ? "國民黨"
-                        : "其他"}
+                    {p === "其他" ? (
+                      "其他"
+                    ) : (
+                      <PartyLink name={p}>
+                        {p === "民主進步黨" ? "民進黨" : "國民黨"}
+                      </PartyLink>
+                    )}
                   </th>
                 ))}
                 <th className="text-center px-4 py-2 text-ink-soft text-xs uppercase">
