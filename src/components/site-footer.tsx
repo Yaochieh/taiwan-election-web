@@ -18,15 +18,33 @@ export function SiteFooter() {
           </a>
           、政府開放資料平台。本網站政見內容皆引自選舉公報原檔，僅作公民查閱用途。
         </p>
-        <p className="text-xs">
-          © 2026 正至 ·
+        <p className="text-xs flex flex-wrap items-baseline gap-x-4">
+          <span>© 2026 正至</span>
           <a
             href="https://github.com/Yaochieh/taiwan-election-web"
             target="_blank"
             rel="noreferrer"
-            className="ml-2 underline underline-offset-2 hover:text-ink"
+            className="underline underline-offset-2 hover:text-ink"
           >
             GitHub
+          </a>
+          <a
+            href="/about"
+            className="underline underline-offset-2 hover:text-ink"
+          >
+            關於
+          </a>
+          <a
+            href="/changelog"
+            className="underline underline-offset-2 hover:text-ink"
+          >
+            更新紀錄
+          </a>
+          <a
+            href="/data/downloads"
+            className="underline underline-offset-2 hover:text-ink"
+          >
+            開放資料 API
           </a>
         </p>
       </div>
