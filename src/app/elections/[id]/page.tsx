@@ -49,6 +49,14 @@ export default async function ElectionDetailPage({
     byDistrict.get(d)!.push(r);
   }
 
+  // 過濾掉「全國摘要」當有縣市分布時（避免重複顯示）
+  const SUMMARY_KEYS = new Set(["全國", "地區(0, 0, 0)"]);
+  const hasCounties =
+    Array.from(byDistrict.keys()).filter((k) => !SUMMARY_KEYS.has(k)).length > 0;
+  if (hasCounties) {
+    for (const k of SUMMARY_KEYS) byDistrict.delete(k);
+  }
+
   const districtList = Array.from(byDistrict.keys()).sort();
 
   // 找有政見資料的候選人 ID 集合（用來顯示連結）
@@ -109,27 +117,68 @@ export default async function ElectionDetailPage({
       ) : (
         <section className="space-y-12">
           <p className="text-sm text-ink-soft">
-            共 {districtList.length} 個選區、{results.length} 筆候選人結果
+            共 {districtList.length} 個選區、
+            {election.type === "presidential"
+              ? `${results.length / 2} 組正副總統候選人`
+              : `${results.length} 筆候選人結果`}
           </p>
           {districtList.map((district) => {
             const rows = byDistrict.get(district)!;
             const total = rows.reduce((a, b) => a + b.votes, 0);
             const label = cleanDistrict(district) || district;
-            const electedCount = rows.filter((r) => r.elected === 1).length;
+
+            // 對 presidential：按相同票數配對正副
+            const isPresident = election.type === "presidential";
+            type ResultRow = (typeof rows)[number];
+            const items: { primary: ResultRow; running?: ResultRow }[] = [];
+            if (isPresident) {
+              const sorted = rows.slice().sort((a, b) => b.votes - a.votes);
+              const seen = new Set<number>();
+              for (let i = 0; i < sorted.length; i++) {
+                if (seen.has(i)) continue;
+                seen.add(i);
+                const pair: ResultRow[] = [sorted[i]];
+                for (let j = i + 1; j < sorted.length; j++) {
+                  if (
+                    !seen.has(j) &&
+                    sorted[j].votes === sorted[i].votes &&
+                    sorted[j].party_name === sorted[i].party_name
+                  ) {
+                    pair.push(sorted[j]);
+                    seen.add(j);
+                    break;
+                  }
+                }
+                items.push({ primary: pair[0], running: pair[1] });
+              }
+            } else {
+              items.push(
+                ...rows
+                  .slice()
+                  .sort((a, b) => b.votes - a.votes)
+                  .map((r) => ({ primary: r })),
+              );
+            }
+
+            const electedCount = items.filter(
+              (it) => it.primary.elected === 1,
+            ).length;
+
             return (
               <div key={district}>
                 <div className="flex items-baseline justify-between gap-4 border-b border-ink pb-2 mb-4">
                   <h2 className="font-serif text-xl font-bold">{label}</h2>
                   <div className="text-xs text-ink-soft">
-                    {rows.length} 位候選人 · 當選 {electedCount} 位 · 共
+                    {items.length} {isPresident ? "組" : "位"}候選人 · 當選{" "}
+                    {electedCount} {isPresident ? "組" : "位"} · 共
                     {formatVotes(total)} 票
                   </div>
                 </div>
                 <ol className="space-y-2">
-                  {rows
-                    .slice()
-                    .sort((a, b) => b.votes - a.votes)
-                    .map((r, idx) => (
+                  {items.map((it, idx) => {
+                    const r = it.primary;
+                    const running = it.running;
+                    return (
                       <li
                         key={`${r.candidate_name}-${idx}`}
                         className={
@@ -143,11 +192,27 @@ export default async function ElectionDetailPage({
                           {idx + 1}
                         </div>
                         <div className="col-span-10 sm:col-span-5">
-                          <PersonLink
-                            name={r.candidate_name}
-                            color={partyColor(r.party_name, r.color_hex)}
-                            className="font-medium"
-                          />
+                          {running ? (
+                            <div className="flex flex-wrap items-baseline gap-x-2">
+                              <PersonLink
+                                name={r.candidate_name}
+                                color={partyColor(r.party_name, r.color_hex)}
+                                className="font-medium"
+                              />
+                              <span className="text-ink-soft">／</span>
+                              <PersonLink
+                                name={running.candidate_name}
+                                color={partyColor(r.party_name, r.color_hex)}
+                                className="font-medium"
+                              />
+                            </div>
+                          ) : (
+                            <PersonLink
+                              name={r.candidate_name}
+                              color={partyColor(r.party_name, r.color_hex)}
+                              className="font-medium"
+                            />
+                          )}
                           {r.elected === 1 && (
                             <span className="ml-2 text-xs text-accent-red font-bold">
                               ★ 當選
@@ -172,7 +237,8 @@ export default async function ElectionDetailPage({
                           {votePct(r.votes, total) || "—"}
                         </div>
                       </li>
-                    ))}
+                    );
+                  })}
                 </ol>
               </div>
             );

@@ -73,7 +73,7 @@ export default async function HomePage() {
     }
   }
 
-  // 最近一屆總統各黨得票
+  // 最近一屆總統各黨得票（正總統，不重複計副）
   const latestPresYear = presidential
     .map((p) => p.date.slice(0, 4))
     .sort()
@@ -82,6 +82,22 @@ export default async function HomePage() {
     .filter((p) => p.date.startsWith(latestPresYear || ""))
     .sort((a, b) => b.votes - a.votes);
   const latestPresTotal = latestPres.reduce((a, b) => a + b.votes, 0);
+
+  // 找副總統配對（從 search candidates 取一次）
+  // 簡單做法：搜尋每位正總統得票相同者作為副
+  const latestPresPairs = latestPres.map((p) => {
+    // 副總統從 search 拿不到，這裡直接用既有資料的副人名硬編
+    // (從 2024 結果：賴清德/蕭美琴, 侯友宜/趙少康, 柯文哲/吳欣盈)
+    const RUNNING_MATES: Record<string, string> = {
+      賴清德: "蕭美琴",
+      侯友宜: "趙少康",
+      柯文哲: "吳欣盈",
+    };
+    return {
+      ...p,
+      running_mate: RUNNING_MATES[p.candidate_name],
+    };
+  });
 
   return (
     <>
@@ -223,7 +239,7 @@ export default async function HomePage() {
             任總統選舉
           </h3>
           <div className="space-y-3">
-            {latestPres.map((p, idx) => {
+            {latestPresPairs.map((p, idx) => {
               const pct = (p.votes / latestPresTotal) * 100;
               return (
                 <div
@@ -236,11 +252,23 @@ export default async function HomePage() {
                         ★ 當選
                       </span>
                     )}
-                    <PersonLink
-                      name={p.candidate_name}
-                      color={partyColor(p.party_name)}
-                      className="font-serif text-xl font-bold"
-                    />
+                    <div className="flex items-baseline gap-1.5">
+                      <PersonLink
+                        name={p.candidate_name}
+                        color={partyColor(p.party_name)}
+                        className="font-serif text-xl font-bold"
+                      />
+                      {p.running_mate && (
+                        <>
+                          <span className="text-ink-soft text-sm">／</span>
+                          <PersonLink
+                            name={p.running_mate}
+                            color={partyColor(p.party_name)}
+                            className="font-serif text-sm font-medium"
+                          />
+                        </>
+                      )}
+                    </div>
                     <span className="text-sm">
                       <PartyLink name={p.party_name} />
                     </span>

@@ -6,7 +6,7 @@ import {
   getPartyListTrend,
   getLegislatureComposition,
 } from "@/lib/api";
-import { partyColor, formatElectionLabelShort } from "@/lib/format";
+import { partyColor, formatElectionLabelShort, cleanDistrict } from "@/lib/format";
 import { PARTY_INFO } from "@/lib/party-info";
 import { PersonLink } from "@/components/entity-links";
 
@@ -167,7 +167,7 @@ export default async function PartyPage({
                 )}
                 <div className="text-xs text-ink-soft mt-0.5">
                   {m.kind === "regional"
-                    ? m.district
+                    ? (cleanDistrict(m.district) || m.district)
                     : m.kind === "highland"
                       ? "山地原住民"
                       : m.kind === "lowland"
@@ -208,7 +208,7 @@ export default async function PartyPage({
                     />
                   </div>
                   <div className="col-span-4 sm:col-span-3 text-sm text-ink-soft">
-                    {m.district || ""}
+                    {cleanDistrict(m.district) || m.district || ""}
                   </div>
                   <div className="col-span-12 sm:col-span-4 text-sm text-ink-soft text-right">
                     {m.votes
