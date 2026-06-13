@@ -3,6 +3,7 @@
 import { useEffect, useState, useMemo } from "react";
 import type { ElectionResult } from "@/lib/types";
 import { partyColor, formatVotes } from "@/lib/format";
+import { getTownshipResults, type TownshipResult } from "@/lib/api";
 
 // GeoJSON 縣名 → DB 縣名 (DB 中是 "臺北市"/"高雄市" 等)
 const GEO_NAME_MAP: Record<string, string> = {
@@ -57,16 +58,137 @@ interface Pair {
   running?: ElectionResult;
 }
 
+function TownshipPanel({
+  townships,
+  loading,
+  isPresident,
+}: {
+  townships: TownshipResult[];
+  loading: boolean;
+  isPresident: boolean;
+}) {
+  // 按 township 分組
+  const byTwn = useMemo(() => {
+    const m = new Map<string, TownshipResult[]>();
+    for (const t of townships) {
+      if (!m.has(t.township)) m.set(t.township, []);
+      m.get(t.township)!.push(t);
+    }
+    // 對每個鄉鎮：去除同票數副總統重複
+    const out: { township: string; winner: TownshipResult; total: number; rows: TownshipResult[] }[] = [];
+    for (const [twn, rows] of m) {
+      const sorted = rows.slice().sort((a, b) => b.votes - a.votes);
+      const unique: TownshipResult[] = [];
+      const seen = new Set<number>();
+      for (let i = 0; i < sorted.length; i++) {
+        if (seen.has(i)) continue;
+        seen.add(i);
+        unique.push(sorted[i]);
+        if (isPresident) {
+          for (let j = i + 1; j < sorted.length; j++) {
+            if (
+              !seen.has(j) &&
+              sorted[j].votes === sorted[i].votes &&
+              sorted[j].party_name === sorted[i].party_name
+            ) {
+              seen.add(j);
+              break;
+            }
+          }
+        }
+      }
+      const total = unique.reduce((a, b) => a + b.votes, 0);
+      out.push({ township: twn, winner: unique[0], total, rows: unique });
+    }
+    return out.sort((a, b) => b.total - a.total);
+  }, [townships, isPresident]);
+
+  if (loading) {
+    return (
+      <p className="text-xs text-ink-soft mt-4 pt-4 border-t border-rule">
+        鄉鎮市區資料載入中…
+      </p>
+    );
+  }
+  if (byTwn.length === 0) {
+    return (
+      <p className="text-xs text-ink-soft mt-4 pt-4 border-t border-rule">
+        此縣市無鄉鎮市區資料
+      </p>
+    );
+  }
+
+  return (
+    <div className="mt-4 pt-4 border-t border-rule">
+      <p className="text-xs font-bold mb-2 tracking-wider uppercase text-ink-soft">
+        鄉鎮市區（{byTwn.length}）· 各鄉鎮勝出者
+      </p>
+      <div className="max-h-72 overflow-y-auto pr-1 space-y-1">
+        {byTwn.map((r) => {
+          const wPct = r.total > 0 ? (r.winner.votes / r.total) * 100 : 0;
+          return (
+            <div
+              key={r.township}
+              className="flex items-center gap-2 text-xs py-1 border-b border-rule/50"
+            >
+              <span
+                className="w-2 h-4 shrink-0"
+                style={{
+                  backgroundColor: partyColor(
+                    r.winner.party_name,
+                    r.winner.color_hex,
+                  ),
+                }}
+              />
+              <span className="w-16 shrink-0">{r.township}</span>
+              <span
+                className="font-medium truncate"
+                style={{
+                  color: partyColor(r.winner.party_name, r.winner.color_hex),
+                }}
+              >
+                {r.winner.candidate_name}
+              </span>
+              <span className="ml-auto tabular-nums text-ink-soft">
+                {wPct.toFixed(1)}%
+              </span>
+              <span className="tabular-nums text-ink-soft w-16 text-right">
+                {formatVotes(r.total)}
+              </span>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 export function VoteMap({
   results,
   isPresident,
+  electionId,
 }: {
   results: ElectionResult[];
   isPresident: boolean;
+  electionId: number;
 }) {
   const [geo, setGeo] = useState<GeoJSON | null>(null);
   const [hover, setHover] = useState<string | null>(null);
   const [selected, setSelected] = useState<string | null>(null);
+  const [townships, setTownships] = useState<TownshipResult[]>([]);
+  const [townshipLoading, setTownshipLoading] = useState(false);
+
+  useEffect(() => {
+    if (!selected) {
+      setTownships([]);
+      return;
+    }
+    setTownshipLoading(true);
+    getTownshipResults(electionId, selected)
+      .then(setTownships)
+      .catch(() => setTownships([]))
+      .finally(() => setTownshipLoading(false));
+  }, [selected, electionId]);
 
   useEffect(() => {
     fetch("/taiwan.geojson")
@@ -230,6 +352,13 @@ export function VoteMap({
               >
                 取消選取
               </button>
+            )}
+            {selected && (
+              <TownshipPanel
+                townships={townships}
+                loading={townshipLoading}
+                isPresident={isPresident}
+              />
             )}
           </>
         ) : (

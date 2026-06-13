@@ -173,7 +173,11 @@ export default async function ElectionDetailPage({
                     <h2 className="font-serif text-xl font-bold mb-4 border-b border-ink pb-2">
                       各縣市勝出政黨
                     </h2>
-                    <VoteMap results={results} isPresident={true} />
+                    <VoteMap
+                      results={results}
+                      isPresident={true}
+                      electionId={electionId}
+                    />
                   </div>
                 )}
               </div>

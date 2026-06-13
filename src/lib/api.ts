@@ -42,6 +42,19 @@ export const getElectionResults = (id: number, district?: string) => {
   const q = district ? `?district=${encodeURIComponent(district)}` : "";
   return fetcher<ElectionResult[]>(`/elections/${id}/results${q}`);
 };
+export type TownshipResult = {
+  county: string;
+  township: string;
+  votes: number;
+  candidate_name: string;
+  background: string | null;
+  party_name: string | null;
+  color_hex: string | null;
+};
+export const getTownshipResults = (id: number, county?: string) => {
+  const q = county ? `?county=${encodeURIComponent(county)}` : "";
+  return fetcher<TownshipResult[]>(`/elections/${id}/townships${q}`);
+};
 
 // ── candidates ──────────────────────────────────────────────
 export const getCandidates = (electionId: number) =>
