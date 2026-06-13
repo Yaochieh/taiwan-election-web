@@ -48,6 +48,7 @@ export interface CandidateSearchResult {
 export interface ElectionResult {
   district: string | null;
   candidate_name: string;
+  background?: string | null;
   party_name: string | null;
   color_hex: string | null;
   votes: number;

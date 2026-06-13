@@ -137,6 +137,8 @@ export default async function ElectionDetailPage({
             const aggregated = Array.from(byCand.values())
               .map((r) => ({ ...r, votes: r.total }))
               .sort((a, b) => b.votes - a.votes);
+            // 配對：以 background='正總統' 為 primary、'副總統' 為 running。
+            // 同黨同票數視為一組。
             const seen = new Set<number>();
             const items: { primary: ResultRow; running?: ResultRow }[] = [];
             for (let i = 0; i < aggregated.length; i++) {
@@ -154,6 +156,12 @@ export default async function ElectionDetailPage({
                   break;
                 }
               }
+              // pair 內以 background 排，正在前、副在後
+              pair.sort((a, b) => {
+                const score = (r: ResultRow) =>
+                  r.background === "副總統" ? 1 : r.background === "正總統" ? 0 : 0.5;
+                return score(a) - score(b);
+              });
               items.push({ primary: pair[0], running: pair[1] });
             }
             const totalAll = items.reduce((a, b) => a + b.primary.votes, 0);
@@ -193,7 +201,13 @@ export default async function ElectionDetailPage({
             type ResultRow = (typeof rows)[number];
             const items: { primary: ResultRow; running?: ResultRow }[] = [];
             if (isPresident) {
-              const sorted = rows.slice().sort((a, b) => b.votes - a.votes);
+              const sorted = rows.slice().sort((a, b) => {
+                if (b.votes !== a.votes) return b.votes - a.votes;
+                // 票數同時，正在副前
+                const score = (r: ResultRow) =>
+                  r.background === "副總統" ? 1 : r.background === "正總統" ? 0 : 0.5;
+                return score(a) - score(b);
+              });
               const seen = new Set<number>();
               for (let i = 0; i < sorted.length; i++) {
                 if (seen.has(i)) continue;
