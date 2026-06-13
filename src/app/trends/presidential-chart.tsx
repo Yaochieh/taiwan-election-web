@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import {
   LineChart,
   Line,
@@ -45,6 +46,19 @@ export function PresidentialChart({ data }: { data: PresidentialTrend[] }) {
   const parties = Array.from(
     new Set(data.map((r) => r.party_name || "其他")),
   ).filter((p) => p !== "其他");
+
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
+
+  if (!mounted) {
+    return (
+      <div className="border border-rule p-4 sm:p-6 bg-paper">
+        <div className="h-80 sm:h-96 flex items-center justify-center text-ink-soft text-sm">
+          圖表載入中…
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="border border-rule p-4 sm:p-6 bg-paper">
