@@ -138,13 +138,24 @@ export function LegislatorList({
           const RowInner = (
             <>
               <div className="col-span-5 sm:col-span-4">
-                <span className="font-medium" style={{ color }}>
-                  {isPartyList ? m.party : m.candidate}
-                </span>
-                {isPartyList && (
-                  <span className="ml-1 text-xs text-ink-soft">
+                {!isPartyList ? (
+                  <Link
+                    href={`/people/${encodeURIComponent(m.candidate)}`}
+                    onClick={(e) => e.stopPropagation()}
+                    className="font-medium hover:underline underline-offset-4"
+                    style={{ color }}
+                  >
                     {m.candidate}
-                  </span>
+                  </Link>
+                ) : (
+                  <>
+                    <span className="font-medium" style={{ color }}>
+                      {m.party}
+                    </span>
+                    <span className="ml-1 text-xs text-ink-soft">
+                      {m.candidate}
+                    </span>
+                  </>
                 )}
               </div>
               <div className="col-span-3 sm:col-span-3 text-sm text-ink-soft">

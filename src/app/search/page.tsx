@@ -58,9 +58,10 @@ export default async function SearchPage({
           </h2>
           <div className="grid sm:grid-cols-2 gap-3">
             {result.candidates.map((c) => (
-              <article
+              <Link
                 key={c.name}
-                className="border border-rule p-3 hover:border-ink transition"
+                href={`/people/${encodeURIComponent(c.name)}`}
+                className="border border-rule p-3 hover:border-ink hover:bg-rule/30 transition"
               >
                 <h3 className="font-medium">{c.name}</h3>
                 <p className="text-xs text-ink-soft mt-1">
@@ -70,7 +71,7 @@ export default async function SearchPage({
                     <span className="ml-2 text-accent-red">★ 曾當選</span>
                   )}
                 </p>
-              </article>
+              </Link>
             ))}
           </div>
         </section>

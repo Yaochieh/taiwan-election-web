@@ -191,3 +191,36 @@ export interface SearchOcr {
   local_path: string;
   snippet: string;
 }
+
+export interface PersonProfile {
+  name: string;
+  photo_path: string | null;
+  background: string | null;
+  total_races: number;
+  total_wins: number;
+  win_rate: number;
+  races: PersonRace[];
+  party_history: PartyHistoryEntry[];
+}
+
+export interface PersonRace {
+  candidate_id: number;
+  election_id: number;
+  election_name: string;
+  election_type: string;
+  election_date: string;
+  election_description: string | null;
+  district: string | null;
+  party_name: string | null;
+  color_hex: string | null;
+  votes: number | null;
+  elected: number | null;
+  platform_count: number;
+  image_count: number;
+}
+
+export interface PartyHistoryEntry {
+  party: string;
+  color_hex: string | null;
+  from_date: string;
+}

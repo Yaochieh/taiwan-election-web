@@ -1,3 +1,4 @@
+import Link from "next/link";
 import {
   getCandidatePlatformImages,
   getCandidatePlatformSources,
@@ -63,7 +64,13 @@ export async function CandidatePlatformCard({
             </span>
           )}
           <h2 className="font-serif text-3xl sm:text-4xl font-bold leading-tight">
-            <span style={{ color }}>{status.candidate_name}</span>
+            <Link
+              href={`/people/${encodeURIComponent(status.candidate_name)}`}
+              className="hover:underline underline-offset-4"
+              style={{ color }}
+            >
+              {status.candidate_name}
+            </Link>
           </h2>
           <span className="text-sm text-ink-soft">
             {status.party_name || "無黨籍"}
