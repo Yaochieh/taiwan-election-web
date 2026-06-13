@@ -21,8 +21,8 @@ const SECTIONS = [
   {
     href: "/government/cabinet",
     title: "中央政府",
-    desc: "總統、副總統與行政院首長現況。",
-    status: "△",
+    desc: "總統府、行政院、五院首長與主要部會首長現況。",
+    status: "✓",
   },
 ];
 
