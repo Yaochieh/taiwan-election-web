@@ -14,6 +14,7 @@ import {
   partyColor,
 } from "@/lib/format";
 import { PersonLink, PartyLink } from "@/components/entity-links";
+import { VoteMap } from "./vote-map";
 
 const TYPE_ZH: Record<string, string> = {
   presidential: "總統",
@@ -122,6 +123,14 @@ export default async function ElectionDetailPage({
               ? `${results.length / 2} 組正副總統候選人`
               : `${results.length} 筆候選人結果`}
           </p>
+          {election.type === "presidential" && hasCounties && (
+            <div className="border border-rule p-4 sm:p-6">
+              <h2 className="font-serif text-xl font-bold mb-4 border-b border-ink pb-2">
+                選票地域分佈
+              </h2>
+              <VoteMap results={results} isPresident={true} />
+            </div>
+          )}
           {districtList.map((district) => {
             const rows = byDistrict.get(district)!;
             const total = rows.reduce((a, b) => a + b.votes, 0);
