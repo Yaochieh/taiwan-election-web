@@ -1,12 +1,17 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { getPersonProfile, candidatePhotoUrl } from "@/lib/api";
+import {
+  getPersonProfile,
+  candidatePhotoUrl,
+  getPersonTargets,
+} from "@/lib/api";
 import {
   cleanDistrict,
   formatElectionLabelShort,
   formatVotes,
   partyColor,
 } from "@/lib/format";
+import { TargetCard } from "@/components/target-card";
 
 const TYPE_ZH: Record<string, string> = {
   presidential: "總統",
@@ -23,7 +28,10 @@ export default async function PersonPage({
   const { name: encodedName } = await params;
   const name = decodeURIComponent(encodedName);
 
-  const profile = await getPersonProfile(name).catch(() => null);
+  const [profile, targets] = await Promise.all([
+    getPersonProfile(name).catch(() => null),
+    getPersonTargets(name).catch(() => []),
+  ]);
   if (!profile) notFound();
 
   const photoUrl = candidatePhotoUrl(profile.photo_path);
@@ -106,6 +114,28 @@ export default async function PersonPage({
                   <span className="text-ink-soft">→</span>
                 )}
               </span>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {/* ── 政見追蹤 ── */}
+      {targets.length > 0 && (
+        <section className="mb-12">
+          <div className="flex items-baseline justify-between mb-4 gap-4">
+            <h2 className="font-serif text-2xl font-bold">政見追蹤</h2>
+            <span className="text-xs text-ink-soft px-2 py-1 border border-accent-red text-accent-red">
+              BETA · 資料為示範性質
+            </span>
+          </div>
+          <p className="text-sm text-ink-soft mb-6 leading-relaxed max-w-3xl">
+            記錄候選人競選承諾的可量化指標、上任時數值、以及任期內的進度變化。
+            <strong>本頁數據為示範用途，數值僅供參考</strong>；
+            歡迎協助提供官方資料來源連結與校正。
+          </p>
+          <div className="grid sm:grid-cols-2 gap-6">
+            {targets.map((t) => (
+              <TargetCard key={t.target_id} target={t} />
             ))}
           </div>
         </section>

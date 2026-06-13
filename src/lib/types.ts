@@ -224,3 +224,31 @@ export interface PartyHistoryEntry {
   color_hex: string | null;
   from_date: string;
 }
+
+export interface TargetProgress {
+  recorded_at: string;
+  current_value: number | null;
+  note: string | null;
+  source_url: string | null;
+}
+
+export interface PlatformTarget {
+  target_id: number;
+  person_name: string;
+  election_id: number | null;
+  category: string | null;
+  title: string;
+  description: string | null;
+  metric_unit: string | null;
+  baseline_value: number | null;
+  baseline_date: string | null;
+  target_value: number | null;
+  target_date: string | null;
+  status: string;
+  source_url: string | null;
+  election_name: string | null;
+  election_date: string | null;
+  progress: TargetProgress[];
+  progress_pct: number | null;
+  latest_value: number | null;
+}

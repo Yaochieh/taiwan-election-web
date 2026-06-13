@@ -16,6 +16,7 @@ import type {
   LegislatureComposition,
   SearchResult,
   PersonProfile,
+  PlatformTarget,
 } from "./types";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
@@ -101,6 +102,9 @@ export const search = (q: string, limit = 30) =>
 // ── people ─────────────────────────────────────────────────
 export const getPersonProfile = (name: string) =>
   fetcher<PersonProfile>(`/people/${encodeURIComponent(name)}`);
+
+export const getPersonTargets = (name: string) =>
+  fetcher<PlatformTarget[]>(`/people/${encodeURIComponent(name)}/targets`);
 
 // ── image URL helper ────────────────────────────────────────
 export const bulletinImageUrl = (localPath: string): string => {
