@@ -44,7 +44,7 @@ export default function AboutPage() {
             <Stat label="候選人" value="9,043 位" desc="跨選舉聚合" />
             <Stat label="得票紀錄" value="8,851 筆" desc="含縣市/選區層級" />
             <Stat label="鄉鎮級得票" value="18,418 筆" desc="總統 1996–2024" />
-            <Stat label="政見全文" value="653 條" desc="OCR + PDF 解析" />
+            <Stat label="政見全文" value="682 條" desc="OCR + PDF 解析" />
             <Stat label="政黨" value="410 個" desc="含歷史小黨" />
           </div>
           <p className="text-xs text-ink-soft mt-3">
