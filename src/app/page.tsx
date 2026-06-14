@@ -293,6 +293,95 @@ export default async function HomePage() {
         </section>
       )}
 
+      {/* ── 最近一屆縣市長 ── */}
+      {(() => {
+        const latestMayoralYear = mayoralHistory
+          .map((m) => m.date.slice(0, 4))
+          .sort()
+          .pop();
+        if (!latestMayoralYear) return null;
+        const winners = mayoralHistory.filter((m) =>
+          m.date.startsWith(latestMayoralYear),
+        );
+        const partyTotals = new Map<string, number>();
+        for (const w of winners) {
+          const party = w.party_name || "無黨籍";
+          partyTotals.set(party, (partyTotals.get(party) || 0) + 1);
+        }
+        const sortedTotals = Array.from(partyTotals.entries()).sort(
+          (a, b) => b[1] - a[1],
+        );
+        return (
+          <section className="border-y border-rule bg-rule/20">
+            <div className="mx-auto max-w-6xl px-4 sm:px-6 py-16">
+              <p className="text-xs tracking-[0.2em] uppercase text-ink-soft mb-3">
+                最近一屆縣市長
+              </p>
+              <h3 className="font-serif text-3xl sm:text-4xl font-bold leading-tight mb-2">
+                {latestMayoralYear} 年九合一選舉
+              </h3>
+              <p className="text-sm text-ink-soft mb-8">
+                {winners.length} 個縣市的勝選政黨分佈
+              </p>
+              <div className="flex flex-wrap gap-3 mb-8">
+                {sortedTotals.map(([party, count]) => (
+                  <div
+                    key={party}
+                    className="flex items-baseline gap-2 border border-rule px-4 py-2"
+                    style={{
+                      borderLeftColor: partyColor(party),
+                      borderLeftWidth: 4,
+                    }}
+                  >
+                    <PartyLink name={party} />
+                    <span className="font-serif text-2xl font-bold tabular-nums">
+                      {count}
+                    </span>
+                    <span className="text-xs text-ink-soft">席</span>
+                  </div>
+                ))}
+              </div>
+              <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 gap-2">
+                {winners
+                  .sort((a, b) =>
+                    (a.district || "").localeCompare(b.district || ""),
+                  )
+                  .map((w) => {
+                    const color = partyColor(w.party_name);
+                    return (
+                      <div
+                        key={w.district}
+                        className="border border-rule px-3 py-2"
+                        style={{
+                          borderLeftColor: color,
+                          borderLeftWidth: 3,
+                        }}
+                      >
+                        <div className="text-xs text-ink-soft">
+                          {w.district}
+                        </div>
+                        <PersonLink
+                          name={w.candidate_name}
+                          color={color}
+                          className="font-medium text-sm truncate inline-block max-w-full"
+                        />
+                      </div>
+                    );
+                  })}
+              </div>
+              <div className="mt-6 text-right">
+                <Link
+                  href="/government/mayors"
+                  className="text-sm underline underline-offset-2 hover:text-accent-red"
+                >
+                  看歷屆縣市長矩陣 →
+                </Link>
+              </div>
+            </div>
+          </section>
+        );
+      })()}
+
       {/* ── 倡議標語 ── */}
       <section className="mx-auto max-w-3xl px-4 sm:px-6 py-20 text-center">
         <p className="font-serif text-2xl sm:text-3xl leading-relaxed text-ink-soft">
