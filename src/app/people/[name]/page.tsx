@@ -192,7 +192,9 @@ export default async function PersonPage({
                   {r.background &&
                     (r.background.includes("罷免") ||
                       r.background.includes("辭職") ||
-                      r.background.includes("撤銷")) && (
+                      r.background.includes("撤銷") ||
+                      r.background.includes("解職") ||
+                      r.background.includes("判刑")) && (
                       <div className="text-xs text-accent-red mt-1">
                         ⚠ {r.background}
                       </div>
