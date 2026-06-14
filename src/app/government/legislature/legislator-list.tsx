@@ -136,10 +136,14 @@ export function LegislatorList({
             platformHref = `/platforms?election=${PARTY_LIST_ELECTION_ID}`;
           }
 
+          // 不分區的 candidate 若是 placeholder「(政黨 第 N 順位)」就顯示政黨；
+          // 若是實名就視為一般人連到 /people
+          const isPlaceholder =
+            isPartyList && m.candidate.startsWith("(") && m.candidate.endsWith(")");
           const RowInner = (
             <>
               <div className="col-span-5 sm:col-span-4">
-                {!isPartyList ? (
+                {!isPlaceholder ? (
                   <Link
                     href={`/people/${encodeURIComponent(m.candidate)}`}
                     onClick={(e) => e.stopPropagation()}
@@ -171,7 +175,7 @@ export function LegislatorList({
             </>
           );
 
-          if (platformHref && !isPartyList) {
+          if (platformHref && !isPlaceholder) {
             return (
               <Link
                 key={`${m.candidate}-${m.district}-${i}`}
