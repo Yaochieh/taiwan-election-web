@@ -177,6 +177,8 @@ export function VoteMap({
   const [selected, setSelected] = useState<string | null>(null);
   const [townships, setTownships] = useState<TownshipResult[]>([]);
   const [townshipLoading, setTownshipLoading] = useState(false);
+  // 點選候選人後切換到「該候選人各縣市得票率」模式
+  const [focusCandidate, setFocusCandidate] = useState<string | null>(null);
 
   useEffect(() => {
     if (!selected) {
@@ -293,13 +295,153 @@ export function VoteMap({
     ? { rows: byCounty.get(selectedCounty), info: winnerByCounty.get(selectedCounty) }
     : null;
 
+  // 把所有候選人去重列出（pair 顯示）
+  const candidatePairs = useMemo(() => {
+    const seen = new Set<string>();
+    const pairs: { name: string; party: string | null; color: string }[] = [];
+    for (const r of results) {
+      if (!r.candidate_name) continue;
+      if (r.district === "全國") continue;
+      const key = `${r.candidate_name}|${r.party_name}`;
+      if (seen.has(key)) continue;
+      seen.add(key);
+      pairs.push({
+        name: r.candidate_name,
+        party: r.party_name,
+        color: partyColor(r.party_name, r.color_hex),
+      });
+    }
+    // presidential：只保留正總統（副總統與正同票數）
+    if (isPresident) {
+      // 同黨同得票合計（22 縣市 SUM）視為一組，只保留其中一位
+      const totalByCand = new Map<string, number>();
+      for (const r of results) {
+        if (r.district === "全國") continue;
+        const k = `${r.candidate_name}|${r.party_name}`;
+        totalByCand.set(k, (totalByCand.get(k) || 0) + r.votes);
+      }
+      // 同票數同黨配對，取字典序第一個（穩定）
+      const partyGroups = new Map<string, typeof pairs>();
+      for (const p of pairs) {
+        const totalKey = `${totalByCand.get(`${p.name}|${p.party}`) || 0}|${p.party}`;
+        if (!partyGroups.has(totalKey)) partyGroups.set(totalKey, []);
+        partyGroups.get(totalKey)!.push(p);
+      }
+      const out: typeof pairs = [];
+      for (const arr of partyGroups.values()) {
+        // 取總票數最高為「展示者」(實務上正/副相同票數，任一即可)
+        out.push(arr[0]);
+      }
+      out.sort(
+        (a, b) =>
+          (totalByCand.get(`${b.name}|${b.party}`) || 0) -
+          (totalByCand.get(`${a.name}|${a.party}`) || 0),
+      );
+      return out;
+    }
+    return pairs;
+  }, [results, isPresident]);
+
+  // focusCandidate 模式下，計算各縣市該候選人的得票%
+  const focusByCounty = useMemo(() => {
+    if (!focusCandidate) return null;
+    const m = new Map<string, { pct: number; votes: number; color: string; rank: number }>();
+    for (const [county, rows] of byCounty) {
+      const total = rows.reduce((a, b) => a + b.votes, 0);
+      const sorted = rows.slice().sort((a, b) => b.votes - a.votes);
+      const idx = sorted.findIndex((r) => r.candidate_name === focusCandidate);
+      if (idx < 0) continue;
+      const r = sorted[idx];
+      m.set(county, {
+        pct: total > 0 ? (r.votes / total) * 100 : 0,
+        votes: r.votes,
+        color: partyColor(r.party_name, r.color_hex),
+        rank: idx + 1,
+      });
+    }
+    return m;
+  }, [focusCandidate, byCounty]);
+
   return (
-    <div className="grid sm:grid-cols-2 gap-6">
+    <div className="space-y-5">
+      {/* 候選人選擇器 */}
+      <div className="flex flex-wrap gap-2 items-baseline">
+        <button
+          onClick={() => setFocusCandidate(null)}
+          className={
+            "text-xs px-3 py-1.5 border transition " +
+            (focusCandidate === null
+              ? "bg-ink text-paper border-ink"
+              : "border-rule hover:border-ink text-ink-soft hover:text-ink")
+          }
+        >
+          各縣市勝出政黨
+        </button>
+        {candidatePairs.map((p) => {
+          const active = focusCandidate === p.name;
+          return (
+            <button
+              key={p.name}
+              onClick={() => setFocusCandidate(active ? null : p.name)}
+              className={
+                "text-xs px-3 py-1.5 border transition " +
+                (active ? "text-paper" : "hover:text-paper")
+              }
+              style={{
+                borderColor: p.color,
+                backgroundColor: active ? p.color : "transparent",
+                color: active ? "white" : p.color,
+              }}
+            >
+              {p.name}
+            </button>
+          );
+        })}
+      </div>
+
+      <div className="grid sm:grid-cols-2 gap-6">
       {/* 左：詳細統計 */}
       <div className="space-y-4">
         <h3 className="font-serif text-lg font-bold">
-          {selectedCounty || "點選縣市查看詳情"}
+          {selectedCounty ||
+            (focusCandidate
+              ? `${focusCandidate} 各縣市得票率`
+              : "點選縣市查看詳情")}
         </h3>
+        {!selectedCounty && focusCandidate && focusByCounty && (
+          <ol className="space-y-1 text-xs">
+            {Array.from(focusByCounty.entries())
+              .sort((a, b) => b[1].pct - a[1].pct)
+              .map(([county, info]) => (
+                <li
+                  key={county}
+                  className="flex items-baseline gap-2 border-b border-rule/50 py-1"
+                >
+                  <span
+                    className="w-2 h-4 shrink-0"
+                    style={{ backgroundColor: info.color, opacity: info.pct / 100 + 0.3 }}
+                  />
+                  <span className="w-20 truncate">{county}</span>
+                  <span
+                    className="ml-auto tabular-nums font-bold"
+                    style={{ color: info.color }}
+                  >
+                    {info.pct.toFixed(2)}%
+                  </span>
+                  <span
+                    className={
+                      "text-[10px] px-1.5 py-0.5 " +
+                      (info.rank === 1
+                        ? "bg-accent-red/10 text-accent-red"
+                        : "text-ink-soft")
+                    }
+                  >
+                    #{info.rank}
+                  </span>
+                </li>
+              ))}
+          </ol>
+        )}
         {selectedData?.rows && selectedData.info ? (
           <>
             <p className="text-xs text-ink-soft">
@@ -378,17 +520,28 @@ export function VoteMap({
         >
           {paths.map((p) => {
             const data = winnerByCounty.get(p.name);
+            const focusInfo = focusByCounty?.get(p.name);
             const isSelected = selected === p.name;
             const isHover = hover === p.name;
-            const fill = data
-              ? partyColor(data.winner.party_name, data.winner.color_hex)
-              : "#e5e5e5";
+            let fill: string;
+            let opacity: number;
+            if (focusInfo) {
+              // focusCandidate 模式：以該候選人的政黨色 + 得票率為 alpha
+              fill = focusInfo.color;
+              opacity = 0.18 + (focusInfo.pct / 100) * 0.82;
+            } else if (data) {
+              fill = partyColor(data.winner.party_name, data.winner.color_hex);
+              opacity = isSelected ? 1 : isHover ? 0.95 : 0.85;
+            } else {
+              fill = "#e5e5e5";
+              opacity = 0.85;
+            }
             return (
               <path
                 key={p.name}
                 d={p.d}
                 fill={fill}
-                fillOpacity={isSelected ? 1 : isHover ? 0.95 : 0.85}
+                fillOpacity={opacity}
                 stroke={isSelected ? "#222" : "#fff"}
                 strokeWidth={isSelected ? 0.4 : 0.15}
                 onMouseEnter={() => setHover(p.name)}
@@ -399,6 +552,12 @@ export function VoteMap({
             );
           })}
         </svg>
+        {focusCandidate && (
+          <p className="text-xs text-ink-soft mt-2 text-center">
+            顏色深淺 = 該候選人在該縣市的得票率
+          </p>
+        )}
+      </div>
       </div>
     </div>
   );
