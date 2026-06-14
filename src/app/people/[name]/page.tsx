@@ -189,6 +189,22 @@ export default async function PersonPage({
                       {districtLabel}
                     </div>
                   )}
+                  {r.election_type === "presidential" &&
+                    r.counties_total &&
+                    r.counties_total > 0 && (
+                      <details className="text-xs text-ink-soft mt-1">
+                        <summary
+                          className="cursor-pointer hover:text-ink select-none"
+                          style={{ color }}
+                        >
+                          勝選 {r.counties_won?.length ?? 0} / {r.counties_total}{" "}
+                          縣市
+                        </summary>
+                        <div className="mt-1 leading-relaxed">
+                          {(r.counties_won ?? []).join("、") || "—"}
+                        </div>
+                      </details>
+                    )}
                 </div>
                 <div className="col-span-6 sm:col-span-3 text-sm">
                   <PartyLink name={r.party_name} color={color} />

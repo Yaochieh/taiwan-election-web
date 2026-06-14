@@ -218,6 +218,8 @@ export interface PersonRace {
   elected: number | null;
   platform_count: number;
   image_count: number;
+  counties_won?: string[];
+  counties_total?: number;
 }
 
 export interface PartyHistoryEntry {
