@@ -116,6 +116,7 @@ export interface MayoralHistory {
   candidate_name: string;
   party_name: string | null;
   votes: number;
+  election_note?: string | null;
 }
 
 export interface LegislatorMember {
