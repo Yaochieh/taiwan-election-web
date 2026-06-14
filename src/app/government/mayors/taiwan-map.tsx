@@ -3,9 +3,14 @@
 import { useEffect, useState, useMemo } from "react";
 import { partyColor } from "@/lib/format";
 
-// GeoJSON 中縣市名稱 → DB 中縣市名稱對應（部分舊縣名要轉新）
+// GeoJSON 中縣市名稱 → DB 中縣市名稱對應
+// GeoJSON 用傳統「台」字、桃園還是「縣」；DB 用「臺」字、桃園「市」
 const GEO_NAME_MAP: Record<string, string> = {
   桃園縣: "桃園市",
+  台北市: "臺北市",
+  台中市: "臺中市",
+  台南市: "臺南市",
+  台東縣: "臺東縣",
 };
 
 interface MapData {
