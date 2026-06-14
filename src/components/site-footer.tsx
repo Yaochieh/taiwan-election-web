@@ -41,6 +41,12 @@ export function SiteFooter() {
             更新紀錄
           </a>
           <a
+            href="/timeline"
+            className="underline underline-offset-2 hover:text-ink"
+          >
+            民主大事記
+          </a>
+          <a
             href="/data/downloads"
             className="underline underline-offset-2 hover:text-ink"
           >
