@@ -119,9 +119,24 @@ export async function PlatformsView({
         <Stat label="完全未繳" value={withoutAny} accent="text-accent-red" />
       </div>
 
+      {/* ── 提示：候選人多 + 未選選區 ── */}
+      {!districtParam && candidates.length > 30 && (
+        <div className="border border-rule p-6 bg-rule/30 text-center">
+          <p className="font-serif text-lg mb-2">
+            本場選舉有 {candidates.length} 位候選人
+          </p>
+          <p className="text-sm text-ink-soft">
+            請先從上方「選區」選一個區，避免頁面過大
+          </p>
+        </div>
+      )}
+
       {/* ── 候選人清單 ── */}
       <div className="space-y-8">
-        {candidates.map((c) => {
+        {(!districtParam && candidates.length > 30
+          ? []
+          : candidates
+        ).map((c) => {
           const cPlatforms = allPlatforms.filter(
             (p) => p.candidate_id === c.candidate_id,
           );
