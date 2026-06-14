@@ -50,6 +50,31 @@ export default function RootLayout({
         <SiteHeader />
         <main className="flex-1">{children}</main>
         <SiteFooter />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              "@context": "https://schema.org",
+              "@type": "WebSite",
+              name: "正至 — 台灣選舉資訊平台",
+              alternateName: "ZhengZhi · Taiwan Election",
+              url: "https://taiwan-election-web.vercel.app",
+              description:
+                "整合中選會選舉公報，提供候選人政見、歷屆當選結果、政黨席次的查詢與比對。",
+              inLanguage: "zh-TW",
+              license: "https://opensource.org/license/mit",
+              potentialAction: {
+                "@type": "SearchAction",
+                target: {
+                  "@type": "EntryPoint",
+                  urlTemplate:
+                    "https://taiwan-election-web.vercel.app/search?q={search_term_string}",
+                },
+                "query-input": "required name=search_term_string",
+              },
+            }),
+          }}
+        />
       </body>
     </html>
   );
