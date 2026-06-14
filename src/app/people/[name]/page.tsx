@@ -189,6 +189,14 @@ export default async function PersonPage({
                       {districtLabel}
                     </div>
                   )}
+                  {r.background &&
+                    (r.background.includes("罷免") ||
+                      r.background.includes("辭職") ||
+                      r.background.includes("撤銷")) && (
+                      <div className="text-xs text-accent-red mt-1">
+                        ⚠ {r.background}
+                      </div>
+                    )}
                   {r.election_type === "presidential" &&
                     r.counties_total &&
                     r.counties_total > 0 && (

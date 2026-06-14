@@ -219,6 +219,7 @@ export interface PersonRace {
   elected: number | null;
   platform_count: number;
   image_count: number;
+  background?: string | null;
   counties_won?: string[];
   counties_total?: number;
 }
