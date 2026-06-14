@@ -196,7 +196,7 @@ export default async function PartyPage({
           <div className="border-t-2 border-ink pt-3">
             <div className="grid grid-cols-[60px_1fr_60px] gap-3 items-center">
               {partyLegTrend.map((r) => {
-                const pct = (r.seats / 79) * 100;
+                const pct = (r.seats / 113) * 100;
                 return (
                   <div key={r.year} className="contents">
                     <div className="font-serif tabular-nums">{r.year}</div>
@@ -219,8 +219,7 @@ export default async function PartyPage({
               })}
             </div>
             <p className="text-xs text-ink-soft mt-3">
-              基準：每屆 79 席（73 區域 + 3 山地 + 3 平地原住民），不含 34
-              席不分區。
+              基準：每屆 113 席（73 區域 + 6 原住民 + 34 不分區，Hare quota）。
             </p>
           </div>
         </section>

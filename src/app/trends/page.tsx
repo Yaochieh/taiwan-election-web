@@ -62,14 +62,14 @@ export default async function TrendsPage() {
 
       <section>
         <h2 className="font-serif text-2xl font-bold mb-3 flex items-baseline gap-3">
-          立委席次（區域 + 原住民）
+          立委席次（含不分區）
           <span className="text-sm font-normal text-ink-soft">
             2008 — 2024（5 屆）
           </span>
         </h2>
         <p className="text-sm text-ink-soft mb-6 max-w-2xl leading-relaxed">
-          每屆立委的 79 席（區域 73 + 山地 3 + 平地 3）各黨拿下多少。
-          不含 34 席不分區。
+          每屆 113 席各黨分布：73 區域 + 6 原住民 + 34 不分區。
+          不分區依政黨票得票率以 Hare quota 配額計算。
         </p>
         <LegislativeChart data={legislative} />
       </section>

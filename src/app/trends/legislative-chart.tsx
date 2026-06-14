@@ -8,8 +8,8 @@ interface Props {
   data: LegislativeSeatTrend[];
 }
 
-// 區域+原住民共 79 席（73 區域 + 3 山地 + 3 平地）
-const TOTAL_SEATS = 79;
+// 113 席（73 區域 + 3 山地 + 3 平地 + 34 不分區）
+const TOTAL_SEATS = 113;
 
 export function LegislativeChart({ data }: Props) {
   const { years, partyMap } = useMemo(() => {
@@ -114,7 +114,7 @@ export function LegislativeChart({ data }: Props) {
         ))}
       </div>
       <p className="text-xs text-ink-soft pt-2">
-        資料含區域立委（73 席）+ 山地原住民（3 席）+ 平地原住民（3 席），不含不分區。
+        共 113 席：區域立委（73 席）+ 山地原住民（3 席）+ 平地原住民（3 席）+ 不分區（34 席，Hare quota）。
       </p>
     </div>
   );
