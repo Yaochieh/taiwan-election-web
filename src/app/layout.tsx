@@ -22,12 +22,17 @@ export const metadata: Metadata = {
   title: "正至 — 台灣選舉資訊平台",
   description:
     "整合中選會選舉公報，提供候選人政見、歷屆結果、政黨席次的查詢與比對。希望降低公民參與政治的門檻。",
-  metadataBase: new URL("https://taiwan-election.app"),
+  metadataBase: new URL("https://taiwan-election-web.vercel.app"),
   openGraph: {
     title: "正至 — 台灣選舉資訊平台",
     description: "整合中選會選舉公報，提供候選人政見、歷屆結果、政黨席次的查詢與比對。",
     type: "website",
     locale: "zh_TW",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "正至 — 台灣選舉資訊平台",
+    description: "整合中選會選舉公報，提供候選人政見、歷屆結果、政黨席次的查詢與比對。",
   },
 };
 
