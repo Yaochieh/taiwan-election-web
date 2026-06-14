@@ -112,6 +112,18 @@ const EVENTS: Event[] = [
     desc: "立法院藍白聯手三讀國會職權修正案；大批民眾包圍立院抗議，後憲法法庭判定多條違憲。",
     type: "milestone",
   },
+  {
+    date: "2025-07-26",
+    title: "大罷免第一波 24 立委 + 1 市長",
+    desc: "公民團體推動針對 24 位國民黨立委 + 新竹市長高虹安的罷免投票，全部未通過門檻。",
+    type: "election",
+  },
+  {
+    date: "2025-08-23",
+    title: "大罷免第二波 7 立委",
+    desc: "針對北市/新竹/桃園剩餘 7 位國民黨立委的罷免案，仍全數未通過。「大罷免」運動告一段落。",
+    type: "election",
+  },
 ];
 
 const TYPE_STYLE: Record<Event["type"], { label: string; color: string }> = {
