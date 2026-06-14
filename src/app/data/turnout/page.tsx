@@ -117,21 +117,21 @@ export default function TurnoutPage() {
 
       <Table
         rows={PRESIDENTIAL}
-        color="#000095"
+        color="#2d2d2d"
         title="總統選舉"
         subtitle="1996 年首次直選後共 8 屆。1996 投票率 76%，最低 2016 年 66%，最高 2000 年 83%。"
       />
 
       <Table
         rows={MAYORAL}
-        color="#1B9431"
+        color="#5d5d5d"
         title="縣市長（含直轄市）"
         subtitle="九合一選舉（2010 起）四年一次。2022 年投票率僅 59.86%，創新低。"
       />
 
       <Table
         rows={LEGISLATIVE}
-        color="#FF6310"
+        color="#8d8d8d"
         title="立法委員"
         subtitle="與總統合辦時投票率拉升。單獨舉辦的 2008、2004 立委選舉投票率較低（58–60%）。"
       />
