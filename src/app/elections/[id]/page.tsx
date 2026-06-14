@@ -92,13 +92,18 @@ export default async function ElectionDetailPage({
           )}
         </div>
         {!isFuture && results.length > 0 && (
-          <div className="mt-4 flex flex-wrap gap-3">
+          <div className="mt-4 flex flex-wrap items-baseline gap-3">
             <Link
               href={`/platforms?election=${electionId}`}
               className="inline-block px-4 py-2 bg-ink text-paper text-sm hover:opacity-85 transition"
             >
               查看候選人政見 →
             </Link>
+            {hasPlatform.size > 0 && (
+              <span className="text-xs text-ink-soft">
+                {hasPlatform.size} / {candidatesStatus.length} 位候選人有政見資料
+              </span>
+            )}
           </div>
         )}
       </header>
