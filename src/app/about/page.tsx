@@ -40,9 +40,9 @@ export default function AboutPage() {
         <section>
           <h2 className="font-serif text-2xl font-bold mb-3">目前資料覆蓋</h2>
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 text-sm">
-            <Stat label="收錄選舉" value="87 場" desc="1994 年起" />
-            <Stat label="候選人" value="9,008 位" desc="跨選舉聚合" />
-            <Stat label="得票紀錄" value="8,336 筆" desc="含縣市/選區層級" />
+            <Stat label="收錄選舉" value="88 場" desc="1994 年起" />
+            <Stat label="候選人" value="9,043 位" desc="跨選舉聚合" />
+            <Stat label="得票紀錄" value="8,851 筆" desc="含縣市/選區層級" />
             <Stat label="鄉鎮級得票" value="18,418 筆" desc="總統 1996–2024" />
             <Stat label="政見全文" value="592 條" desc="OCR + PDF 解析" />
             <Stat label="政黨" value="410 個" desc="含歷史小黨" />
