@@ -5,35 +5,34 @@ interface Props {
   data: CountyWinnerCell[];
   title: string;
   desc: string;
+  prefix?: string;
 }
 
-// 縣市排序：北 → 中 → 南 → 東 → 外島
-const COUNTY_ORDER = [
-  "臺北市",
-  "新北市",
-  "基隆市",
-  "桃園市",
-  "新竹市",
-  "新竹縣",
-  "苗栗縣",
-  "臺中市",
-  "彰化縣",
-  "南投縣",
-  "雲林縣",
-  "嘉義市",
-  "嘉義縣",
-  "臺南市",
-  "高雄市",
-  "屏東縣",
-  "宜蘭縣",
-  "花蓮縣",
-  "臺東縣",
-  "澎湖縣",
-  "金門縣",
-  "連江縣",
+// 縣市分區
+const REGION_GROUPS: { label: string; counties: string[] }[] = [
+  {
+    label: "北部",
+    counties: ["臺北市", "新北市", "基隆市", "桃園市", "新竹市", "新竹縣"],
+  },
+  {
+    label: "中部",
+    counties: ["苗栗縣", "臺中市", "彰化縣", "南投縣", "雲林縣"],
+  },
+  {
+    label: "南部",
+    counties: ["嘉義市", "嘉義縣", "臺南市", "高雄市", "屏東縣"],
+  },
+  { label: "東部", counties: ["宜蘭縣", "花蓮縣", "臺東縣"] },
+  { label: "外島", counties: ["澎湖縣", "金門縣", "連江縣"] },
 ];
 
-export function CountyHeatmap({ data, title, desc }: Props) {
+const COUNTY_ORDER = REGION_GROUPS.flatMap((g) => g.counties);
+const COUNTY_TO_REGION = new Map<string, string>();
+for (const g of REGION_GROUPS) {
+  for (const c of g.counties) COUNTY_TO_REGION.set(c, g.label);
+}
+
+export function CountyHeatmap({ data, title, desc, prefix }: Props) {
   // 找所有年份
   const years = Array.from(new Set(data.map((d) => d.year))).sort();
   // 建索引：year × county → cell
@@ -57,13 +56,16 @@ export function CountyHeatmap({ data, title, desc }: Props) {
   }
 
   return (
-    <section className="mb-16">
-      <h2 className="font-serif text-2xl font-bold mb-3 flex items-baseline gap-3">
-        {title}
-        <span className="text-sm font-normal text-ink-soft">
+    <div>
+      <div className="flex items-baseline gap-3 mb-3">
+        {prefix && (
+          <span className="font-serif text-3xl text-ink-soft">{prefix}</span>
+        )}
+        <h2 className="font-serif text-2xl font-bold">{title}</h2>
+        <span className="text-sm text-ink-soft">
           {counties.length} 縣市 × {years.length} 屆
         </span>
-      </h2>
+      </div>
       <p className="text-sm text-ink-soft mb-6 max-w-2xl leading-relaxed">
         {desc}
       </p>
@@ -83,9 +85,24 @@ export function CountyHeatmap({ data, title, desc }: Props) {
             </tr>
           </thead>
           <tbody>
-            {counties.map((c) => (
-              <tr key={c} className="border-b border-rule/40">
+            {counties.map((c, idx) => {
+              const region = COUNTY_TO_REGION.get(c);
+              const prevRegion = idx > 0 ? COUNTY_TO_REGION.get(counties[idx - 1]) : null;
+              const isFirstOfRegion = region && region !== prevRegion;
+              return (
+              <tr
+                key={c}
+                className={
+                  "border-b border-rule/30 " +
+                  (isFirstOfRegion ? "border-t-2 border-t-ink/60" : "")
+                }
+              >
                 <td className="px-2 py-0.5 sticky left-0 bg-paper text-ink-soft whitespace-nowrap">
+                  {isFirstOfRegion && (
+                    <span className="inline-block text-[10px] text-accent-red font-bold mr-1.5 tracking-wider">
+                      {region}
+                    </span>
+                  )}
                   {c}
                 </td>
                 {years.map((y) => {
@@ -115,7 +132,8 @@ export function CountyHeatmap({ data, title, desc }: Props) {
                   );
                 })}
               </tr>
-            ))}
+              );
+            })}
           </tbody>
           {/* 每年各黨總計 */}
           <tfoot className="border-t-2 border-ink">
@@ -159,6 +177,6 @@ export function CountyHeatmap({ data, title, desc }: Props) {
           </tfoot>
         </table>
       </div>
-    </section>
+    </div>
   );
 }
