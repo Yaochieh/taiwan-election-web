@@ -104,11 +104,16 @@ export async function CandidatePlatformCard({
       {/* ── 文字政見 ── */}
       {hasText && (
         <ol className="space-y-4 mb-6">
-          {platforms.map((p) => (
+          {platforms.map((p) => {
+            // 若內文本身已是「1. 2. 3.」條列，就不顯示外層 seq 避免重複
+            const contentIsNumbered = /^\s*\d+[\.\)、]/.test(p.content || "");
+            return (
             <li key={p.seq} className="flex gap-4">
-              <span className="font-serif text-2xl text-ink-soft tabular-nums shrink-0 min-w-[2ch]">
-                {p.seq}.
-              </span>
+              {!contentIsNumbered && (
+                <span className="font-serif text-2xl text-ink-soft tabular-nums shrink-0 min-w-[2ch]">
+                  {p.seq}.
+                </span>
+              )}
               <div className="flex-1">
                 <p className="leading-[1.85] whitespace-pre-wrap">{p.content}</p>
                 {(p.source_url || p.note) && (
@@ -132,7 +137,8 @@ export async function CandidatePlatformCard({
                 )}
               </div>
             </li>
-          ))}
+            );
+          })}
         </ol>
       )}
 
