@@ -27,23 +27,34 @@ export default async function TopicsPage() {
       </header>
 
       <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
-        {topics.map((t) => (
-          <Link
-            key={t.topic_id}
-            href={`/topics/${encodeURIComponent(t.name)}`}
-            className="border border-rule p-4 hover:border-ink hover:bg-rule/20 transition group"
-          >
-            <div className="flex items-baseline gap-3">
-              <span className="text-3xl">{t.icon}</span>
-              <span className="font-serif text-xl font-bold group-hover:text-accent-red transition">
-                {t.name}
-              </span>
-              <span className="ml-auto text-sm text-ink-soft tabular-nums">
-                {t.platform_count}
-              </span>
-            </div>
-          </Link>
-        ))}
+        {topics
+          .slice()
+          .sort((a, b) => b.platform_count - a.platform_count)
+          .map((t) => {
+            const maxCount = Math.max(...topics.map((x) => x.platform_count), 1);
+            const bar = (t.platform_count / maxCount) * 100;
+            return (
+              <Link
+                key={t.topic_id}
+                href={`/topics/${encodeURIComponent(t.name)}`}
+                className="border border-rule p-4 hover:border-ink hover:bg-rule/20 transition group relative overflow-hidden"
+              >
+                <div
+                  className="absolute inset-y-0 left-0 bg-rule/40 group-hover:bg-accent-red/10 transition"
+                  style={{ width: `${bar}%` }}
+                />
+                <div className="relative flex items-baseline gap-3">
+                  <span className="text-3xl">{t.icon}</span>
+                  <span className="font-serif text-xl font-bold group-hover:text-accent-red transition">
+                    {t.name}
+                  </span>
+                  <span className="ml-auto text-sm text-ink-soft tabular-nums">
+                    {t.platform_count} 條
+                  </span>
+                </div>
+              </Link>
+            );
+          })}
       </div>
 
       <p className="text-xs text-ink-soft border-t border-rule pt-6 mt-12 leading-relaxed">
