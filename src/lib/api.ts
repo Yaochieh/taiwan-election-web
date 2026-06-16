@@ -192,6 +192,37 @@ export const getTopicPlatforms = (
 export const getTopicStats = (name: string) =>
   fetcher<TopicStats>(`/topics/${encodeURIComponent(name)}/stats`);
 
+export type AutoTarget = {
+  target_id: number;
+  person_name: string;
+  title: string;
+  description: string;
+  metric_unit: string;
+  target_value: number;
+  election_id: number | null;
+  source_platform_id: number | null;
+  status: string;
+  election_date: string | null;
+  election_name: string | null;
+  election_type: string | null;
+  election_desc: string | null;
+  party_name: string | null;
+  color_hex: string | null;
+};
+export const getTopicAutoTargets = (name: string) =>
+  fetcher<AutoTarget[]>(`/topics/${encodeURIComponent(name)}/targets`);
+
+export type TopicDistribution = {
+  topic: string;
+  icon: string;
+  n: number;
+  total_score: number;
+};
+export const getPersonTopicDistribution = (name: string) =>
+  fetcher<TopicDistribution[]>(
+    `/people/${encodeURIComponent(name)}/topic-distribution`,
+  );
+
 // ── search ─────────────────────────────────────────────────
 export const search = (q: string, limit = 30) =>
   fetcher<SearchResult>(`/search?q=${encodeURIComponent(q)}&limit=${limit}`);

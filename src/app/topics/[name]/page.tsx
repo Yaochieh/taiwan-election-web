@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { getTopicPlatforms, getTopicStats, getTopics } from "@/lib/api";
+import { getTopicPlatforms, getTopicStats, getTopics, getTopicAutoTargets } from "@/lib/api";
 import { partyColor, formatElectionLabelShort } from "@/lib/format";
 import { PersonLink, PartyLink } from "@/components/entity-links";
 
@@ -28,7 +28,7 @@ export default async function TopicDetailPage({
   const name = decodeURIComponent(encoded);
   const q = await searchParams;
 
-  const [stats, platforms, allTopics] = await Promise.all([
+  const [stats, platforms, allTopics, autoTargets] = await Promise.all([
     getTopicStats(name).catch(() => null),
     getTopicPlatforms(name, {
       election_type: q.election_type,
@@ -36,6 +36,7 @@ export default async function TopicDetailPage({
       person: q.person,
     }).catch(() => []),
     getTopics().catch(() => []),
+    getTopicAutoTargets(name).catch(() => []),
   ]);
   if (!stats) notFound();
 
@@ -194,6 +195,68 @@ export default async function TopicDetailPage({
                     </span>
                   </span>
                 </Link>
+              );
+            })}
+          </div>
+        </section>
+      )}
+
+      {/* 量化承諾（auto-extracted） */}
+      {autoTargets.length > 0 && (
+        <section className="mb-12">
+          <h2 className="font-serif text-2xl font-bold mb-3">
+            可追蹤的量化承諾
+            <span className="ml-3 text-sm text-ink-soft font-normal">
+              {autoTargets.length} 個
+            </span>
+          </h2>
+          <p className="text-sm text-ink-soft mb-4 leading-relaxed">
+            自動從政見原文抽取的數字承諾（如「4 年內 5 萬戶社宅」）。
+            後續可接公開資料來源追蹤達標。
+          </p>
+          <div className="space-y-2">
+            {autoTargets.slice(0, 15).map((t) => {
+              const color = partyColor(t.party_name, t.color_hex);
+              return (
+                <div
+                  key={t.target_id}
+                  className="border border-rule p-3 text-sm"
+                  style={{ borderLeftColor: color, borderLeftWidth: 4 }}
+                >
+                  <div className="flex items-baseline justify-between gap-3 mb-1 flex-wrap">
+                    <div className="flex items-baseline gap-2">
+                      <PersonLink
+                        name={t.person_name}
+                        color={color}
+                        className="font-medium"
+                      />
+                      <span className="text-xs text-ink-soft">
+                        {t.party_name || "—"}
+                      </span>
+                    </div>
+                    <div className="text-right">
+                      <span className="font-serif text-xl font-bold tabular-nums">
+                        {t.target_value >= 10000
+                          ? `${(t.target_value / 10000).toFixed(1)} 萬`
+                          : t.target_value.toLocaleString()}
+                      </span>
+                      <span className="ml-1 text-xs text-ink-soft">
+                        {t.metric_unit}
+                      </span>
+                    </div>
+                  </div>
+                  <p className="text-xs text-ink-soft leading-relaxed">
+                    「{t.description.length > 150
+                      ? t.description.slice(0, 150) + "…"
+                      : t.description}」
+                  </p>
+                  {t.election_date && (
+                    <p className="text-[10px] text-ink-soft mt-1">
+                      出處：{t.election_date.slice(0, 7)}{" "}
+                      {t.election_name?.slice(0, 20)}
+                    </p>
+                  )}
+                </div>
               );
             })}
           </div>

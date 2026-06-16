@@ -4,7 +4,9 @@ import {
   getPersonProfile,
   candidatePhotoUrl,
   getPersonTargets,
+  getPersonTopicDistribution,
 } from "@/lib/api";
+import { TopicRadar } from "@/components/topic-radar";
 import {
   cleanDistrict,
   formatElectionLabelShort,
@@ -32,9 +34,10 @@ export default async function PersonPage({
   const { name: encodedName } = await params;
   const name = decodeURIComponent(encodedName);
 
-  const [profile, targets] = await Promise.all([
+  const [profile, targets, topicDist] = await Promise.all([
     getPersonProfile(name).catch(() => null),
     getPersonTargets(name).catch(() => []),
+    getPersonTopicDistribution(name).catch(() => []),
   ]);
   if (!profile) notFound();
 
@@ -241,6 +244,21 @@ export default async function PersonPage({
           </section>
         );
       })()}
+
+      {/* ── 政見主題分布（雷達圖） ── */}
+      {topicDist.length > 0 && (
+        <section className="mb-12">
+          <h2 className="font-serif text-2xl font-bold mb-4">
+            政見主題分布
+            <span className="ml-3 text-sm text-ink-soft font-normal">
+              {topicDist.length} 個主題
+            </span>
+          </h2>
+          <div className="border border-rule p-5">
+            <TopicRadar data={topicDist} accent={accent} />
+          </div>
+        </section>
+      )}
 
       {/* ── 歷次參選紀錄 ── */}
       <section className="mb-12">
