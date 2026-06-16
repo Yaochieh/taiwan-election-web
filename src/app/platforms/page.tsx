@@ -11,10 +11,15 @@ export const metadata = {
 export default async function PlatformsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ election?: string; district?: string }>;
+  searchParams: Promise<{ election?: string; district?: string; type?: string }>;
 }) {
   const params = await searchParams;
-  const elections = await getElectionsWithPlatforms().catch(() => []);
+  const allElections = await getElectionsWithPlatforms().catch(() => []);
+  const typeFilter = params.type || "all";
+  const elections =
+    typeFilter === "all"
+      ? allElections
+      : allElections.filter((e) => e.type === typeFilter);
   const electionId = params.election
     ? Number(params.election)
     : elections[0]?.election_id;
@@ -42,6 +47,32 @@ export default async function PlatformsPage({
           若候選人未在公報刊登政見，將特別標註，民眾可至公報原檔自行查證。
         </p>
       </header>
+
+      {/* 類型切換 */}
+      <div className="mb-6 flex flex-wrap gap-2">
+        {[
+          { value: "all", label: "全部" },
+          { value: "presidential", label: "總統" },
+          { value: "legislative", label: "立法委員" },
+          { value: "mayoral", label: "縣市長" },
+        ].map((t) => {
+          const active = t.value === typeFilter;
+          return (
+            <a
+              key={t.value}
+              href={t.value === "all" ? "/platforms" : `/platforms?type=${t.value}`}
+              className={
+                "px-4 py-1.5 text-sm border transition " +
+                (active
+                  ? "bg-ink text-paper border-ink"
+                  : "border-rule text-ink-soft hover:border-ink hover:text-ink")
+              }
+            >
+              {t.label}
+            </a>
+          );
+        })}
+      </div>
 
       <Suspense fallback={<div className="text-ink-soft">載入中…</div>}>
         <PlatformsView
