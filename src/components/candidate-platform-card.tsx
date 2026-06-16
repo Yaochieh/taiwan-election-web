@@ -116,25 +116,53 @@ export async function CandidatePlatformCard({
               )}
               <div className="flex-1">
                 <p className="leading-[1.85] whitespace-pre-wrap">{p.content}</p>
-                {(p.source_url || p.note || p.content_raw) && (
-                  <div className="mt-1.5 flex flex-wrap items-center gap-x-3 text-[11px] text-ink-soft">
-                    {p.note && (
-                      <span className="inline-block bg-rule/60 text-ink px-1.5 py-0.5">
-                        {p.note}
-                      </span>
-                    )}
-                    {p.source_url && (
-                      <a
-                        href={p.source_url}
-                        target="_blank"
-                        rel="noopener"
-                        className="hover:text-accent-red underline-offset-4 hover:underline"
-                      >
-                        資料來源 →
-                      </a>
-                    )}
-                  </div>
-                )}
+                {(p.source_url || p.note || p.content_raw) && (() => {
+                  // 解析 note: 找出 tag (含 [人工潤稿] / [OCR 清理] 等) 與來源說明
+                  const note = p.note || "";
+                  const tags = note.match(/\[[^\]]+\]/g) || [];
+                  // 「來源：」之後當 source text
+                  const srcMatch = note.match(/來源[：:]\s*(.+?)(?:\s*·\s*\[|$)/);
+                  const sourceText = srcMatch ? srcMatch[1].trim() : null;
+                  return (
+                    <div className="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-[11px] text-ink-soft">
+                      {tags.map((t, ti) => {
+                        const isPolish = t.includes("人工潤稿");
+                        const isClean = t.includes("OCR");
+                        const isSplit = t.includes("拆條");
+                        return (
+                          <span
+                            key={ti}
+                            className={
+                              "inline-block px-1.5 py-0.5 text-[10px] " +
+                              (isPolish
+                                ? "bg-accent-red/15 text-accent-red border border-accent-red/30"
+                                : isClean || isSplit
+                                  ? "bg-rule/60 text-ink"
+                                  : "bg-rule/40 text-ink-soft")
+                            }
+                          >
+                            {isPolish ? "人工潤稿" : isClean ? "OCR 清理" : isSplit ? "自動拆條" : t.replace(/[\[\]]/g, "")}
+                          </span>
+                        );
+                      })}
+                      {sourceText && (
+                        <span className="text-ink-soft">
+                          來源：{sourceText}
+                        </span>
+                      )}
+                      {p.source_url && (
+                        <a
+                          href={p.source_url}
+                          target="_blank"
+                          rel="noopener"
+                          className="hover:text-accent-red underline-offset-4 hover:underline"
+                        >
+                          原始公報 →
+                        </a>
+                      )}
+                    </div>
+                  );
+                })()}
                 {p.content_raw && p.content_raw !== p.content && (
                   <details className="mt-2">
                     <summary className="text-[11px] text-ink-soft cursor-pointer hover:text-accent-red">
