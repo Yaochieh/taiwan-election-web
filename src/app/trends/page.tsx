@@ -2,10 +2,13 @@ import {
   getPresidentialTrend,
   getPartyListTrend,
   getLegislativeSeatTrend,
+  getPresidentialCountyWinners,
+  getMayoralCountyWinners,
 } from "@/lib/api";
 import { PresidentialChart } from "./presidential-chart";
 import { PartyListChart } from "./party-list-chart";
 import { LegislativeChart } from "./legislative-chart";
+import { CountyHeatmap } from "./county-heatmap";
 
 export const metadata = {
   title: "趨勢分析 · 正至",
@@ -13,10 +16,18 @@ export const metadata = {
 };
 
 export default async function TrendsPage() {
-  const [presidential, partyList, legislative] = await Promise.all([
+  const [
+    presidential,
+    partyList,
+    legislative,
+    presCounty,
+    mayoralCounty,
+  ] = await Promise.all([
     getPresidentialTrend().catch(() => []),
     getPartyListTrend().catch(() => []),
     getLegislativeSeatTrend().catch(() => []),
+    getPresidentialCountyWinners().catch(() => []),
+    getMayoralCountyWinners().catch(() => []),
   ]);
 
   return (
@@ -73,6 +84,18 @@ export default async function TrendsPage() {
         </p>
         <LegislativeChart data={legislative} />
       </section>
+
+      <CountyHeatmap
+        data={presCounty}
+        title="總統選舉縣市政治版圖"
+        desc="每屆總統選舉中各縣市勝出政黨的色塊熱力圖。數字為該政黨在該縣市得票率（≥30% 才顯示），下方統計每屆各黨贏的縣市數。"
+      />
+
+      <CountyHeatmap
+        data={mayoralCounty}
+        title="縣市長選舉政治版圖"
+        desc="歷屆縣市長選舉各縣市勝出政黨。1994 年起逐步建立直選傳統，2010 年五都改制；2022 大選國民黨拿下 13 縣市。"
+      />
     </div>
   );
 }

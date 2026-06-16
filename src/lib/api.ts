@@ -117,6 +117,19 @@ export type LegislativeSeatTrend = {
 export const getLegislativeSeatTrend = () =>
   fetcher<LegislativeSeatTrend[]>("/legislature/trend/seats");
 
+export type CountyWinnerCell = {
+  year: string;
+  county: string;
+  party: string;
+  color_hex: string | null;
+  pct: number;
+  candidate?: string;
+};
+export const getPresidentialCountyWinners = () =>
+  fetcher<CountyWinnerCell[]>("/trends/presidential/county-winners");
+export const getMayoralCountyWinners = () =>
+  fetcher<CountyWinnerCell[]>("/trends/mayoral/county-winners");
+
 // ── search ─────────────────────────────────────────────────
 export const search = (q: string, limit = 30) =>
   fetcher<SearchResult>(`/search?q=${encodeURIComponent(q)}&limit=${limit}`);
