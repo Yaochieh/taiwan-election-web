@@ -36,12 +36,13 @@ export function TopicRadar({ data, accent }: Props) {
   const polygon = points.map((p) => `${p.x},${p.y}`).join(" ");
 
   return (
-    <div className="grid sm:grid-cols-[200px_1fr] gap-6 items-center">
+    <div className="grid sm:grid-cols-[260px_1fr] gap-6 items-center">
       {/* SVG 雷達圖 */}
       <svg
-        viewBox="-40 -10 280 220"
-        className="w-full max-w-[240px] mx-auto"
+        viewBox="-50 -20 300 240"
+        className="w-full max-w-[260px] mx-auto block"
         style={{ overflow: "visible" }}
+        preserveAspectRatio="xMidYMid meet"
       >
         {/* 同心圓刻度 */}
         {[0.33, 0.66, 1].map((k) => (
@@ -80,7 +81,7 @@ export function TopicRadar({ data, accent }: Props) {
         {points.map((p, i) => (
           <circle key={i} cx={p.x} cy={p.y} r="2.5" fill={accent} />
         ))}
-        {/* Label */}
+        {/* Label：圖示與文字分行，避免被切 */}
         {points.map((p, i) => {
           const anchor =
             p.labelX < cx - 5 ? "end" : p.labelX > cx + 5 ? "start" : "middle";
@@ -89,12 +90,17 @@ export function TopicRadar({ data, accent }: Props) {
               key={i}
               x={p.labelX}
               y={p.labelY}
-              fontSize="9"
+              fontSize="10"
               textAnchor={anchor}
               dominantBaseline="middle"
-              fill="#333"
+              fill="#222"
             >
-              {p.topic.icon} {p.topic.topic}
+              <tspan x={p.labelX} dy="-0.4em" fontSize="10">
+                {p.topic.icon}
+              </tspan>
+              <tspan x={p.labelX} dy="1.1em" fontSize="9">
+                {p.topic.topic}
+              </tspan>
             </text>
           );
         })}
