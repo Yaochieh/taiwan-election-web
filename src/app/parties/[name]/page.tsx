@@ -235,33 +235,55 @@ export default async function PartyPage({
             </span>
           </h2>
           <div className="border-t-2 border-ink">
-            {mayors
-              .sort((a, b) => b.date.localeCompare(a.date))
-              .map((m, i) => (
-                <article
-                  key={i}
-                  className="grid grid-cols-12 gap-3 py-3 border-b border-rule items-baseline"
-                >
-                  <div className="col-span-3 sm:col-span-2 font-serif tabular-nums">
-                    {m.date.slice(0, 4)}
-                  </div>
-                  <div className="col-span-5 sm:col-span-3">
-                    <PersonLink
-                      name={m.candidate_name}
-                      color={color}
-                      className="font-medium"
-                    />
-                  </div>
-                  <div className="col-span-4 sm:col-span-3 text-sm text-ink-soft">
-                    {cleanDistrict(m.district) || m.district || ""}
-                  </div>
-                  <div className="col-span-12 sm:col-span-4 text-sm text-ink-soft text-right">
-                    {m.votes
-                      ? `得票 ${new Intl.NumberFormat("zh-TW").format(m.votes)}`
-                      : ""}
-                  </div>
-                </article>
-              ))}
+            {(() => {
+              // 按年份分組
+              const byYear = new Map<string, typeof mayors>();
+              for (const m of mayors) {
+                const year = m.date.slice(0, 4);
+                if (!byYear.has(year)) byYear.set(year, []);
+                byYear.get(year)!.push(m);
+              }
+              const years = Array.from(byYear.keys()).sort((a, b) =>
+                b.localeCompare(a),
+              );
+              return years.map((year) => {
+                const list = byYear
+                  .get(year)!
+                  .sort((a, b) =>
+                    (cleanDistrict(a.district) || "").localeCompare(
+                      cleanDistrict(b.district) || "",
+                      "zh-TW",
+                    ),
+                  );
+                return (
+                  <article
+                    key={year}
+                    className="grid grid-cols-12 gap-3 py-3 border-b border-rule items-baseline"
+                  >
+                    <div className="col-span-2 font-serif tabular-nums text-lg">
+                      {year}
+                    </div>
+                    <div className="col-span-10 flex flex-wrap gap-x-3 gap-y-1.5">
+                      {list.map((m, i) => (
+                        <span
+                          key={i}
+                          className="text-sm whitespace-nowrap"
+                        >
+                          <span className="text-ink-soft mr-1">
+                            {cleanDistrict(m.district) || m.district}
+                          </span>
+                          <PersonLink
+                            name={m.candidate_name}
+                            color={color}
+                            className="font-medium"
+                          />
+                        </span>
+                      ))}
+                    </div>
+                  </article>
+                );
+              });
+            })()}
           </div>
         </section>
       )}
