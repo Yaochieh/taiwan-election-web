@@ -282,20 +282,7 @@ export function VoteMap({
     return { paths };
   }, [geo]);
 
-  if (!geo) {
-    return (
-      <div className="border border-rule p-12 text-center text-ink-soft">
-        地圖載入中…
-      </div>
-    );
-  }
-
-  const selectedCounty = selected || hover;
-  const selectedData = selectedCounty
-    ? { rows: byCounty.get(selectedCounty), info: winnerByCounty.get(selectedCounty) }
-    : null;
-
-  // 把所有候選人去重列出（pair 顯示）
+  // 把所有候選人去重列出（pair 顯示）— 必須在條件 return 前呼叫
   const candidatePairs = useMemo(() => {
     const seen = new Set<string>();
     const pairs: { name: string; party: string | null; color: string }[] = [];
@@ -361,6 +348,19 @@ export function VoteMap({
     }
     return m;
   }, [focusCandidate, byCounty]);
+
+  if (!geo) {
+    return (
+      <div className="border border-rule p-12 text-center text-ink-soft">
+        地圖載入中…
+      </div>
+    );
+  }
+
+  const selectedCounty = selected || hover;
+  const selectedData = selectedCounty
+    ? { rows: byCounty.get(selectedCounty), info: winnerByCounty.get(selectedCounty) }
+    : null;
 
   return (
     <div className="space-y-5">
