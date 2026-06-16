@@ -201,6 +201,42 @@ export default async function TopicDetailPage({
         </section>
       )}
 
+      {/* 政府開放資料來源 */}
+      {stats.data_sources && stats.data_sources.length > 0 && (
+        <section className="mb-12">
+          <h2 className="font-serif text-2xl font-bold mb-3">
+            想追蹤達標？
+            <span className="ml-3 text-sm text-ink-soft font-normal">
+              {stats.data_sources.length} 個政府公開資料來源
+            </span>
+          </h2>
+          <p className="text-sm text-ink-soft mb-4 leading-relaxed">
+            這些是與 {name} 相關的政府公開資料 / 統計平台。可以前往對照各承諾是否達標。
+          </p>
+          <div className="grid sm:grid-cols-2 gap-3">
+            {stats.data_sources.map((s, i) => (
+              <a
+                key={i}
+                href={s.url}
+                target="_blank"
+                rel="noopener"
+                className="border border-rule p-3 hover:border-ink hover:bg-rule/30 transition block"
+              >
+                <div className="font-medium text-sm mb-0.5">{s.label}</div>
+                {s.notes && (
+                  <div className="text-xs text-ink-soft leading-relaxed">
+                    {s.notes}
+                  </div>
+                )}
+                <div className="text-[10px] text-ink-soft mt-1 truncate">
+                  {s.url} →
+                </div>
+              </a>
+            ))}
+          </div>
+        </section>
+      )}
+
       {/* 量化承諾（auto-extracted） */}
       {autoTargets.length > 0 && (
         <section className="mb-12">

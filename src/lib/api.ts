@@ -165,6 +165,7 @@ export type TopicStats = {
     total_score: number;
   }[];
   by_type: { type: string; n: number }[];
+  data_sources?: { label: string; url: string; notes: string | null }[];
 };
 
 export const getTopics = () => fetcher<Topic[]>("/topics");
