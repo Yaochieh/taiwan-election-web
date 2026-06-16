@@ -109,7 +109,28 @@ export async function CandidatePlatformCard({
               <span className="font-serif text-2xl text-ink-soft tabular-nums shrink-0 min-w-[2ch]">
                 {p.seq}.
               </span>
-              <p className="leading-[1.85] whitespace-pre-wrap">{p.content}</p>
+              <div className="flex-1">
+                <p className="leading-[1.85] whitespace-pre-wrap">{p.content}</p>
+                {(p.source_url || p.note) && (
+                  <div className="mt-1.5 flex flex-wrap items-center gap-x-3 text-[11px] text-ink-soft">
+                    {p.note && (
+                      <span className="inline-block bg-rule/60 text-ink px-1.5 py-0.5">
+                        {p.note}
+                      </span>
+                    )}
+                    {p.source_url && (
+                      <a
+                        href={p.source_url}
+                        target="_blank"
+                        rel="noopener"
+                        className="hover:text-accent-red underline-offset-4 hover:underline"
+                      >
+                        資料來源 →
+                      </a>
+                    )}
+                  </div>
+                )}
+              </div>
             </li>
           ))}
         </ol>

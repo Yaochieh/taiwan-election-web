@@ -122,6 +122,28 @@ Safari hydration 會炸 (#310 Rules of Hooks 也要小心，所有 hook
 ### IIFE 在 server component 內計算
 頁面內常用 `{(() => { ... })()}` pattern 做就地聚合。
 
+## ★ 資料一定標來源
+
+任何顯示「補來的資料」「潤稿後的政見」「抓出來的關鍵數字」「公開
+資料的學經歷」都要在 UI 上加註來源（連結優先；無連結則寫文字「中
+選會公報 2024 區域立委 第X選區」）。後端 schema 對應的欄位：
+
+- `platforms.source_url` / `platform_targets.source_url`
+- `candidates.background_source`（學經歷補充來源）
+
+前端模式：
+
+```tsx
+{platform.source_url && (
+  <a href={platform.source_url} className="text-xs text-ink-soft hover:text-accent-red">
+    資料來源 →
+  </a>
+)}
+```
+
+OCR 後人工潤稿的政見一定要在卡片上掛一個小 tag「人工整理」+ 來源，
+讓使用者可以對照原文公報。
+
 ## ★ 不要做的事
 
 1. **不要在 hooks 後面寫 `if (...) return`**（React #310）

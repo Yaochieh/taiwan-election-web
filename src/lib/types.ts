@@ -66,6 +66,8 @@ export interface Platform {
   candidate_name?: string | null;
   party_name?: string | null;
   color_hex?: string | null;
+  source_url?: string | null;
+  note?: string | null;
 }
 
 export interface PlatformSource {
