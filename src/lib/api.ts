@@ -130,6 +130,68 @@ export const getPresidentialCountyWinners = () =>
 export const getMayoralCountyWinners = () =>
   fetcher<CountyWinnerCell[]>("/trends/mayoral/county-winners");
 
+// ── topics ──────────────────────────────────────────────────
+export type Topic = {
+  topic_id: number;
+  name: string;
+  icon: string;
+  rank: number;
+  platform_count: number;
+};
+export type TopicPlatform = {
+  platform_id: number;
+  content: string;
+  score: number;
+  candidate_id: number;
+  candidate_name: string;
+  election_id: number;
+  election_date: string;
+  election_name: string;
+  election_type: string;
+  election_desc: string | null;
+  district: string | null;
+  party_name: string | null;
+  color_hex: string | null;
+};
+export type TopicStats = {
+  topic: string;
+  by_year: { year: string; n: number }[];
+  by_party: { party: string; color_hex: string | null; n: number }[];
+  by_person: {
+    name: string;
+    party: string;
+    color_hex: string | null;
+    times: number;
+    total_score: number;
+  }[];
+  by_type: { type: string; n: number }[];
+};
+
+export const getTopics = () => fetcher<Topic[]>("/topics");
+export const getTopicPlatforms = (
+  name: string,
+  filters?: {
+    election_type?: string;
+    party?: string;
+    person?: string;
+    year_from?: number;
+    year_to?: number;
+  },
+) => {
+  const params = new URLSearchParams();
+  if (filters?.election_type) params.set("election_type", filters.election_type);
+  if (filters?.party) params.set("party", filters.party);
+  if (filters?.person) params.set("person", filters.person);
+  if (filters?.year_from) params.set("year_from", String(filters.year_from));
+  if (filters?.year_to) params.set("year_to", String(filters.year_to));
+  const q = params.toString();
+  return fetcher<TopicPlatform[]>(
+    `/topics/${encodeURIComponent(name)}${q ? "?" + q : ""}`,
+  );
+};
+export const getTopicStats = (name: string) =>
+  fetcher<TopicStats>(`/topics/${encodeURIComponent(name)}/stats`);
+
 // ── search ─────────────────────────────────────────────────
 export const search = (q: string, limit = 30) =>
   fetcher<SearchResult>(`/search?q=${encodeURIComponent(q)}&limit=${limit}`);
