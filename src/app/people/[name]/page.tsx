@@ -100,7 +100,7 @@ export default async function PersonPage({
         <section className="mb-12">
           <h2 className="font-serif text-2xl font-bold mb-4">政黨歷程</h2>
           <div className="flex flex-wrap items-baseline gap-2">
-            {profile.party_history.slice().reverse().map((p, i) => (
+            {profile.party_history.map((p, i) => (
               <span key={i} className="flex items-baseline gap-2">
                 <Link
                   href={`/parties/${encodeURIComponent(p.party)}`}
@@ -146,15 +146,48 @@ export default async function PersonPage({
         </section>
       )}
 
-      {/* ── 學經歷 ── */}
-      {profile.background && (
-        <section className="mb-12">
-          <h2 className="font-serif text-2xl font-bold mb-4">學歷與經歷</h2>
-          <div className="border border-rule p-5 text-sm whitespace-pre-wrap leading-relaxed">
-            {profile.background}
-          </div>
-        </section>
-      )}
+      {/* ── 學經歷（分學歷 / 經歷顯示） ── */}
+      {profile.background && (() => {
+        // 解析 background：可能有「【學歷】...」「【經歷】...」結構
+        const text = profile.background;
+        let edu = "";
+        let exp = "";
+        const eduMatch = text.match(/【學歷】\s*([\s\S]*?)(?=【經歷】|$)/);
+        const expMatch = text.match(/【經歷】\s*([\s\S]*?)$/);
+        if (eduMatch) edu = eduMatch[1].trim();
+        if (expMatch) exp = expMatch[1].trim();
+        // 沒有【】tag → 全部視為「經歷」
+        if (!edu && !exp) exp = text.trim();
+        const Block = ({ label, content }: { label: string; content: string }) =>
+          content ? (
+            <div>
+              <p className="text-xs tracking-widest uppercase text-ink-soft mb-1.5">
+                {label}
+              </p>
+              <ul className="text-sm leading-relaxed space-y-1">
+                {content
+                  .split("\n")
+                  .map((l) => l.trim())
+                  .filter(Boolean)
+                  .map((line, i) => (
+                    <li key={i} className="flex gap-2">
+                      <span className="text-ink-soft shrink-0">·</span>
+                      <span>{line}</span>
+                    </li>
+                  ))}
+              </ul>
+            </div>
+          ) : null;
+        return (
+          <section className="mb-12">
+            <h2 className="font-serif text-2xl font-bold mb-4">學歷與經歷</h2>
+            <div className="border border-rule p-5 grid sm:grid-cols-2 gap-6">
+              <Block label="學歷" content={edu} />
+              <Block label="經歷" content={exp} />
+            </div>
+          </section>
+        );
+      })()}
 
       {/* ── 歷次參選紀錄 ── */}
       <section className="mb-12">
