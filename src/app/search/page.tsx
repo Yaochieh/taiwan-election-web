@@ -1,10 +1,11 @@
 import Link from "next/link";
-import { search } from "@/lib/api";
+import { search, getTopics } from "@/lib/api";
 import { partyColor, formatElectionLabelShort } from "@/lib/format";
 import { candidatePhotoUrl } from "@/lib/api";
 import { PersonLink, PartyLink } from "@/components/entity-links";
 
 export const metadata = { title: "搜尋 · 正至" };
+export const revalidate = 60;
 
 export default async function SearchPage({
   searchParams,
@@ -14,15 +15,37 @@ export default async function SearchPage({
   const params = await searchParams;
   const query = params.q?.trim() || "";
 
+  const topics = await getTopics().catch(() => []);
+
   if (!query) {
     return (
       <div className="mx-auto max-w-4xl px-4 sm:px-6 py-12">
         <h1 className="font-serif text-3xl font-bold mb-4">搜尋</h1>
-        <p className="text-ink-soft">在上方輸入關鍵字開始搜尋。</p>
+        <p className="text-ink-soft mb-8">在上方輸入關鍵字開始搜尋。</p>
+        {topics.length > 0 && (
+          <section>
+            <h2 className="text-xs tracking-[0.2em] uppercase text-ink-soft mb-3">
+              依主題瀏覽
+            </h2>
+            <div className="flex flex-wrap gap-2">
+              {topics.map((t) => (
+                <Link
+                  key={t.topic_id}
+                  href={`/topics/${encodeURIComponent(t.name)}`}
+                  className="inline-flex items-baseline gap-1.5 border border-rule px-3 py-1.5 text-sm hover:border-ink hover:bg-rule/30 transition"
+                >
+                  <span className="font-medium">{t.name}</span>
+                  <span className="text-xs text-ink-soft">{t.platform_count}</span>
+                </Link>
+              ))}
+            </div>
+          </section>
+        )}
       </div>
     );
   }
 
+  const matchedTopics = topics.filter((t) => t.name.includes(query) || query.includes(t.name));
   const result = await search(query, 30).catch(() => null);
 
   if (!result) {
@@ -47,6 +70,30 @@ export default async function SearchPage({
           共找到 {result.total} 筆相關資料
         </p>
       </header>
+
+      {/* ── 主題 ── */}
+      {matchedTopics.length > 0 && (
+        <section className="mb-12">
+          <h2 className="font-serif text-xl font-bold mb-4 flex items-baseline gap-2">
+            主題
+            <span className="text-sm font-normal text-ink-soft">
+              {matchedTopics.length}
+            </span>
+          </h2>
+          <div className="flex flex-wrap gap-2">
+            {matchedTopics.map((t) => (
+              <Link
+                key={t.topic_id}
+                href={`/topics/${encodeURIComponent(t.name)}`}
+                className="inline-flex items-baseline gap-1.5 border border-rule px-3 py-1.5 text-sm hover:border-ink hover:bg-rule/30 transition"
+              >
+                <span className="font-medium">{t.name}</span>
+                <span className="text-xs text-ink-soft">{t.platform_count} 政見</span>
+              </Link>
+            ))}
+          </div>
+        </section>
+      )}
 
       {/* ── 候選人 ── */}
       {result.candidates.length > 0 && (

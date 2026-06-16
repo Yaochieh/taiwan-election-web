@@ -129,7 +129,7 @@ export function CountyHeatmap({ data, title, desc, prefix }: Props) {
                         opacity,
                       }}
                     >
-                      {cell.pct >= 30 ? cell.pct.toFixed(0) : ""}
+                      {cell.pct.toFixed(0)}
                     </td>
                   );
                 })}
