@@ -41,6 +41,20 @@ export default async function PersonPage({
   ]);
   if (!profile) notFound();
 
+  // 最新一場有政見的參選
+  const raceWithPlatform = profile.races.find(
+    (r) => (r.platform_count || 0) > 0,
+  );
+  const latestPlatforms = raceWithPlatform
+    ? await (async () => {
+        const { getCandidatePlatforms } = await import("@/lib/api");
+        return getCandidatePlatforms(
+          raceWithPlatform.candidate_id,
+          raceWithPlatform.election_id,
+        ).catch(() => []);
+      })()
+    : [];
+
   const photoUrl = candidatePhotoUrl(profile.photo_path);
   const latestRace = profile.races[0];
   const winRate = (profile.win_rate * 100).toFixed(0);
@@ -278,6 +292,41 @@ export default async function PersonPage({
           </section>
         );
       })()}
+
+      {/* ── 最新政見預覽 ── */}
+      {latestPlatforms.length > 0 && raceWithPlatform && (
+        <section className="mb-12">
+          <h2 className="font-serif text-2xl font-bold mb-3">
+            最新政見
+            <span className="ml-3 text-sm text-ink-soft font-normal">
+              {raceWithPlatform.election_date.slice(0, 4)}{" "}
+              {raceWithPlatform.election_name}
+            </span>
+          </h2>
+          <div className="border border-rule p-5 space-y-3 bg-rule/10">
+            {latestPlatforms.slice(0, 3).map((p) => (
+              <div key={p.seq} className="border-l-2 border-rule pl-3">
+                <p className="whitespace-pre-wrap leading-[1.85] text-sm">
+                  {(p.content || "").slice(0, 500)}
+                  {(p.content || "").length > 500 ? "…" : ""}
+                </p>
+                {p.note?.includes("人工潤稿") && (
+                  <span className="mt-1.5 inline-block bg-accent-red/15 text-accent-red border border-accent-red/30 px-1.5 py-0.5 text-[10px]">
+                    人工潤稿
+                  </span>
+                )}
+              </div>
+            ))}
+            <Link
+              href={`/platforms?election=${raceWithPlatform.election_id}${raceWithPlatform.district ? `&district=${encodeURIComponent(raceWithPlatform.district)}` : ""}`}
+              className="inline-block text-sm hover:text-accent-red underline-offset-2 hover:underline mt-1"
+              style={{ color: accent }}
+            >
+              查看完整政見 →
+            </Link>
+          </div>
+        </section>
+      )}
 
       {/* ── 政見主題分布（雷達圖） ── */}
       {topicDist.length > 0 && (
