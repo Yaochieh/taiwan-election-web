@@ -38,7 +38,11 @@ export function TopicRadar({ data, accent }: Props) {
   return (
     <div className="grid sm:grid-cols-[200px_1fr] gap-6 items-center">
       {/* SVG 雷達圖 */}
-      <svg viewBox="0 0 200 200" className="w-full max-w-[200px] mx-auto">
+      <svg
+        viewBox="-40 -10 280 220"
+        className="w-full max-w-[240px] mx-auto"
+        style={{ overflow: "visible" }}
+      >
         {/* 同心圓刻度 */}
         {[0.33, 0.66, 1].map((k) => (
           <circle
