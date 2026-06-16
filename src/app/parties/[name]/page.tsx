@@ -7,7 +7,13 @@ import {
   getLegislatureComposition,
   getLegislativeSeatTrend,
 } from "@/lib/api";
-import { partyColor, formatElectionLabelShort, cleanDistrict } from "@/lib/format";
+import {
+  partyColor,
+  formatElectionLabelShort,
+  cleanDistrict,
+  COUNTY_GROUPS,
+  COUNTY_TO_GROUP,
+} from "@/lib/format";
 import { PARTY_INFO } from "@/lib/party-info";
 import { PersonLink } from "@/components/entity-links";
 
@@ -224,6 +230,73 @@ export default async function PartyPage({
           </div>
         </section>
       )}
+
+      {/* 縣市勝場版圖 */}
+      {mayors.length > 0 && (() => {
+        const COUNTY_MERGE: Record<string, string> = {
+          臺北縣: "新北市",
+          桃園縣: "桃園市",
+          臺中縣: "臺中市",
+          臺南縣: "臺南市",
+          高雄縣: "高雄市",
+        };
+        const winCount = new Map<string, number>();
+        for (const m of mayors) {
+          const raw = cleanDistrict(m.district) || m.district;
+          const county = COUNTY_MERGE[raw] || raw;
+          winCount.set(county, (winCount.get(county) || 0) + 1);
+        }
+        const maxWin = Math.max(...winCount.values(), 1);
+        return (
+          <section className="mb-12">
+            <h2 className="font-serif text-2xl font-bold mb-4">
+              縣市政治版圖
+              <span className="text-sm font-normal text-ink-soft ml-3">
+                曾在 {winCount.size} 縣市拿下市/縣長
+              </span>
+            </h2>
+            <div className="border-t-2 border-ink pt-3 space-y-4">
+              {COUNTY_GROUPS.map((g) => {
+                const entries = g.counties
+                  .map((c) => ({ county: c, n: winCount.get(c) || 0 }))
+                  .filter((e) => e.n > 0);
+                if (entries.length === 0) return null;
+                return (
+                  <div key={g.label}>
+                    <p className="text-[10px] tracking-[0.2em] text-accent-red font-bold mb-1.5">
+                      {g.label}
+                    </p>
+                    <div className="grid grid-cols-3 sm:grid-cols-6 gap-1.5">
+                      {entries.map((e) => {
+                        const intensity = 0.25 + (e.n / maxWin) * 0.75;
+                        return (
+                          <div
+                            key={e.county}
+                            className="border border-paper text-paper px-2 py-1.5 text-center"
+                            style={{
+                              backgroundColor: color,
+                              opacity: intensity,
+                            }}
+                            title={`${e.county} 拿下 ${e.n} 次`}
+                          >
+                            <div className="text-xs font-medium">{e.county}</div>
+                            <div className="font-serif tabular-nums text-lg font-bold">
+                              {e.n}
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+            <p className="text-xs text-ink-soft mt-3">
+              數字為歷屆勝場次數。升格前的舊縣（如高雄縣）已併入現直轄市。
+            </p>
+          </section>
+        );
+      })()}
 
       {/* 歷屆縣市長 */}
       {mayors.length > 0 && (
