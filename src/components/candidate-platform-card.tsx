@@ -116,7 +116,7 @@ export async function CandidatePlatformCard({
               )}
               <div className="flex-1">
                 <p className="leading-[1.85] whitespace-pre-wrap">{p.content}</p>
-                {(p.source_url || p.note) && (
+                {(p.source_url || p.note || p.content_raw) && (
                   <div className="mt-1.5 flex flex-wrap items-center gap-x-3 text-[11px] text-ink-soft">
                     {p.note && (
                       <span className="inline-block bg-rule/60 text-ink px-1.5 py-0.5">
@@ -134,6 +134,16 @@ export async function CandidatePlatformCard({
                       </a>
                     )}
                   </div>
+                )}
+                {p.content_raw && p.content_raw !== p.content && (
+                  <details className="mt-2">
+                    <summary className="text-[11px] text-ink-soft cursor-pointer hover:text-accent-red">
+                      顯示原始 OCR
+                    </summary>
+                    <pre className="mt-1 p-2 bg-rule/30 text-[11px] text-ink-soft whitespace-pre-wrap font-sans leading-relaxed">
+                      {p.content_raw}
+                    </pre>
+                  </details>
                 )}
               </div>
             </li>

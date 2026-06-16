@@ -68,6 +68,7 @@ export interface Platform {
   color_hex?: string | null;
   source_url?: string | null;
   note?: string | null;
+  content_raw?: string | null;
 }
 
 export interface PlatformSource {
