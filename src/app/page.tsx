@@ -6,7 +6,12 @@ import {
   getCandidatesStatus,
   getPresidentialTrend,
 } from "@/lib/api";
-import { formatElectionLabelShort, partyColor, formatVotes } from "@/lib/format";
+import {
+  formatElectionLabelShort,
+  partyColor,
+  formatVotes,
+  sortCounties,
+} from "@/lib/format";
 import { PersonLink, PartyLink } from "@/components/entity-links";
 
 const TYPE_ZH: Record<string, string> = {
@@ -342,10 +347,7 @@ export default async function HomePage() {
                 ))}
               </div>
               <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 gap-2">
-                {winners
-                  .sort((a, b) =>
-                    (a.district || "").localeCompare(b.district || ""),
-                  )
+                {sortCounties(winners, (m) => m.district || "")
                   .map((w) => {
                     const color = partyColor(w.party_name);
                     return (

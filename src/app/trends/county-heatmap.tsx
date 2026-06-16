@@ -1,5 +1,10 @@
 import type { CountyWinnerCell } from "@/lib/api";
-import { partyColor } from "@/lib/format";
+import {
+  partyColor,
+  COUNTY_GROUPS as SHARED_GROUPS,
+  COUNTY_ORDER,
+  COUNTY_TO_GROUP,
+} from "@/lib/format";
 
 interface Props {
   data: CountyWinnerCell[];
@@ -8,29 +13,8 @@ interface Props {
   prefix?: string;
 }
 
-// 縣市分區
-const REGION_GROUPS: { label: string; counties: string[] }[] = [
-  {
-    label: "北部",
-    counties: ["臺北市", "新北市", "基隆市", "桃園市", "新竹市", "新竹縣"],
-  },
-  {
-    label: "中部",
-    counties: ["苗栗縣", "臺中市", "彰化縣", "南投縣", "雲林縣"],
-  },
-  {
-    label: "南部",
-    counties: ["嘉義市", "嘉義縣", "臺南市", "高雄市", "屏東縣"],
-  },
-  { label: "東部", counties: ["宜蘭縣", "花蓮縣", "臺東縣"] },
-  { label: "外島", counties: ["澎湖縣", "金門縣", "連江縣"] },
-];
-
-const COUNTY_ORDER = REGION_GROUPS.flatMap((g) => g.counties);
-const COUNTY_TO_REGION = new Map<string, string>();
-for (const g of REGION_GROUPS) {
-  for (const c of g.counties) COUNTY_TO_REGION.set(c, g.label);
-}
+// 用 lib/format 的 SHARED_GROUPS (六都/其他縣市/外島)
+const COUNTY_TO_REGION = COUNTY_TO_GROUP;
 
 export function CountyHeatmap({ data, title, desc, prefix }: Props) {
   // 找所有年份

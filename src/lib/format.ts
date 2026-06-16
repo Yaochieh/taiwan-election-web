@@ -1,5 +1,71 @@
 // 將 DB 中的 district 代碼（如 "地區(63, 0, 0)"）轉成中文縣市名
 
+/**
+ * 縣市分組 — 全站排序與分隔規則統一使用此清單。
+ *
+ * 規則：
+ *   1. 六都優先（北 → 南）：臺北 / 新北 / 桃園 / 臺中 / 臺南 / 高雄
+ *   2. 其他縣市（北 → 南）：基隆 → 新竹（市/縣）→ 苗栗 → 彰化 → 南投 →
+ *      雲林 → 嘉義（市/縣）→ 屏東 → 宜蘭 → 花蓮 → 臺東
+ *   3. 外島：澎湖 / 金門 / 連江
+ *
+ * 任何要列縣市的地方都應 import COUNTY_GROUPS / COUNTY_ORDER / sortCounties。
+ */
+export const COUNTY_GROUPS: { label: string; counties: string[] }[] = [
+  {
+    label: "六都",
+    counties: ["臺北市", "新北市", "桃園市", "臺中市", "臺南市", "高雄市"],
+  },
+  {
+    label: "其他縣市",
+    counties: [
+      "基隆市",
+      "新竹市",
+      "新竹縣",
+      "苗栗縣",
+      "彰化縣",
+      "南投縣",
+      "雲林縣",
+      "嘉義市",
+      "嘉義縣",
+      "屏東縣",
+      "宜蘭縣",
+      "花蓮縣",
+      "臺東縣",
+    ],
+  },
+  {
+    label: "外島",
+    counties: ["澎湖縣", "金門縣", "連江縣"],
+  },
+];
+
+/** 統一縣市排序（六都優先、北到南、外島最後） */
+export const COUNTY_ORDER: string[] = COUNTY_GROUPS.flatMap((g) => g.counties);
+
+/** 縣市 → 所屬分組 label（六都/其他縣市/外島） */
+export const COUNTY_TO_GROUP: Map<string, string> = new Map();
+for (const g of COUNTY_GROUPS) {
+  for (const c of g.counties) COUNTY_TO_GROUP.set(c, g.label);
+}
+
+/** 把縣市陣列按統一規則排序 */
+export function sortCounties<T>(
+  items: T[],
+  getCounty: (i: T) => string,
+): T[] {
+  return items.slice().sort((a, b) => {
+    const ca = getCounty(a);
+    const cb = getCounty(b);
+    const ia = COUNTY_ORDER.indexOf(ca);
+    const ib = COUNTY_ORDER.indexOf(cb);
+    if (ia === -1 && ib === -1) return ca.localeCompare(cb, "zh-TW");
+    if (ia === -1) return 1;
+    if (ib === -1) return -1;
+    return ia - ib;
+  });
+}
+
 const COUNTY_CODE_MAP: Record<number, string> = {
   0: "全國",
   1: "臺北市", 2: "高雄市", 3: "基隆市", 4: "臺中市",

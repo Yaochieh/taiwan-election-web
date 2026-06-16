@@ -12,6 +12,8 @@ import {
   formatVotes,
   votePct,
   partyColor,
+  COUNTY_ORDER,
+  COUNTY_TO_GROUP,
 } from "@/lib/format";
 import { PersonLink, PartyLink } from "@/components/entity-links";
 import { VoteMap } from "./vote-map";
@@ -75,7 +77,14 @@ export default async function ElectionDetailPage({
     if (!countyToDistricts.has(c)) countyToDistricts.set(c, []);
     countyToDistricts.get(c)!.push(d);
   }
-  const countyList = Array.from(countyToDistricts.keys()).sort();
+  const countyList = Array.from(countyToDistricts.keys()).sort((a, b) => {
+    const ia = COUNTY_ORDER.indexOf(a);
+    const ib = COUNTY_ORDER.indexOf(b);
+    if (ia === -1 && ib === -1) return a.localeCompare(b, "zh-TW");
+    if (ia === -1) return 1;
+    if (ib === -1) return -1;
+    return ia - ib;
+  });
   const useCountyFilter =
     election.type === "legislative" && countyList.length > 6;
   const filteredDistrictList = useCountyFilter
@@ -237,25 +246,33 @@ export default async function ElectionDetailPage({
                   </a>
                 )}
               </p>
-              <div className="flex flex-wrap gap-2">
-                {countyList.map((c) => {
+              <div className="flex flex-wrap gap-2 items-center">
+                {countyList.map((c, idx) => {
                   const active = countyParam === c;
+                  const group = COUNTY_TO_GROUP.get(c);
+                  const prevGroup =
+                    idx > 0 ? COUNTY_TO_GROUP.get(countyList[idx - 1]) : null;
+                  const isFirstOfGroup = group && group !== prevGroup;
                   return (
-                    <a
-                      key={c}
-                      href={`/elections/${electionId}?county=${encodeURIComponent(c)}`}
-                      className={
-                        "text-xs px-3 py-1.5 border transition " +
-                        (active
-                          ? "bg-ink text-paper border-ink"
-                          : "border-rule hover:border-ink text-ink-soft hover:text-ink")
-                      }
-                    >
-                      {c}
-                      <span className="ml-1.5 opacity-70">
-                        {countyToDistricts.get(c)!.length}
-                      </span>
-                    </a>
+                    <span key={c} className="flex items-center gap-2">
+                      {isFirstOfGroup && idx > 0 && (
+                        <span className="text-ink-soft mx-1">｜</span>
+                      )}
+                      <a
+                        href={`/elections/${electionId}?county=${encodeURIComponent(c)}`}
+                        className={
+                          "text-xs px-3 py-1.5 border transition " +
+                          (active
+                            ? "bg-ink text-paper border-ink"
+                            : "border-rule hover:border-ink text-ink-soft hover:text-ink")
+                        }
+                      >
+                        {c}
+                        <span className="ml-1.5 opacity-70">
+                          {countyToDistricts.get(c)!.length}
+                        </span>
+                      </a>
+                    </span>
                   );
                 })}
               </div>

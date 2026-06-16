@@ -1,6 +1,12 @@
 import Link from "next/link";
 import { getMayoralHistory, getElections } from "@/lib/api";
-import { cleanDistrict, formatVotes, partyColor } from "@/lib/format";
+import {
+  cleanDistrict,
+  formatVotes,
+  partyColor,
+  COUNTY_ORDER,
+  COUNTY_TO_GROUP,
+} from "@/lib/format";
 import { TaiwanMap } from "./taiwan-map";
 import { PersonLink, PartyLink } from "@/components/entity-links";
 
@@ -63,9 +69,14 @@ export default async function MayorsPage() {
   }
 
   const yearList = Array.from(years).sort();
-  const countyList = Array.from(counties).sort((a, b) =>
-    a.localeCompare(b, "zh-TW"),
-  );
+  const countyList = Array.from(counties).sort((a, b) => {
+    const ia = COUNTY_ORDER.indexOf(a);
+    const ib = COUNTY_ORDER.indexOf(b);
+    if (ia === -1 && ib === -1) return a.localeCompare(b, "zh-TW");
+    if (ia === -1) return 1;
+    if (ib === -1) return -1;
+    return ia - ib;
+  });
   const latestYear = yearList[yearList.length - 1];
 
   // 最近一屆地圖資料
@@ -152,9 +163,24 @@ export default async function MayorsPage() {
               </tr>
             </thead>
             <tbody>
-              {countyList.map((county) => (
-                <tr key={county} className="border-b border-rule">
+              {countyList.map((county, idx) => {
+                const group = COUNTY_TO_GROUP.get(county);
+                const prevGroup = idx > 0 ? COUNTY_TO_GROUP.get(countyList[idx - 1]) : null;
+                const isFirstOfGroup = group && group !== prevGroup;
+                return (
+                <tr
+                  key={county}
+                  className={
+                    "border-b border-rule " +
+                    (isFirstOfGroup ? "border-t-2 border-t-ink/60" : "")
+                  }
+                >
                   <th className="sticky left-0 bg-paper z-10 text-left px-3 py-2 font-medium">
+                    {isFirstOfGroup && (
+                      <span className="block text-[10px] text-accent-red font-bold tracking-wider mb-0.5">
+                        {group}
+                      </span>
+                    )}
                     {county}
                   </th>
                   {yearList.map((y) => {
@@ -202,7 +228,8 @@ export default async function MayorsPage() {
                     );
                   })}
                 </tr>
-              ))}
+                );
+              })}
             </tbody>
           </table>
         </div>
