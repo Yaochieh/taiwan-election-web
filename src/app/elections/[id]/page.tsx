@@ -133,7 +133,11 @@ export default async function ElectionDetailPage({
           {election.type === "presidential" && (() => {
             type ResultRow = (typeof results)[number];
             const byCand = new Map<string, ResultRow & { total: number }>();
+            // 若有「全國摘要列」優先用它（已是總票）；否則 SUM 縣市
+            const hasNational = results.some((r) => r.district === "全國");
             for (const r of results) {
+              if (hasNational && r.district !== "全國") continue;
+              if (!hasNational && r.district === "全國") continue;
               const key = `${r.candidate_name}::${r.party_name}`;
               const ex = byCand.get(key);
               if (ex) ex.total += r.votes;
