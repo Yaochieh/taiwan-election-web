@@ -42,9 +42,29 @@ export default async function PersonPage({
   const latestRace = profile.races[0];
   const winRate = (profile.win_rate * 100).toFixed(0);
 
+  // 現任政黨色作為強調色
+  const latestParty = profile.party_history[profile.party_history.length - 1];
+  const accent = latestParty
+    ? partyColor(latestParty.party, latestParty.color_hex)
+    : "#1a1a1a";
+  const isCurrentlyElected = profile.races.some((r) => {
+    if (r.elected !== 1) return false;
+    const year = parseInt(r.election_date.slice(0, 4));
+    if (r.election_type === "presidential")
+      return year >= new Date().getFullYear() - 4;
+    if (r.election_type === "mayoral")
+      return year >= new Date().getFullYear() - 4;
+    if (r.election_type === "legislative")
+      return year >= new Date().getFullYear() - 4;
+    return false;
+  });
+
   return (
     <div className="mx-auto max-w-4xl px-4 sm:px-6 py-12">
-      <header className="border-b border-rule pb-8 mb-10">
+      <header
+        className="border-t-4 pb-8 mb-10 pt-6"
+        style={{ borderTopColor: accent }}
+      >
         <div className="text-sm text-ink-soft mb-4">
           <Link href="/people" className="hover:text-ink">
             ← 政治人物
@@ -56,22 +76,58 @@ export default async function PersonPage({
             <img
               src={photoUrl}
               alt={`${name} 大頭照`}
-              className="w-32 h-40 object-cover border border-rule bg-rule/30 shrink-0"
+              className="w-32 h-40 object-cover border-2 shrink-0"
+              style={{ borderColor: accent }}
             />
           ) : (
-            <div className="w-32 h-40 border border-rule bg-rule/30 flex items-center justify-center shrink-0">
-              <span className="font-serif text-6xl text-ink-soft">
+            <div
+              className="w-32 h-40 border-2 flex items-center justify-center shrink-0"
+              style={{
+                borderColor: accent,
+                backgroundColor: `${accent}10`,
+              }}
+            >
+              <span
+                className="font-serif text-6xl"
+                style={{ color: accent }}
+              >
                 {name.slice(0, 1)}
               </span>
             </div>
           )}
           <div className="flex-1">
-            <p className="text-xs tracking-[0.2em] uppercase text-ink-soft mb-2">
-              PERSON
-            </p>
-            <h1 className="article-title font-serif text-4xl sm:text-5xl font-bold leading-tight mb-3">
+            <div className="flex items-baseline gap-2 mb-2 flex-wrap">
+              <p className="text-xs tracking-[0.2em] uppercase text-ink-soft">
+                PERSON
+              </p>
+              {isCurrentlyElected && (
+                <span
+                  className="text-[10px] px-2 py-0.5 text-paper font-bold tracking-wider"
+                  style={{ backgroundColor: accent }}
+                >
+                  ★ 現任
+                </span>
+              )}
+            </div>
+            <h1
+              className="article-title font-serif text-4xl sm:text-5xl font-bold leading-tight mb-3"
+              style={{ color: accent }}
+            >
               {name}
             </h1>
+            {latestRace && (
+              <p className="mb-4 text-sm text-ink-soft">
+                最新身份：
+                {formatElectionLabelShort(
+                  latestRace.election_date,
+                  latestRace.election_name,
+                )}{" "}
+                · {latestRace.party_name || "無黨籍"}
+                {latestRace.elected === 1 && (
+                  <span className="ml-2 text-accent-red font-bold">★</span>
+                )}
+              </p>
+            )}
             <div className="grid grid-cols-3 gap-3 max-w-md">
               <Stat label="參選次數" value={profile.total_races} />
               <Stat
@@ -81,45 +137,42 @@ export default async function PersonPage({
               />
               <Stat label="勝選率" value={`${winRate}%`} />
             </div>
-            {latestRace && (
-              <p className="mt-4 text-sm text-ink-soft">
-                最近一次：
-                {formatElectionLabelShort(
-                  latestRace.election_date,
-                  latestRace.election_name,
-                )}{" "}
-                ({latestRace.party_name || "無黨籍"})
-              </p>
-            )}
           </div>
         </div>
       </header>
 
-      {/* ── 政黨歷程 ── */}
+      {/* ── 政黨歷程（時間軸）── */}
       {profile.party_history.length > 0 && (
         <section className="mb-12">
           <h2 className="font-serif text-2xl font-bold mb-4">政黨歷程</h2>
-          <div className="flex flex-wrap items-baseline gap-2">
-            {profile.party_history.map((p, i) => (
-              <span key={i} className="flex items-baseline gap-2">
-                <Link
-                  href={`/parties/${encodeURIComponent(p.party)}`}
-                  className="px-3 py-1.5 text-sm border hover:underline underline-offset-4 transition"
-                  style={{
-                    color: p.color_hex || partyColor(p.party),
-                    borderColor: p.color_hex || partyColor(p.party),
-                  }}
-                >
-                  {p.party}
-                </Link>
-                <span className="text-xs text-ink-soft">
-                  自 {p.from_date.slice(0, 4)}
-                </span>
-                {i < profile.party_history.length - 1 && (
-                  <span className="text-ink-soft">→</span>
-                )}
-              </span>
-            ))}
+          <div className="relative ml-2">
+            {/* 垂直線 */}
+            <div className="absolute left-1 top-2 bottom-2 w-0.5 bg-rule" />
+            <ol className="space-y-4">
+              {profile.party_history.map((p, i) => {
+                const c = p.color_hex || partyColor(p.party);
+                return (
+                  <li key={i} className="relative pl-7">
+                    <span
+                      className="absolute left-0 top-1.5 w-3 h-3 rounded-full border-2 border-paper"
+                      style={{ backgroundColor: c }}
+                    />
+                    <div className="flex items-baseline gap-3 flex-wrap">
+                      <span className="text-xs text-ink-soft tabular-nums w-12 shrink-0">
+                        {p.from_date.slice(0, 4)}
+                      </span>
+                      <Link
+                        href={`/parties/${encodeURIComponent(p.party)}`}
+                        className="font-medium text-base hover:underline underline-offset-2"
+                        style={{ color: c }}
+                      >
+                        {p.party}
+                      </Link>
+                    </div>
+                  </li>
+                );
+              })}
+            </ol>
           </div>
         </section>
       )}
