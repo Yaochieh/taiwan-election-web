@@ -26,10 +26,13 @@ const TYPE_ZH: Record<string, string> = {
 
 export default async function ElectionDetailPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ id: string }>;
+  searchParams: Promise<{ county?: string }>;
 }) {
   const { id } = await params;
+  const { county: countyParam } = await searchParams;
   const electionId = Number(id);
   if (!Number.isFinite(electionId)) notFound();
 
@@ -60,6 +63,26 @@ export default async function ElectionDetailPage({
   }
 
   const districtList = Array.from(byDistrict.keys()).sort();
+
+  // 把 districts 按縣市分組 (例：'臺北市第07選區' → 臺北市)
+  const districtToCounty = (d: string): string => {
+    const m = d.match(/^(.+?[市縣])第\d+選區$/);
+    return m ? m[1] : d;
+  };
+  const countyToDistricts = new Map<string, string[]>();
+  for (const d of districtList) {
+    const c = districtToCounty(d);
+    if (!countyToDistricts.has(c)) countyToDistricts.set(c, []);
+    countyToDistricts.get(c)!.push(d);
+  }
+  const countyList = Array.from(countyToDistricts.keys()).sort();
+  const useCountyFilter =
+    election.type === "legislative" && countyList.length > 6;
+  const filteredDistrictList = useCountyFilter
+    ? countyParam
+      ? countyToDistricts.get(countyParam) || []
+      : []
+    : districtList;
 
   // 找有政見資料的候選人 ID 集合（用來顯示連結）
   const hasPlatform = new Set(
@@ -200,7 +223,50 @@ export default async function ElectionDetailPage({
               </div>
             );
           })()}
-          {election.type !== "presidential" && districtList.map((district) => {
+          {/* 立委選舉：縣市篩選器（73 個選區直接列太多） */}
+          {useCountyFilter && (
+            <section className="border border-rule p-5 mb-6">
+              <p className="text-sm font-medium mb-3">
+                按縣市瀏覽選區
+                {countyParam && (
+                  <a
+                    href={`/elections/${electionId}`}
+                    className="ml-3 text-xs text-ink-soft hover:text-accent-red underline underline-offset-2"
+                  >
+                    清除篩選
+                  </a>
+                )}
+              </p>
+              <div className="flex flex-wrap gap-2">
+                {countyList.map((c) => {
+                  const active = countyParam === c;
+                  return (
+                    <a
+                      key={c}
+                      href={`/elections/${electionId}?county=${encodeURIComponent(c)}`}
+                      className={
+                        "text-xs px-3 py-1.5 border transition " +
+                        (active
+                          ? "bg-ink text-paper border-ink"
+                          : "border-rule hover:border-ink text-ink-soft hover:text-ink")
+                      }
+                    >
+                      {c}
+                      <span className="ml-1.5 opacity-70">
+                        {countyToDistricts.get(c)!.length}
+                      </span>
+                    </a>
+                  );
+                })}
+              </div>
+              {!countyParam && (
+                <p className="text-xs text-ink-soft mt-3">
+                  共 73 個選區、{countyList.length} 個縣市，請選縣市開始瀏覽。
+                </p>
+              )}
+            </section>
+          )}
+          {election.type !== "presidential" && filteredDistrictList.map((district) => {
             const rows = byDistrict.get(district)!;
             const total = rows.reduce((a, b) => a + b.votes, 0);
             const label = cleanDistrict(district) || district;
