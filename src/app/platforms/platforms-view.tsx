@@ -119,6 +119,23 @@ export async function PlatformsView({
         <Stat label="完全未繳" value={withoutAny} accent="text-accent-red" />
       </div>
 
+      {/* ── 潤稿說明 ── */}
+      {(() => {
+        const polished = allPlatforms.filter((p) => p.note && p.note.includes("人工潤稿")).length;
+        const cleaned = allPlatforms.filter((p) => p.note && p.note.includes("OCR")).length;
+        if (polished === 0 && cleaned === 0) return null;
+        return (
+          <div className="border-l-4 border-accent-red/60 bg-rule/20 px-4 py-3 text-sm leading-relaxed">
+            <p className="text-ink-soft">
+              本場 <strong className="text-ink">{polished}</strong> 條政見已經人工潤稿、
+              <strong className="text-ink">{cleaned}</strong> 條程式自動清理過。
+              卡片下方 chip 會顯示「人工潤稿」/「OCR 清理」/「自動拆條」等標記。
+              點「顯示原始 OCR」可以對照公報原文。
+            </p>
+          </div>
+        );
+      })()}
+
       {/* ── 提示：候選人多 + 未選選區 ── */}
       {!districtParam && candidates.length > 30 && (
         <div className="border border-rule p-6 bg-rule/30 text-center">
