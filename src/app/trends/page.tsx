@@ -5,6 +5,10 @@ import {
   getPresidentialCountyWinners,
   getMayoralCountyWinners,
 } from "@/lib/api";
+
+// 改用 ISR 60 秒：避免 build 時 Railway API 還沒部署導致空資料；
+// 且資料變動時 Vercel 可在 1 分鐘內反映。
+export const revalidate = 60;
 import { PresidentialChart } from "./presidential-chart";
 import { PartyListChart } from "./party-list-chart";
 import { LegislativeChart } from "./legislative-chart";
