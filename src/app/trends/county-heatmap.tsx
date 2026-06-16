@@ -55,6 +55,21 @@ export function CountyHeatmap({ data, title, desc, prefix }: Props) {
     m.set(cell.party, (m.get(cell.party) || 0) + 1);
   }
 
+  // 各縣市政黨輪替次數（相鄰兩屆不同政黨算 1 次）
+  const countySwings = new Map<string, number>();
+  for (const c of counties) {
+    let swings = 0;
+    let prev: string | null = null;
+    for (const y of years) {
+      const cell = map.get(`${y}|${c}`);
+      if (!cell) continue;
+      if (prev && prev !== cell.party) swings++;
+      prev = cell.party;
+    }
+    countySwings.set(c, swings);
+  }
+  const maxSwings = Math.max(...Array.from(countySwings.values()), 0);
+
   return (
     <div>
       <div className="flex items-baseline gap-3 mb-3">
@@ -82,6 +97,9 @@ export function CountyHeatmap({ data, title, desc, prefix }: Props) {
                   {y}
                 </th>
               ))}
+              <th className="px-2 py-1 font-medium text-ink-soft text-center border-l-2 border-ink">
+                輪替
+              </th>
             </tr>
           </thead>
           <tbody>
@@ -131,6 +149,24 @@ export function CountyHeatmap({ data, title, desc, prefix }: Props) {
                     </td>
                   );
                 })}
+                {/* 輪替次數 column */}
+                <td
+                  className="w-12 h-7 border-l-2 border-ink text-center tabular-nums"
+                  title={`${c} 共輪替 ${countySwings.get(c) || 0} 次政黨`}
+                >
+                  <span
+                    className={
+                      "inline-block px-1.5 text-xs font-bold " +
+                      ((countySwings.get(c) || 0) === 0
+                        ? "text-ink-soft"
+                        : (countySwings.get(c) || 0) >= maxSwings
+                          ? "text-accent-red"
+                          : "text-ink")
+                    }
+                  >
+                    {countySwings.get(c) || 0}
+                  </span>
+                </td>
               </tr>
               );
             })}
@@ -171,12 +207,37 @@ export function CountyHeatmap({ data, title, desc, prefix }: Props) {
                         </td>
                       );
                     })}
+                    <td className="border-l-2 border-ink" />
+
                   </tr>
                 );
               })}
           </tfoot>
         </table>
       </div>
+
+      {/* 輪替次數統計 */}
+      {maxSwings > 0 && (
+        <div className="mt-4 text-xs text-ink-soft border-t border-rule pt-3 flex flex-wrap gap-x-4 gap-y-1">
+          <span>政黨輪替排行：</span>
+          {Array.from(countySwings.entries())
+            .sort((a, b) => b[1] - a[1])
+            .slice(0, 5)
+            .map(([county, swings]) => (
+              <span key={county}>
+                <span className="text-ink-soft">{county}</span>
+                <strong
+                  className={
+                    "ml-1 " +
+                    (swings === maxSwings ? "text-accent-red" : "text-ink")
+                  }
+                >
+                  {swings} 次
+                </strong>
+              </span>
+            ))}
+        </div>
+      )}
     </div>
   );
 }
