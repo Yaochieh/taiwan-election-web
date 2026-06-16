@@ -241,6 +241,40 @@ export default async function PersonPage({
               <Block label="學歷" content={edu} />
               <Block label="經歷" content={exp} />
             </div>
+            <p className="text-xs text-ink-soft mt-2">資料來源：中選會公報</p>
+          </section>
+        );
+      })()}
+
+      {/* ── 維基百科簡介 ── */}
+      {profile.background_source && (() => {
+        const text = profile.background_source;
+        const urlMatch = text.match(/https?:\/\/\S+/);
+        const url = urlMatch ? urlMatch[0].replace(/\)$/, "") : null;
+        const bodyText = text
+          .replace(/（資料來源：[^）]*）/, "")
+          .trim();
+        return (
+          <section className="mb-12">
+            <h2 className="font-serif text-2xl font-bold mb-4">維基百科簡介</h2>
+            <div className="border border-rule p-5">
+              <p className="leading-[1.85] whitespace-pre-wrap text-sm">
+                {bodyText}
+              </p>
+              {url && (
+                <p className="mt-3 text-xs text-ink-soft">
+                  資料來源：
+                  <a
+                    href={url}
+                    target="_blank"
+                    rel="noopener"
+                    className="ml-1 hover:text-accent-red underline-offset-2 hover:underline"
+                  >
+                    中文維基百科 →
+                  </a>
+                </p>
+              )}
+            </div>
           </section>
         );
       })()}

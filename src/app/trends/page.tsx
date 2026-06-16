@@ -10,7 +10,7 @@ import { PartyListChart } from "./party-list-chart";
 import { LegislativeChart } from "./legislative-chart";
 import { CountyHeatmap } from "./county-heatmap";
 
-export const revalidate = 60;
+export const revalidate = 30;
 
 export const metadata = {
   title: "趨勢分析 · 正至",
@@ -117,7 +117,7 @@ export default async function TrendsPage() {
         <CountyHeatmap
           data={presCounty}
           title="總統選舉縣市政治版圖"
-          desc="每屆總統選舉中各縣市勝出政黨的色塊熱力圖。數字為該政黨在該縣市得票率（≥30% 才顯示），下方統計每屆各黨贏的縣市數。"
+          desc="每屆總統選舉各縣市勝出政黨。數字為該政黨在該縣市得票率（直接顯示）。1996/2000/2004 的舊縣（臺北縣/桃園縣等）已合併到升格後的直轄市方便跨年比較。"
           prefix="④"
         />
       </section>
@@ -127,7 +127,7 @@ export default async function TrendsPage() {
         <CountyHeatmap
           data={mayoralCounty}
           title="縣市長選舉政治版圖"
-          desc="歷屆縣市長選舉各縣市勝出政黨。1994 年起逐步建立直選傳統，2010 年五都改制；2022 大選國民黨拿下 13 縣市。"
+          desc="歷屆縣市長選舉各縣市勝出政黨。1994–2005 僅有北/高直轄市選舉；1997 起 23 縣市長同步選；2010 五都改制升格直轄市；2014 起 22 縣市同步直選。升格前的舊縣（高雄縣等）已合併到升格後直轄市。"
           prefix="⑤"
         />
       </section>

@@ -200,6 +200,7 @@ export interface PersonProfile {
   name: string;
   photo_path: string | null;
   background: string | null;
+  background_source: string | null;
   total_races: number;
   total_wins: number;
   win_rate: number;
