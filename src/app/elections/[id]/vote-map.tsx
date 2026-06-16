@@ -334,8 +334,12 @@ export function VoteMap({
     if (!focusCandidate) return null;
     const m = new Map<string, { pct: number; votes: number; color: string; rank: number }>();
     for (const [county, rows] of byCounty) {
-      const total = rows.reduce((a, b) => a + b.votes, 0);
-      const sorted = rows.slice().sort((a, b) => b.votes - a.votes);
+      // 總統選舉每組正副各有一筆 row，副總統不能計入總票數
+      const denomRows = isPresident
+        ? rows.filter((r) => r.background !== "副總統")
+        : rows;
+      const total = denomRows.reduce((a, b) => a + b.votes, 0);
+      const sorted = denomRows.slice().sort((a, b) => b.votes - a.votes);
       const idx = sorted.findIndex((r) => r.candidate_name === focusCandidate);
       if (idx < 0) continue;
       const r = sorted[idx];
@@ -347,7 +351,7 @@ export function VoteMap({
       });
     }
     return m;
-  }, [focusCandidate, byCounty]);
+  }, [focusCandidate, byCounty, isPresident]);
 
   if (!geo) {
     return (

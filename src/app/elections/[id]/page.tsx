@@ -285,7 +285,10 @@ export default async function ElectionDetailPage({
           )}
           {election.type !== "presidential" && filteredDistrictList.map((district) => {
             const rows = byDistrict.get(district)!;
-            const total = rows.reduce((a, b) => a + b.votes, 0);
+            // 總統選舉每組正副候選人各有一筆 row，副總統不能納入總票數
+            const total = rows
+              .filter((r) => r.background !== "副總統")
+              .reduce((a, b) => a + b.votes, 0);
             const label = cleanDistrict(district) || district;
 
             // 對 presidential：按相同票數配對正副
