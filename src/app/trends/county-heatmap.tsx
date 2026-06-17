@@ -1,3 +1,4 @@
+import Link from "next/link";
 import type { CountyWinnerCell } from "@/lib/api";
 import {
   partyColor,
@@ -8,6 +9,8 @@ import {
 
 interface Props {
   data: CountyWinnerCell[];
+  /** 把 (year|county) 對應到「升格前 sub-縣市」的 cells（合併模式用） */
+  subsIndex?: Map<string, CountyWinnerCell[]>;
   title: string;
   desc: string;
   prefix?: string;
@@ -16,7 +19,7 @@ interface Props {
 // 用 lib/format 的 SHARED_GROUPS (六都/其他縣市/外島)
 const COUNTY_TO_REGION = COUNTY_TO_GROUP;
 
-export function CountyHeatmap({ data, title, desc, prefix }: Props) {
+export function CountyHeatmap({ data, subsIndex, title, desc, prefix }: Props) {
   // 找所有年份
   const years = Array.from(new Set(data.map((d) => d.year))).sort();
   // 建索引：year × county → cell
@@ -116,20 +119,53 @@ export function CountyHeatmap({ data, title, desc, prefix }: Props) {
                         className="w-12 h-7 border border-rule/30 bg-rule/10"
                       />
                     );
+                  // 合併模式下如有 split-subs ≥ 2，就一格內畫多個 sub
+                  const subs = subsIndex?.get(`${y}|${c}`) || [];
+                  const useSubs = subs.length >= 2;
+                  if (useSubs) {
+                    return (
+                      <td
+                        key={y}
+                        className="w-12 h-7 border border-paper p-0"
+                        title={`${y} ${c}（合併前 ${subs.length} 子區）`}
+                      >
+                        <Link
+                          href={`/trends/county/${encodeURIComponent(c)}`}
+                          className="flex w-full h-full"
+                        >
+                          {subs.map((s, si) => {
+                            const sc = partyColor(s.party, s.color_hex);
+                            const so = Math.min(1, 0.35 + (s.pct - 25) / 100);
+                            return (
+                              <span
+                                key={si}
+                                title={`${s.county}: ${s.party} ${s.pct}%`}
+                                className="flex-1 flex items-center justify-center text-paper text-[9px] font-bold leading-none"
+                                style={{ backgroundColor: sc, opacity: so }}
+                              >
+                                {s.pct.toFixed(0)}
+                              </span>
+                            );
+                          })}
+                        </Link>
+                      </td>
+                    );
+                  }
                   const color = partyColor(cell.party, cell.color_hex);
-                  // 透明度根據得票% 調整：50% → 0.8 opacity, 30% → 0.4 opacity
                   const opacity = Math.min(1, 0.35 + (cell.pct - 25) / 100);
                   return (
                     <td
                       key={y}
                       title={`${cell.year} ${c}: ${cell.candidate ? cell.candidate + " · " : ""}${cell.party} ${cell.pct}%`}
-                      className="w-12 h-7 border border-paper text-center tabular-nums text-paper font-bold"
-                      style={{
-                        backgroundColor: color,
-                        opacity,
-                      }}
+                      className="w-12 h-7 border border-paper p-0"
                     >
-                      {cell.pct.toFixed(0)}
+                      <Link
+                        href={`/trends/county/${encodeURIComponent(c)}`}
+                        className="flex items-center justify-center w-full h-full tabular-nums text-paper font-bold"
+                        style={{ backgroundColor: color, opacity }}
+                      >
+                        {cell.pct.toFixed(0)}
+                      </Link>
                     </td>
                   );
                 })}
