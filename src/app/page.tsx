@@ -51,14 +51,17 @@ async function fetchIncumbentStats(name: string) {
     getPersonProfile(name).catch(() => null),
     getPersonTargets(name).catch(() => []),
   ]);
-  const past = targets.filter((t) => t.tense === "past").length;
-  const future = targets.filter((t) => t.tense === "future").length;
+  // 只算 parent target，避免 sub-metric 重複計數
+  const top = targets.filter((t) => t.parent_target_id === null);
+  const past = top.filter((t) => t.tense === "past").length;
+  const future = top.filter((t) => t.tense === "future").length;
   const party = profile?.party_history?.[profile.party_history.length - 1];
   return {
     name,
     party_name: party?.party || null,
     color_hex: party?.color_hex || null,
     photo_path: profile?.photo_path || null,
+    total: top.length,
     past,
     future,
   };
@@ -237,71 +240,30 @@ export default async function HomePage() {
             中央 · 行政與立法
           </p>
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-3 mb-8">
-            {INCUMBENTS.map((o) => {
-              const s = incumbentStatsByName.get(o.name);
-              const color = partyColor(s?.party_name);
-              return (
-                <Link
-                  key={o.name}
-                  href={`/people/${encodeURIComponent(o.name)}`}
-                  className="border border-rule p-4 hover:bg-rule/20 transition group"
-                >
-                  <div
-                    className="text-[10px] tracking-[0.2em] mb-1"
-                    style={{ color }}
-                  >
-                    {o.role}
-                  </div>
-                  <div className="font-serif text-2xl font-bold mb-1 group-hover:text-accent-red transition">
-                    {o.name}
-                  </div>
-                  <div className="text-xs text-ink-soft mb-3">
-                    {s?.party_name || "—"} · 上任 {daysInOffice(o.since)} 天
-                  </div>
-                  <div className="flex gap-3 text-xs">
-                    <span>📜 {s?.past ?? 0} 政績</span>
-                    <span className="text-accent-red">🎯 {s?.future ?? 0} 承諾</span>
-                  </div>
-                </Link>
-              );
-            })}
+            {INCUMBENTS.map((o) => (
+              <IncumbentCard
+                key={o.name}
+                role={o.role}
+                name={o.name}
+                since={o.since}
+                stats={incumbentStatsByName.get(o.name)}
+              />
+            ))}
           </div>
 
           <p className="text-[10px] tracking-[0.2em] uppercase text-ink-soft mb-3">
             六都市長
           </p>
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
-            {MAYORS.map((m) => {
-              const s = incumbentStatsByName.get(m.name);
-              const color = partyColor(s?.party_name);
-              return (
-                <Link
-                  key={m.name}
-                  href={`/people/${encodeURIComponent(m.name)}`}
-                  className="border border-rule p-4 hover:bg-rule/20 transition group flex items-start gap-3"
-                >
-                  <div
-                    className="w-1 h-14 shrink-0"
-                    style={{ backgroundColor: color }}
-                  />
-                  <div className="flex-1 min-w-0">
-                    <div className="text-[10px] tracking-[0.2em] text-ink-soft mb-0.5">
-                      {m.role}
-                    </div>
-                    <div className="font-serif text-xl font-bold mb-1 group-hover:text-accent-red transition truncate">
-                      {m.name}
-                    </div>
-                    <div className="text-xs text-ink-soft mb-2 truncate">
-                      {s?.party_name || "—"} · {daysInOffice(m.since)} 天
-                    </div>
-                    <div className="flex gap-3 text-xs">
-                      <span>📜 {s?.past ?? 0}</span>
-                      <span className="text-accent-red">🎯 {s?.future ?? 0}</span>
-                    </div>
-                  </div>
-                </Link>
-              );
-            })}
+            {MAYORS.map((m) => (
+              <IncumbentCard
+                key={m.name}
+                role={m.role}
+                name={m.name}
+                since={m.since}
+                stats={incumbentStatsByName.get(m.name)}
+              />
+            ))}
           </div>
         </div>
       </section>
@@ -590,6 +552,71 @@ function daysUntil(dateStr: string): number {
   const target = new Date(dateStr.slice(0, 10) + "T00:00:00");
   const ms = target.getTime() - today.getTime();
   return Math.ceil(ms / (1000 * 60 * 60 * 24));
+}
+
+function IncumbentCard({
+  role,
+  name,
+  since,
+  stats,
+}: {
+  role: string;
+  name: string;
+  since: string;
+  stats:
+    | {
+        party_name: string | null;
+        color_hex: string | null;
+        total: number;
+        past: number;
+        future: number;
+      }
+    | undefined;
+}) {
+  const color = partyColor(stats?.party_name, stats?.color_hex || undefined);
+  const total = stats?.total ?? 0;
+  const past = stats?.past ?? 0;
+  const future = stats?.future ?? 0;
+  const other = Math.max(0, total - past - future);
+  return (
+    <Link
+      href={`/people/${encodeURIComponent(name)}`}
+      className="border border-rule p-4 hover:bg-rule/20 transition group flex items-start gap-3"
+    >
+      <div
+        className="w-1 self-stretch shrink-0"
+        style={{ backgroundColor: color }}
+      />
+      <div className="flex-1 min-w-0">
+        <div className="text-[10px] tracking-[0.2em] text-ink-soft mb-1">
+          {role}
+        </div>
+        <div className="font-serif text-2xl font-bold mb-1 group-hover:text-accent-red transition truncate">
+          {name}
+        </div>
+        <div className="text-xs text-ink-soft mb-2 truncate">
+          {stats?.party_name || "—"} · 上任 {daysInOffice(since)} 天
+        </div>
+        <div className="flex gap-3 text-xs tabular-nums">
+          {total === 0 ? (
+            <span className="text-ink-soft">— 政見資料整理中</span>
+          ) : (
+            <>
+              <span title="已完成政績">📜 {past}</span>
+              <span className="text-accent-red" title="未達成承諾">
+                🎯 {future}
+              </span>
+              {other > 0 && (
+                <span className="text-ink-soft" title="未分類">
+                  ⋯ {other}
+                </span>
+              )}
+            </>
+          )}
+        </div>
+      </div>
+    </Link>
+  );
 }
 
 function FeatureCard({
