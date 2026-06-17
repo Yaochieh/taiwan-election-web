@@ -199,6 +199,50 @@ export default async function PersonPage({
         const past = targets.filter((t) => t.tense === "past");
         const future = targets.filter((t) => t.tense === "future");
         const unknown = targets.filter((t) => !t.tense || t.tense === "unknown");
+        // 一個 tense 群組：有數值的用完整卡，無數值的用精簡列
+        const renderGroup = (
+          list: typeof targets,
+          heading: React.ReactNode,
+          compactBorder: string,
+        ) => {
+          if (list.length === 0) return null;
+          const withVal = list.filter((t) => t.target_value != null);
+          const noVal = list.filter((t) => t.target_value == null);
+          return (
+            <div className="mb-8">
+              <h3 className="font-serif text-lg font-bold mb-3 flex items-baseline gap-3">
+                {heading}
+                <span className="text-sm text-ink-soft">{list.length} 項</span>
+              </h3>
+              {withVal.length > 0 && (
+                <div className="grid sm:grid-cols-2 gap-6 mb-3">
+                  {withVal.map((t) => (
+                    <TargetCard key={t.target_id} target={t} />
+                  ))}
+                </div>
+              )}
+              {noVal.length > 0 && (
+                <ul className="space-y-1.5">
+                  {noVal.map((t) => (
+                    <li
+                      key={t.target_id}
+                      className="border-l-2 pl-3 py-1 text-sm"
+                      style={{ borderColor: compactBorder }}
+                    >
+                      <span className="font-medium">{t.title}</span>
+                      {t.description && t.description !== t.title && (
+                        <span className="text-ink-soft">
+                          {" "}
+                          — {t.description}
+                        </span>
+                      )}
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          );
+        };
         return (
           <section className="mb-12">
             <div className="flex items-baseline justify-between mb-4 gap-4">
@@ -209,46 +253,21 @@ export default async function PersonPage({
             </div>
             <p className="text-sm text-ink-soft mb-6 leading-relaxed max-w-3xl">
               從候選人公報自動分類為「政績」（已完成、過去任內事項）與「承諾」（本次競選新提）。
-              政績預設標「待考證」，未來會接公開資料自動驗證。
+              有量化數字的承諾會以卡片呈現、其餘條列。政績預設標「待考證」。
             </p>
-
-            {future.length > 0 && (
-              <div className="mb-8">
-                <h3 className="font-serif text-lg font-bold mb-3 flex items-baseline gap-3">
-                  <span className="text-accent-red">🎯 承諾</span>
-                  <span className="text-sm text-ink-soft">{future.length} 項</span>
-                </h3>
-                <div className="grid sm:grid-cols-2 gap-6">
-                  {future.map((t) => (
-                    <TargetCard key={t.target_id} target={t} />
-                  ))}
-                </div>
-              </div>
+            {renderGroup(
+              future,
+              <span className="text-accent-red">🎯 承諾</span>,
+              "var(--color-accent-red, #c0392b)",
             )}
-
-            {past.length > 0 && (
-              <div className="mb-8">
-                <h3 className="font-serif text-lg font-bold mb-3 flex items-baseline gap-3">
-                  <span>📜 政績</span>
-                  <span className="text-sm text-ink-soft">{past.length} 項 · 預設待考證</span>
-                </h3>
-                <div className="grid sm:grid-cols-2 gap-6">
-                  {past.map((t) => (
-                    <TargetCard key={t.target_id} target={t} />
-                  ))}
-                </div>
-              </div>
-            )}
-
+            {renderGroup(past, <span>📜 政績</span>, "#999")}
             {unknown.length > 0 && (
               <details className="mb-4">
                 <summary className="cursor-pointer text-sm text-ink-soft hover:text-ink">
                   ⋯ 其他 {unknown.length} 項（未分類）
                 </summary>
-                <div className="grid sm:grid-cols-2 gap-6 mt-4">
-                  {unknown.map((t) => (
-                    <TargetCard key={t.target_id} target={t} />
-                  ))}
+                <div className="mt-3">
+                  {renderGroup(unknown, <span className="text-ink-soft">未分類</span>, "#ccc")}
                 </div>
               </details>
             )}
