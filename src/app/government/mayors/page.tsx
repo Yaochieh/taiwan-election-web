@@ -42,29 +42,56 @@ export default async function MayorsPage() {
     votes: number;
     color: string;
   };
+  // 升格前舊縣 → 升格後直轄市
+  const COUNTY_MERGE: Record<string, string> = {
+    "臺北縣": "新北市",
+    "桃園縣": "桃園市",
+    "臺中縣": "臺中市",
+    "臺南縣": "臺南市",
+    "高雄縣": "高雄市",
+  };
+  // grid[modern_county][year] = 「合併版」單一勝選 Cell
+  // subs[modern_county][year] = 升格前原始各縣市 sub-cells（可能有多筆）
   const grid = new Map<string, Map<string, Cell>>();
+  const subs = new Map<string, Map<string, Cell[]>>();
   const years = new Set<string>();
   const counties = new Set<string>();
 
   for (const h of history) {
     if (h.district === "地區(10, 0, 0)") continue;
-    const county = cleanDistrict(h.district);
-    if (!county) continue;
+    const rawCounty = cleanDistrict(h.district);
+    if (!rawCounty) continue;
+    const modern = COUNTY_MERGE[rawCounty] || rawCounty;
     const year = h.date.slice(0, 4);
     years.add(year);
-    counties.add(county);
+    counties.add(modern);
 
-    // 同一縣市同一年只保留得票最高（一場 normal 選舉一名當選人）
-    if (!grid.has(county)) grid.set(county, new Map());
-    const row = grid.get(county)!;
+    const subCell: Cell & { originDistrict: string } = {
+      candidate: h.candidate_name,
+      party: h.party_name,
+      votes: h.votes,
+      color: partyColor(h.party_name),
+      originDistrict: rawCounty,
+    };
+    // subs：每個 (modern_county, year) 收所有原始縣市 cells
+    if (!subs.has(modern)) subs.set(modern, new Map());
+    const subRow = subs.get(modern)!;
+    if (!subRow.has(year)) subRow.set(year, []);
+    const list = subRow.get(year)!;
+    // 同一 originDistrict 只保留得票最高（多次匯入時去重）
+    const existIdx = list.findIndex((x) => (x as any).originDistrict === rawCounty);
+    if (existIdx >= 0) {
+      if (h.votes > list[existIdx].votes) list[existIdx] = subCell;
+    } else {
+      list.push(subCell);
+    }
+
+    // grid：合併版用得票最高那位（升格前若有多縣市，取總票數最高的一位）
+    if (!grid.has(modern)) grid.set(modern, new Map());
+    const row = grid.get(modern)!;
     const existing = row.get(year);
     if (!existing || h.votes > existing.votes) {
-      row.set(year, {
-        candidate: h.candidate_name,
-        party: h.party_name,
-        votes: h.votes,
-        color: partyColor(h.party_name),
-      });
+      row.set(year, subCell);
     }
   }
 
@@ -184,45 +211,68 @@ export default async function MayorsPage() {
                     {county}
                   </th>
                   {yearList.map((y) => {
-                    const cell = grid.get(county)?.get(y);
+                    const subList = subs.get(county)?.get(y) || [];
                     const electionId = yearToElectionId.get(y);
                     return (
                       <td
                         key={y}
                         className="text-center px-2 py-2 align-top"
                       >
-                        {cell ? (
-                          electionId ? (
-                            <Link
-                              href={`/elections/${electionId}`}
-                              className="block hover:bg-rule/40 px-2 py-1 transition"
-                              title={`${cell.candidate} (${cell.party || "無黨籍"})\n得票 ${formatVotes(cell.votes)}\n點擊看選舉詳情`}
-                            >
-                              <div
-                                className="font-medium leading-tight"
-                                style={{ color: cell.color }}
-                              >
-                                {cell.candidate}
-                              </div>
-                              <div className="text-[10px] text-ink-soft mt-0.5">
-                                {(cell.party || "無黨籍").slice(0, 4)}
-                              </div>
-                            </Link>
-                          ) : (
-                            <div>
-                              <div
-                                className="font-medium leading-tight"
-                                style={{ color: cell.color }}
-                              >
-                                {cell.candidate}
-                              </div>
-                              <div className="text-[10px] text-ink-soft mt-0.5">
-                                {(cell.party || "無黨籍").slice(0, 4)}
-                              </div>
-                            </div>
-                          )
-                        ) : (
+                        {subList.length === 0 ? (
                           <span className="text-ink-soft">—</span>
+                        ) : subList.length === 1 ? (
+                          (() => {
+                            const cell = subList[0];
+                            const inner = (
+                              <>
+                                <div
+                                  className="font-medium leading-tight"
+                                  style={{ color: cell.color }}
+                                >
+                                  {cell.candidate}
+                                </div>
+                                <div className="text-[10px] text-ink-soft mt-0.5">
+                                  {(cell.party || "無黨籍").slice(0, 4)}
+                                </div>
+                              </>
+                            );
+                            return electionId ? (
+                              <Link
+                                href={`/elections/${electionId}`}
+                                className="block hover:bg-rule/40 px-2 py-1 transition"
+                                title={`${cell.candidate} (${cell.party || "無黨籍"})\n得票 ${formatVotes(cell.votes)}`}
+                              >
+                                {inner}
+                              </Link>
+                            ) : (
+                              <div>{inner}</div>
+                            );
+                          })()
+                        ) : (
+                          // 升格前同年有兩個原始縣市 → 並列
+                          <div className="flex gap-1 justify-center">
+                            {subList.map((s, si) => (
+                              <div
+                                key={si}
+                                className="flex-1 border border-rule px-1 py-0.5 min-w-0"
+                                title={`${(s as any).originDistrict}：${s.candidate} (${s.party || "無黨籍"})\n得票 ${formatVotes(s.votes)}`}
+                              >
+                                <div className="text-[9px] text-ink-soft tracking-wider">
+                                  {(s as any).originDistrict.replace(/[縣市]$/, "")}
+                                  {(s as any).originDistrict.endsWith("市") ? "市" : "縣"}
+                                </div>
+                                <div
+                                  className="text-xs font-medium leading-tight truncate"
+                                  style={{ color: s.color }}
+                                >
+                                  {s.candidate}
+                                </div>
+                                <div className="text-[9px] text-ink-soft">
+                                  {(s.party || "—").slice(0, 3)}
+                                </div>
+                              </div>
+                            ))}
+                          </div>
                         )}
                       </td>
                     );
