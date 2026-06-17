@@ -199,6 +199,12 @@ export default async function PersonPage({
         const past = targets.filter((t) => t.tense === "past");
         const future = targets.filter((t) => t.tense === "future");
         const unknown = targets.filter((t) => !t.tense || t.tense === "unknown");
+        // 承諾再依選舉結果分：當選可追蹤 vs 落選未執行
+        const futureWon = future.filter((t) => t.verification_status === "in_office");
+        const futureLost = future.filter((t) => t.verification_status === "not_executed");
+        const futureOther = future.filter(
+          (t) => t.verification_status !== "in_office" && t.verification_status !== "not_executed",
+        );
         // 一個 tense 群組：有數值的用完整卡，無數值的用精簡列
         const renderGroup = (
           list: typeof targets,
@@ -252,14 +258,26 @@ export default async function PersonPage({
               </span>
             </div>
             <p className="text-sm text-ink-soft mb-6 leading-relaxed max-w-3xl">
-              從候選人公報自動分類為「政績」（已完成、過去任內事項）與「承諾」（本次競選新提）。
-              有量化數字的承諾會以卡片呈現、其餘條列。政績預設標「待考證」。
+              從候選人公報自動分類為「政績」（過去任內事項）與「承諾」（競選新提）。
+              承諾再依該場選舉是否當選，分「當選·可追蹤」與「未當選·未執行」。
+              有量化數字者以卡片呈現、其餘條列。
             </p>
             {renderGroup(
-              future,
-              <span className="text-accent-red">🎯 承諾</span>,
+              futureWon,
+              <span className="text-accent-red">🎯 承諾 · 當選可追蹤</span>,
               "var(--color-accent-red, #c0392b)",
             )}
+            {renderGroup(
+              futureLost,
+              <span className="text-ink-soft">✗ 承諾 · 未當選未執行</span>,
+              "#bbb",
+            )}
+            {futureOther.length > 0 &&
+              renderGroup(
+                futureOther,
+                <span className="text-accent-red">🎯 承諾</span>,
+                "var(--color-accent-red, #c0392b)",
+              )}
             {renderGroup(past, <span>📜 政績</span>, "#999")}
             {unknown.length > 0 && (
               <details className="mb-4">
