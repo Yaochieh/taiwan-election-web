@@ -5,6 +5,9 @@ import {
   getMayoralHistory,
   getCandidatesStatus,
   getPresidentialTrend,
+  getPersonTargets,
+  getPersonProfile,
+  candidatePhotoUrl,
 } from "@/lib/api";
 import {
   formatElectionLabelShort,
@@ -21,13 +24,59 @@ const TYPE_ZH: Record<string, string> = {
   council: "議員",
 };
 
-export default async function HomePage() {
-  const [withPlatforms, mayoralHistory, allElections, presidential] = await Promise.all([
-    getElectionsWithPlatforms().catch(() => []),
-    getMayoralHistory().catch(() => []),
-    getElections().catch(() => []),
-    getPresidentialTrend().catch(() => []),
+// 現任政府首長（手動策展，與 /government/cabinet 同步）
+const INCUMBENTS = [
+  { role: "總統", name: "賴清德", since: "2024-05-20" },
+  { role: "副總統", name: "蕭美琴", since: "2024-05-20" },
+  { role: "行政院長", name: "卓榮泰", since: "2024-05-20" },
+  { role: "立法院長", name: "韓國瑜", since: "2024-02-01" },
+];
+const MAYORS = [
+  { role: "臺北市", name: "蔣萬安", since: "2022-12-25" },
+  { role: "新北市", name: "侯友宜", since: "2022-12-25" },
+  { role: "桃園市", name: "張善政", since: "2022-12-25" },
+  { role: "臺中市", name: "盧秀燕", since: "2022-12-25" },
+  { role: "臺南市", name: "黃偉哲", since: "2022-12-25" },
+  { role: "高雄市", name: "陳其邁", since: "2022-12-25" },
+];
+
+function daysInOffice(since: string): number {
+  const start = new Date(since + "T00:00:00");
+  const now = new Date();
+  return Math.floor((now.getTime() - start.getTime()) / 86400000);
+}
+
+async function fetchIncumbentStats(name: string) {
+  const [profile, targets] = await Promise.all([
+    getPersonProfile(name).catch(() => null),
+    getPersonTargets(name).catch(() => []),
   ]);
+  const past = targets.filter((t) => t.tense === "past").length;
+  const future = targets.filter((t) => t.tense === "future").length;
+  const party = profile?.party_history?.[profile.party_history.length - 1];
+  return {
+    name,
+    party_name: party?.party || null,
+    color_hex: party?.color_hex || null,
+    photo_path: profile?.photo_path || null,
+    past,
+    future,
+  };
+}
+
+export default async function HomePage() {
+  const [withPlatforms, mayoralHistory, allElections, presidential, ...incumbentStats] =
+    await Promise.all([
+      getElectionsWithPlatforms().catch(() => []),
+      getMayoralHistory().catch(() => []),
+      getElections().catch(() => []),
+      getPresidentialTrend().catch(() => []),
+      ...INCUMBENTS.map((o) => fetchIncumbentStats(o.name)),
+      ...MAYORS.map((m) => fetchIncumbentStats(m.name)),
+    ]);
+  const incumbentStatsByName = new Map(
+    incumbentStats.map((s) => [s.name, s]),
+  );
 
   const latestPlatformElection = withPlatforms[0];
 
@@ -160,6 +209,144 @@ export default async function HomePage() {
           </div>
         </div>
       </section>
+
+      {/* ── 現任執政者政績追蹤 ── */}
+      <section className="border-y border-rule bg-paper">
+        <div className="mx-auto max-w-6xl px-4 sm:px-6 py-14">
+          <div className="flex items-baseline justify-between flex-wrap gap-3 mb-6">
+            <div>
+              <p className="text-xs tracking-[0.2em] uppercase text-ink-soft mb-2">
+                INCUMBENTS · 現任執政者
+              </p>
+              <h2 className="font-serif text-3xl sm:text-4xl font-bold">
+                政績追蹤
+              </h2>
+            </div>
+            <Link
+              href="/government/cabinet"
+              className="text-sm underline underline-offset-4 hover:text-accent-red"
+            >
+              查看完整內閣名單 →
+            </Link>
+          </div>
+          <p className="text-sm text-ink-soft mb-6 max-w-2xl leading-relaxed">
+            「政績」= 已完成事項；「承諾」= 競選時提出尚待達成。數字來自 LLM 自動分類。
+          </p>
+
+          <p className="text-[10px] tracking-[0.2em] uppercase text-ink-soft mb-3">
+            中央 · 行政與立法
+          </p>
+          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-3 mb-8">
+            {INCUMBENTS.map((o) => {
+              const s = incumbentStatsByName.get(o.name);
+              const color = partyColor(s?.party_name);
+              return (
+                <Link
+                  key={o.name}
+                  href={`/people/${encodeURIComponent(o.name)}`}
+                  className="border border-rule p-4 hover:bg-rule/20 transition group"
+                >
+                  <div
+                    className="text-[10px] tracking-[0.2em] mb-1"
+                    style={{ color }}
+                  >
+                    {o.role}
+                  </div>
+                  <div className="font-serif text-2xl font-bold mb-1 group-hover:text-accent-red transition">
+                    {o.name}
+                  </div>
+                  <div className="text-xs text-ink-soft mb-3">
+                    {s?.party_name || "—"} · 上任 {daysInOffice(o.since)} 天
+                  </div>
+                  <div className="flex gap-3 text-xs">
+                    <span>📜 {s?.past ?? 0} 政績</span>
+                    <span className="text-accent-red">🎯 {s?.future ?? 0} 承諾</span>
+                  </div>
+                </Link>
+              );
+            })}
+          </div>
+
+          <p className="text-[10px] tracking-[0.2em] uppercase text-ink-soft mb-3">
+            六都市長
+          </p>
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
+            {MAYORS.map((m) => {
+              const s = incumbentStatsByName.get(m.name);
+              const color = partyColor(s?.party_name);
+              return (
+                <Link
+                  key={m.name}
+                  href={`/people/${encodeURIComponent(m.name)}`}
+                  className="border border-rule p-4 hover:bg-rule/20 transition group flex items-start gap-3"
+                >
+                  <div
+                    className="w-1 h-14 shrink-0"
+                    style={{ backgroundColor: color }}
+                  />
+                  <div className="flex-1 min-w-0">
+                    <div className="text-[10px] tracking-[0.2em] text-ink-soft mb-0.5">
+                      {m.role}
+                    </div>
+                    <div className="font-serif text-xl font-bold mb-1 group-hover:text-accent-red transition truncate">
+                      {m.name}
+                    </div>
+                    <div className="text-xs text-ink-soft mb-2 truncate">
+                      {s?.party_name || "—"} · {daysInOffice(m.since)} 天
+                    </div>
+                    <div className="flex gap-3 text-xs">
+                      <span>📜 {s?.past ?? 0}</span>
+                      <span className="text-accent-red">🎯 {s?.future ?? 0}</span>
+                    </div>
+                  </div>
+                </Link>
+              );
+            })}
+          </div>
+        </div>
+      </section>
+
+      {/* ── 下次選舉聚焦 ── */}
+      {nextDate && (
+        <section className="mx-auto max-w-6xl px-4 sm:px-6 py-14 border-b border-rule">
+          <div className="flex items-baseline justify-between flex-wrap gap-3 mb-6">
+            <div>
+              <p className="text-xs tracking-[0.2em] uppercase text-ink-soft mb-2">
+                NEXT ELECTION · 下次選舉
+              </p>
+              <h2 className="font-serif text-3xl sm:text-4xl font-bold">
+                {nextDate.slice(0, 10)}
+                <span className="ml-3 text-base text-ink-soft font-normal">
+                  {nextTypes.slice(0, 4).join("、")}
+                </span>
+              </h2>
+            </div>
+            <div className="text-right">
+              <div className="font-serif text-5xl font-bold text-accent-red tabular-nums">
+                {daysToNext}
+              </div>
+              <div className="text-xs text-ink-soft">天</div>
+            </div>
+          </div>
+          <p className="text-sm text-ink-soft leading-relaxed max-w-3xl">
+            候選人與政見會在中選會公報公告後陸續上線。可先看
+            <Link
+              href="/elections"
+              className="underline underline-offset-4 hover:text-accent-red mx-1"
+            >
+              歷屆選舉
+            </Link>
+            或
+            <Link
+              href="/government/cabinet"
+              className="underline underline-offset-4 hover:text-accent-red mx-1"
+            >
+              現任政府
+            </Link>
+            。
+          </p>
+        </section>
+      )}
 
       {/* ── 平台收錄 三大區塊 ── */}
       <section className="mx-auto max-w-6xl px-4 sm:px-6 py-16">
