@@ -46,6 +46,22 @@ function formatNumber(n: number | null, unit: string | null): string {
   return new Intl.NumberFormat("zh-TW").format(n) + " " + (unit || "");
 }
 
+// 標題與內文是否「實質重複」：去標點空白後互相包含、或重疊度高
+function isRedundant(title: string, desc: string): boolean {
+  const norm = (s: string) => s.replace(/[\s，。、：:（）()「」0-9]/g, "");
+  const a = norm(title);
+  const b = norm(desc);
+  if (!a || !b) return false;
+  if (a === b) return true;
+  // 一方完全包含另一方
+  if (a.includes(b) || b.includes(a)) return true;
+  // 字元重疊度 > 70%
+  const setA = new Set(a);
+  let overlap = 0;
+  for (const ch of new Set(b)) if (setA.has(ch)) overlap++;
+  return overlap / Math.min(setA.size, new Set(b).size) > 0.7;
+}
+
 export function TargetCard({ target }: { target: PlatformTarget }) {
   const color = (target.category && CATEGORY_COLOR[target.category]) || "#444";
   const status = STATUS_LABEL[target.status] || STATUS_LABEL.in_progress;
@@ -55,7 +71,8 @@ export function TargetCard({ target }: { target: PlatformTarget }) {
     <article className="border border-rule bg-paper">
       {/* Header */}
       <div className="p-5 sm:p-6">
-        <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1 mb-3">
+        {/* 第一行：chips */}
+        <div className="flex flex-wrap items-center gap-2 mb-2">
           {target.category && (
             <span
               className="text-xs font-medium px-2 py-0.5 border"
@@ -64,18 +81,14 @@ export function TargetCard({ target }: { target: PlatformTarget }) {
               {target.category}
             </span>
           )}
-          {/* tense chip */}
           {target.tense === "past" && (
-            <span className="text-xs px-2 py-0.5 bg-rule/40 text-ink">
-              📜 政績
-            </span>
+            <span className="text-xs px-2 py-0.5 bg-rule/40 text-ink">📜 政績</span>
           )}
           {target.tense === "future" && (
             <span className="text-xs px-2 py-0.5 bg-accent-red/15 text-accent-red border border-accent-red/30">
               🎯 承諾
             </span>
           )}
-          {/* verification chip */}
           {target.verification_status === "pending" && (
             <span className="text-xs px-2 py-0.5 bg-paper border border-rule text-ink-soft">
               ❓ 待考證
@@ -106,18 +119,21 @@ export function TargetCard({ target }: { target: PlatformTarget }) {
               ⚐ 自我宣稱·未查證
             </span>
           )}
-          <h3 className="font-serif text-xl font-bold flex-1">
-            {target.title}
-          </h3>
-          <span className={"text-xs px-2 py-0.5 " + status.cls}>
+          <span className={"ml-auto text-xs px-2 py-0.5 shrink-0 " + status.cls}>
             {status.text}
           </span>
         </div>
-        {target.description && (
-          <p className="text-sm text-ink-soft mb-2 leading-relaxed">
-            {target.description}
-          </p>
-        )}
+        {/* 第二行：標題獨佔一行 */}
+        <h3 className="font-serif text-xl font-bold leading-snug mb-2">
+          {target.title}
+        </h3>
+        {/* 內文：與標題明顯不同時才顯示，避免重複 */}
+        {target.description &&
+          !isRedundant(target.title, target.description) && (
+            <p className="text-sm text-ink-soft mb-2 leading-relaxed">
+              {target.description}
+            </p>
+          )}
         {target.election_date && (
           <p className="text-[11px] text-ink-soft">
             出處：{target.election_date.slice(0, 4)} {target.election_name}
