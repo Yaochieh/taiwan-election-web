@@ -285,9 +285,65 @@ export default async function TopicDetailPage({
                 );
               })}
             </div>
+            {/* 同單位最大承諾 by 年 */}
+            {(() => {
+              // 找最多人使用的 unit
+              const unitCounts = new Map<string, number>();
+              for (const t of autoTargets) {
+                const u = t.metric_unit || "";
+                if (!u) continue;
+                unitCounts.set(u, (unitCounts.get(u) || 0) + 1);
+              }
+              const topUnit = Array.from(unitCounts.entries())
+                .sort((a, b) => b[1] - a[1])[0]?.[0];
+              if (!topUnit || (unitCounts.get(topUnit) || 0) < 3) return null;
+              const maxByYear = new Map<string, { v: number; person: string }>();
+              for (const t of autoTargets) {
+                if (t.metric_unit !== topUnit) continue;
+                const y = (t.election_date || "").slice(0, 4);
+                if (!y) continue;
+                const cur = maxByYear.get(y);
+                const v = t.target_value || 0;
+                if (!cur || v > cur.v) {
+                  maxByYear.set(y, { v, person: t.person_name });
+                }
+              }
+              const yrs = Array.from(maxByYear.keys()).sort();
+              if (yrs.length < 2) return null;
+              const maxVal = Math.max(...yrs.map((y) => maxByYear.get(y)!.v));
+              return (
+                <div className="border-t border-rule pt-4 mt-4 mb-4">
+                  <p className="text-xs text-ink-soft mb-3">
+                    歷年承諾最大值（單位：<strong>{topUnit}</strong>），
+                    每年取該年最高承諾、附提出者：
+                  </p>
+                  <div className="grid grid-cols-[60px_1fr_120px] gap-3 items-center text-sm">
+                    {yrs.map((y) => {
+                      const entry = maxByYear.get(y)!;
+                      const pct = (entry.v / maxVal) * 100;
+                      const display = entry.v >= 10000
+                        ? `${(entry.v / 10000).toFixed(1)} 萬`
+                        : entry.v.toLocaleString();
+                      return (
+                        <div key={y} className="contents">
+                          <div className="font-serif text-lg tabular-nums">{y}</div>
+                          <div className="h-6 bg-rule">
+                            <div className="h-6 bg-ink" style={{ width: `${pct}%` }} />
+                          </div>
+                          <div className="text-xs tabular-nums">
+                            <strong>{display}</strong>
+                            <span className="text-ink-soft ml-1">({entry.person})</span>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              );
+            })()}
             <p className="text-xs text-ink-soft mb-3">完整列表：</p>
           <div className="space-y-2">
-            {autoTargets.slice(0, 15).map((t) => {
+            {autoTargets.slice(0, 30).map((t) => {
               const color = partyColor(t.party_name, t.color_hex);
               return (
                 <div
