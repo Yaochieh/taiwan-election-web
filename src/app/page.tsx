@@ -567,6 +567,7 @@ function IncumbentCard({
     | {
         party_name: string | null;
         color_hex: string | null;
+        photo_path: string | null;
         total: number;
         past: number;
         future: number;
@@ -578,6 +579,7 @@ function IncumbentCard({
   const past = stats?.past ?? 0;
   const future = stats?.future ?? 0;
   const other = Math.max(0, total - past - future);
+  const photo = candidatePhotoUrl(stats?.photo_path ?? null);
   return (
     <Link
       href={`/people/${encodeURIComponent(name)}`}
@@ -587,6 +589,22 @@ function IncumbentCard({
         className="w-1 self-stretch shrink-0"
         style={{ backgroundColor: color }}
       />
+      {photo ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
+          src={photo}
+          alt={name}
+          className="w-12 h-16 object-cover border shrink-0"
+          style={{ borderColor: color }}
+        />
+      ) : (
+        <div
+          className="w-12 h-16 flex items-center justify-center border shrink-0 font-serif text-2xl"
+          style={{ borderColor: color, color, backgroundColor: `${color}10` }}
+        >
+          {name.slice(0, 1)}
+        </div>
+      )}
       <div className="flex-1 min-w-0">
         <div className="text-[10px] tracking-[0.2em] text-ink-soft mb-1">
           {role}
