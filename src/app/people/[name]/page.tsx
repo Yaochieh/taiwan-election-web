@@ -235,6 +235,11 @@ export default async function PersonPage({
                       className="border-l-2 pl-3 py-1 text-sm"
                       style={{ borderColor: compactBorder }}
                     >
+                      {t.election_date && (
+                        <span className="text-[10px] text-ink-soft tabular-nums mr-1.5 align-middle">
+                          {t.election_date.slice(0, 4)}
+                        </span>
+                      )}
                       <span className="font-medium">{t.title}</span>
                       {t.description && t.description !== t.title && (
                         <span className="text-ink-soft">
