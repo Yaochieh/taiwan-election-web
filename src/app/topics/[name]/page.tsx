@@ -368,6 +368,16 @@ export default async function TopicDetailPage({
                       <span className="text-xs text-ink-soft">
                         {t.party_name || "—"}
                       </span>
+                      {t.verification_status === "in_office" && (
+                        <span className="text-[10px] px-1.5 py-0.5 border border-accent-red/40 text-accent-red">
+                          當選·可追蹤
+                        </span>
+                      )}
+                      {t.verification_status === "not_executed" && (
+                        <span className="text-[10px] px-1.5 py-0.5 border border-ink-soft/30 text-ink-soft">
+                          未當選
+                        </span>
+                      )}
                     </div>
                     <div className="text-right">
                       <span className="font-serif text-xl font-bold tabular-nums">
