@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { getPersonProfile } from "@/lib/api";
+import { getPersonProfile, getPersonTopicDistribution } from "@/lib/api";
 import type { PersonProfile } from "@/lib/types";
 import { partyColor, formatVotes } from "@/lib/format";
 import { PersonLink, PartyLink } from "@/components/entity-links";
@@ -27,10 +27,26 @@ export default async function ComparePage({
         .filter(Boolean)
     : [];
 
-  const profiles: (PersonProfile | null)[] = await Promise.all(
-    names.map((n) => getPersonProfile(n).catch(() => null)),
-  );
+  const [profiles, topicDists] = await Promise.all([
+    Promise.all(names.map((n) => getPersonProfile(n).catch(() => null))),
+    Promise.all(names.map((n) => getPersonTopicDistribution(n).catch(() => []))),
+  ]);
   const valid = profiles.filter((p): p is PersonProfile => p !== null);
+  // name → topic distribution map（只保留有 profile 的）
+  const distByName = new Map<string, Awaited<ReturnType<typeof getPersonTopicDistribution>>>();
+  names.forEach((n, i) => {
+    if (profiles[i]) distByName.set(n, topicDists[i]);
+  });
+  // 收集所有出現過的主題（聯集），用最大 n 正規化長條
+  const allTopics = new Map<string, string>(); // topic → icon
+  let maxTopicN = 1;
+  for (const dist of distByName.values()) {
+    for (const d of dist) {
+      allTopics.set(d.topic, d.icon);
+      if (d.n > maxTopicN) maxTopicN = d.n;
+    }
+  }
+  const topicList = Array.from(allTopics.entries());
 
   return (
     <div className="mx-auto max-w-6xl px-4 sm:px-6 py-12">
@@ -181,6 +197,55 @@ export default async function ComparePage({
               ))}
             </div>
           </section>
+
+          {/* 政見主題對照 */}
+          {topicList.length > 0 && (
+            <section>
+              <h2 className="font-serif text-xl font-bold mb-1">政見主題對照</h2>
+              <p className="text-xs text-ink-soft mb-3">
+                各人歷年政見被歸到各主題的條數。長條長度可橫向比較誰更重視該議題。
+              </p>
+              <div className="border border-rule divide-y divide-rule">
+                {topicList.map(([topic, icon]) => (
+                  <div
+                    key={topic}
+                    className="grid items-center gap-2 px-3 py-2"
+                    style={{
+                      gridTemplateColumns: `120px repeat(${valid.length}, minmax(0, 1fr))`,
+                    }}
+                  >
+                    <div className="text-sm whitespace-nowrap">
+                      <span className="mr-1">{icon}</span>
+                      {topic}
+                    </div>
+                    {valid.map((p) => {
+                      const dist = distByName.get(p.name) || [];
+                      const cell = dist.find((d) => d.topic === topic);
+                      const n = cell?.n || 0;
+                      const color = partyColor(p.party_history[0]?.party);
+                      return (
+                        <div key={p.name} className="flex items-center gap-2">
+                          <div className="flex-1 h-4 bg-rule/30">
+                            <div
+                              className="h-4"
+                              style={{
+                                width: `${(n / maxTopicN) * 100}%`,
+                                backgroundColor: color,
+                                opacity: n > 0 ? 0.85 : 0,
+                              }}
+                            />
+                          </div>
+                          <span className="text-xs tabular-nums text-ink-soft w-6 text-right">
+                            {n || "–"}
+                          </span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                ))}
+              </div>
+            </section>
+          )}
 
           {/* 重要選戰 */}
           <section>
