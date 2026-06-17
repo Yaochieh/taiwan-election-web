@@ -4,6 +4,7 @@ import {
   getCandidatePlatformSources,
   bulletinImageUrl,
   candidatePhotoUrl,
+  sourceLocalPathUrl,
 } from "@/lib/api";
 import type { CandidatePlatformStatus, Platform } from "@/lib/types";
 import { partyColor, formatVotes, votePct } from "@/lib/format";
@@ -235,22 +236,25 @@ export async function CandidatePlatformCard({
             資料來源（{sources.length}）
           </summary>
           <ul className="mt-3 space-y-2 pl-4 border-l border-rule">
-            {sources.map((s, i) => (
-              <li key={i}>
-                {s.url ? (
-                  <a
-                    href={s.url}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="underline underline-offset-2 hover:text-ink"
-                  >
-                    {s.description || s.source_type}
-                  </a>
-                ) : (
-                  <span>{s.description || s.source_type}</span>
-                )}
-              </li>
-            ))}
+            {sources.map((s, i) => {
+              const href = s.url || (s.local_path ? sourceLocalPathUrl(s.local_path) : null);
+              return (
+                <li key={i}>
+                  {href ? (
+                    <a
+                      href={href}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="underline underline-offset-2 hover:text-ink"
+                    >
+                      {s.description || s.source_type} →
+                    </a>
+                  ) : (
+                    <span>{s.description || s.source_type}</span>
+                  )}
+                </li>
+              );
+            })}
           </ul>
         </details>
       )}
