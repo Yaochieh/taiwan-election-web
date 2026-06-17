@@ -114,8 +114,13 @@ export function TargetCard({ target }: { target: PlatformTarget }) {
           </span>
         </div>
         {target.description && (
-          <p className="text-sm text-ink-soft mb-4 leading-relaxed">
+          <p className="text-sm text-ink-soft mb-2 leading-relaxed">
             {target.description}
+          </p>
+        )}
+        {target.election_date && (
+          <p className="text-[11px] text-ink-soft">
+            出處：{target.election_date.slice(0, 4)} {target.election_name}
           </p>
         )}
       </div>
