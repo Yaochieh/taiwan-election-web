@@ -273,7 +273,14 @@ export interface PlatformTarget {
   latest_value: number | null;
   children: PlatformTarget[];
   tense?: "past" | "future" | "unknown" | null;
-  verification_status?: "pending" | "verified" | "disputed" | null;
+  verification_status?:
+    | "pending"
+    | "verified"
+    | "disputed"
+    | "not_executed"
+    | "in_office"
+    | "self_claim"
+    | null;
   verification_source?: string | null;
   verification_note?: string | null;
 }

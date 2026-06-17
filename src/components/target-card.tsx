@@ -75,8 +75,8 @@ export function TargetCard({ target }: { target: PlatformTarget }) {
               🎯 承諾
             </span>
           )}
-          {/* verification chip — 只對 past 顯示 */}
-          {target.tense === "past" && target.verification_status === "pending" && (
+          {/* verification chip */}
+          {target.verification_status === "pending" && (
             <span className="text-xs px-2 py-0.5 bg-paper border border-rule text-ink-soft">
               ❓ 待考證
             </span>
@@ -89,6 +89,21 @@ export function TargetCard({ target }: { target: PlatformTarget }) {
           {target.verification_status === "disputed" && (
             <span className="text-xs px-2 py-0.5 bg-paper border border-amber-600 text-amber-700">
               ⚠ 與公開資料矛盾
+            </span>
+          )}
+          {target.verification_status === "not_executed" && (
+            <span className="text-xs px-2 py-0.5 bg-paper border border-ink-soft/40 text-ink-soft">
+              ✗ 未當選·未執行
+            </span>
+          )}
+          {target.verification_status === "in_office" && (
+            <span className="text-xs px-2 py-0.5 bg-paper border border-accent-red/40 text-accent-red">
+              ● 任期追蹤中
+            </span>
+          )}
+          {target.verification_status === "self_claim" && (
+            <span className="text-xs px-2 py-0.5 bg-paper border border-ink-soft/40 text-ink-soft">
+              ⚐ 自我宣稱·未查證
             </span>
           )}
           <h3 className="font-serif text-xl font-bold flex-1">
@@ -156,11 +171,17 @@ export function TargetCard({ target }: { target: PlatformTarget }) {
           )}
         </div>
       )}
-      {target.tense === "past" && target.verification_status === "pending" && (
-        <div className="border-t border-rule px-5 sm:px-6 py-3 text-xs text-ink-soft">
-          ❓ 此政績尚未有公開資料證實，待考證
-        </div>
-      )}
+      {/* 其他狀態的說明文字 */}
+      {target.verification_note &&
+        target.verification_status !== "verified" && (
+          <div className="border-t border-rule px-5 sm:px-6 py-3 text-xs text-ink-soft">
+            {target.verification_status === "not_executed" && "✗ "}
+            {target.verification_status === "in_office" && "● "}
+            {target.verification_status === "self_claim" && "⚐ "}
+            {target.verification_status === "pending" && "❓ "}
+            {target.verification_note}
+          </div>
+        )}
     </article>
   );
 }
