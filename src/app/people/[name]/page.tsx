@@ -258,16 +258,25 @@ export default async function PersonPage({
 
       {/* ── 學經歷（分學歷 / 經歷顯示） ── */}
       {profile.background && (() => {
-        // 解析 background：可能有「【學歷】...」「【經歷】...」結構
-        const text = profile.background;
+        // 解析 background。先依【】tag 分區，再依關鍵字微調（很多筆 OCR 都把
+        // 全部塞在「【學歷】」之下，實際內容是經歷職稱）
+        const text = profile.background.replace(/^【.*?】\s*/g, "\n").replace(/^[•．\-]\s*/gm, "");
+        const lines = text.split(/\n+/).map((l) => l.trim()).filter(Boolean);
+        const EDU_KEYWORDS = /(大學|碩士|博士|學系|學院|高中|中學|小學|科系|系所|學位|EMBA|MBA|專科|MIT|Stanford|Harvard)/;
+        const EXP_KEYWORDS = /(委員|主任|秘書|律師|醫師|部長|署長|局長|長|議員|市長|縣長|總理|理事|董事|顧問|秘書長|主席|代表|處長|科長|執行長)/;
         let edu = "";
         let exp = "";
-        const eduMatch = text.match(/【學歷】\s*([\s\S]*?)(?=【經歷】|$)/);
-        const expMatch = text.match(/【經歷】\s*([\s\S]*?)$/);
-        if (eduMatch) edu = eduMatch[1].trim();
-        if (expMatch) exp = expMatch[1].trim();
-        // 沒有【】tag → 全部視為「經歷」
-        if (!edu && !exp) exp = text.trim();
+        for (const line of lines) {
+          if (EDU_KEYWORDS.test(line) && !EXP_KEYWORDS.test(line)) {
+            edu += (edu ? "\n" : "") + line;
+          } else if (EXP_KEYWORDS.test(line)) {
+            exp += (exp ? "\n" : "") + line;
+          } else {
+            // 無法判斷：丟到經歷
+            exp += (exp ? "\n" : "") + line;
+          }
+        }
+        if (!edu && !exp) exp = profile.background.trim();
         const Block = ({ label, content }: { label: string; content: string }) =>
           content ? (
             <div>

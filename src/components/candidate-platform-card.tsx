@@ -104,7 +104,7 @@ export async function CandidatePlatformCard({
 
       {/* ── 文字政見 ── */}
       {hasText && (
-        <ol className="space-y-4 mb-6">
+        <ol className="space-y-4 mb-6 list-none pl-0">
           {platforms.map((p) => {
             // 若內文本身已是「1. 2. 3.」條列，就不顯示外層 seq 避免重複
             const contentIsNumbered = /^\s*\d+[\.\)、]/.test(p.content || "");
