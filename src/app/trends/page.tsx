@@ -26,7 +26,14 @@ const SECTIONS = [
   { id: "mayoral-county", label: "縣市長版圖", emoji: "⑤" },
 ];
 
-export default async function TrendsPage() {
+export default async function TrendsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ split?: string }>;
+}) {
+  const params = await searchParams;
+  const split = params.split === "1";
+  const merge = !split;
   const [
     presidential,
     partyList,
@@ -37,8 +44,8 @@ export default async function TrendsPage() {
     getPresidentialTrend().catch(() => []),
     getPartyListTrend().catch(() => []),
     getLegislativeSeatTrend().catch(() => []),
-    getPresidentialCountyWinners().catch(() => []),
-    getMayoralCountyWinners().catch(() => []),
+    getPresidentialCountyWinners(merge).catch(() => []),
+    getMayoralCountyWinners(merge).catch(() => []),
   ]);
 
   return (
@@ -112,12 +119,48 @@ export default async function TrendsPage() {
         <LegislativeChart data={legislative} />
       </section>
 
+      {/* 升格前後舊縣 toggle */}
+      <div className="border border-rule p-4 mb-8 flex flex-wrap items-baseline gap-3 text-sm">
+        <span className="text-ink-soft">舊縣顯示方式：</span>
+        <a
+          href="/trends"
+          className={
+            "px-3 py-1.5 border transition " +
+            (!split
+              ? "bg-ink text-paper border-ink"
+              : "border-rule text-ink-soft hover:border-ink hover:text-ink")
+          }
+        >
+          合併到升格後直轄市
+        </a>
+        <a
+          href="/trends?split=1"
+          className={
+            "px-3 py-1.5 border transition " +
+            (split
+              ? "bg-ink text-paper border-ink"
+              : "border-rule text-ink-soft hover:border-ink hover:text-ink")
+          }
+        >
+          保留原始縣市（高雄縣/高雄市分開）
+        </a>
+        <span className="text-xs text-ink-soft ml-auto">
+          {split
+            ? "1996–2008 顯示原始舊縣名稱（高雄縣/桃園縣/臺北縣等）"
+            : "高雄縣+高雄市票數加總後算贏家，方便跨年對照"}
+        </span>
+      </div>
+
       {/* ④ 總統版圖 */}
       <section id="presidential-county" className="mb-20 scroll-mt-4">
         <CountyHeatmap
           data={presCounty}
           title="總統選舉縣市政治版圖"
-          desc="每屆總統選舉各縣市勝出政黨。數字為該政黨在該縣市得票率（直接顯示）。1996/2000/2004 的舊縣（臺北縣/桃園縣等）已合併到升格後的直轄市方便跨年比較。"
+          desc={
+            split
+              ? "每屆總統選舉各縣市勝出政黨。1996–2008 保留升格前的舊縣（高雄縣/臺北縣等），可以看到當年的真實行政區分佈。"
+              : "每屆總統選舉各縣市勝出政黨。1996/2000/2004 的舊縣（高雄縣等）已合併到升格後的直轄市方便跨年比較。"
+          }
           prefix="④"
         />
       </section>
@@ -127,7 +170,11 @@ export default async function TrendsPage() {
         <CountyHeatmap
           data={mayoralCounty}
           title="縣市長選舉政治版圖"
-          desc="歷屆縣市長選舉各縣市勝出政黨。1994–2005 僅有北/高直轄市選舉；1997 起 23 縣市長同步選；2010 五都改制升格直轄市；2014 起 22 縣市同步直選。升格前的舊縣（高雄縣等）已合併到升格後直轄市。"
+          desc={
+            split
+              ? "歷屆縣市長選舉各縣市勝出政黨。1997/2001/2005/2009 保留原始縣市（高雄縣/臺北縣等），對照當年真實行政區分佈。"
+              : "歷屆縣市長選舉各縣市勝出政黨。1994–2005 僅有北/高直轄市選舉；1997 起 23 縣市長同步選；2010 五都改制升格直轄市；2014 起 22 縣市同步直選。升格前的舊縣（高雄縣等）已合併到升格後直轄市。"
+          }
           prefix="⑤"
         />
       </section>

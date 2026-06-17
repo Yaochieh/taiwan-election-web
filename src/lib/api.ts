@@ -125,10 +125,14 @@ export type CountyWinnerCell = {
   pct: number;
   candidate?: string;
 };
-export const getPresidentialCountyWinners = () =>
-  fetcher<CountyWinnerCell[]>("/trends/presidential/county-winners");
-export const getMayoralCountyWinners = () =>
-  fetcher<CountyWinnerCell[]>("/trends/mayoral/county-winners");
+export const getPresidentialCountyWinners = (mergeOld = true) =>
+  fetcher<CountyWinnerCell[]>(
+    `/trends/presidential/county-winners?merge_old=${mergeOld}`,
+  );
+export const getMayoralCountyWinners = (mergeOld = true) =>
+  fetcher<CountyWinnerCell[]>(
+    `/trends/mayoral/county-winners?merge_old=${mergeOld}`,
+  );
 
 // ── topics ──────────────────────────────────────────────────
 export type Topic = {
