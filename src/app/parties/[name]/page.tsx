@@ -242,7 +242,8 @@ export default async function PartyPage({
         };
         const winCount = new Map<string, number>();
         for (const m of mayors) {
-          const raw = cleanDistrict(m.district) || m.district;
+          const raw = cleanDistrict(m.district) || m.district || "";
+          if (!raw) continue;
           const county = COUNTY_MERGE[raw] || raw;
           winCount.set(county, (winCount.get(county) || 0) + 1);
         }
