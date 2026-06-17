@@ -195,26 +195,66 @@ export default async function PersonPage({
       )}
 
       {/* ── 政見追蹤 ── */}
-      {targets.length > 0 && (
-        <section className="mb-12">
-          <div className="flex items-baseline justify-between mb-4 gap-4">
-            <h2 className="font-serif text-2xl font-bold">政見追蹤</h2>
-            <span className="text-xs text-ink-soft px-2 py-1 border border-accent-red text-accent-red">
-              BETA · 資料為示範性質
-            </span>
-          </div>
-          <p className="text-sm text-ink-soft mb-6 leading-relaxed max-w-3xl">
-            記錄候選人競選承諾的可量化指標、上任時數值、以及任期內的進度變化。
-            <strong>本頁數據為示範用途，數值僅供參考</strong>；
-            歡迎協助提供官方資料來源連結與校正。
-          </p>
-          <div className="grid sm:grid-cols-2 gap-6">
-            {targets.map((t) => (
-              <TargetCard key={t.target_id} target={t} />
-            ))}
-          </div>
-        </section>
-      )}
+      {targets.length > 0 && (() => {
+        const past = targets.filter((t) => t.tense === "past");
+        const future = targets.filter((t) => t.tense === "future");
+        const unknown = targets.filter((t) => !t.tense || t.tense === "unknown");
+        return (
+          <section className="mb-12">
+            <div className="flex items-baseline justify-between mb-4 gap-4">
+              <h2 className="font-serif text-2xl font-bold">政見追蹤</h2>
+              <span className="text-xs text-ink-soft px-2 py-1 border border-accent-red text-accent-red">
+                BETA · 數據自動抽取
+              </span>
+            </div>
+            <p className="text-sm text-ink-soft mb-6 leading-relaxed max-w-3xl">
+              從候選人公報自動分類為「政績」（已完成、過去任內事項）與「承諾」（本次競選新提）。
+              政績預設標「待考證」，未來會接公開資料自動驗證。
+            </p>
+
+            {future.length > 0 && (
+              <div className="mb-8">
+                <h3 className="font-serif text-lg font-bold mb-3 flex items-baseline gap-3">
+                  <span className="text-accent-red">🎯 承諾</span>
+                  <span className="text-sm text-ink-soft">{future.length} 項</span>
+                </h3>
+                <div className="grid sm:grid-cols-2 gap-6">
+                  {future.map((t) => (
+                    <TargetCard key={t.target_id} target={t} />
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {past.length > 0 && (
+              <div className="mb-8">
+                <h3 className="font-serif text-lg font-bold mb-3 flex items-baseline gap-3">
+                  <span>📜 政績</span>
+                  <span className="text-sm text-ink-soft">{past.length} 項 · 預設待考證</span>
+                </h3>
+                <div className="grid sm:grid-cols-2 gap-6">
+                  {past.map((t) => (
+                    <TargetCard key={t.target_id} target={t} />
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {unknown.length > 0 && (
+              <details className="mb-4">
+                <summary className="cursor-pointer text-sm text-ink-soft hover:text-ink">
+                  ⋯ 其他 {unknown.length} 項（未分類）
+                </summary>
+                <div className="grid sm:grid-cols-2 gap-6 mt-4">
+                  {unknown.map((t) => (
+                    <TargetCard key={t.target_id} target={t} />
+                  ))}
+                </div>
+              </details>
+            )}
+          </section>
+        );
+      })()}
 
       {/* ── 學經歷（分學歷 / 經歷顯示） ── */}
       {profile.background && (() => {

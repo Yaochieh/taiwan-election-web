@@ -26,54 +26,21 @@ const SECTIONS = [
   { id: "mayoral-county", label: "縣市長版圖", emoji: "⑤" },
 ];
 
-export default async function TrendsPage({
-  searchParams,
-}: {
-  searchParams: Promise<{ split?: string }>;
-}) {
-  const params = await searchParams;
-  const split = params.split === "1";
-  const merge = !split;
+export default async function TrendsPage() {
   const [
     presidential,
     partyList,
     legislative,
     presCounty,
-    presCountySplit,
     mayoralCounty,
-    mayoralCountySplit,
   ] = await Promise.all([
     getPresidentialTrend().catch(() => []),
     getPartyListTrend().catch(() => []),
     getLegislativeSeatTrend().catch(() => []),
     // 縣 + 市 一律保留原始 row（COUNTY_GROUPS 已併排）
     getPresidentialCountyWinners(false).catch(() => []),
-    Promise.resolve([] as Awaited<ReturnType<typeof getPresidentialCountyWinners>>),
     getMayoralCountyWinners(false).catch(() => []),
-    Promise.resolve([] as Awaited<ReturnType<typeof getMayoralCountyWinners>>),
   ]);
-
-  // 把 split 版本依現代縣市 group → 提供給 CountyHeatmap 用於畫小方塊
-  const COUNTY_MERGE: Record<string, string> = {
-    "臺北縣": "新北市",
-    "桃園縣": "桃園市",
-    "臺中縣": "臺中市",
-    "臺南縣": "臺南市",
-    "高雄縣": "高雄市",
-  };
-  type Cell = (typeof presCountySplit)[number];
-  const buildSubsIndex = (split: Cell[]) => {
-    const idx = new Map<string, Cell[]>();
-    for (const cell of split) {
-      const modern = COUNTY_MERGE[cell.county] || cell.county;
-      const key = `${cell.year}|${modern}`;
-      if (!idx.has(key)) idx.set(key, []);
-      idx.get(key)!.push(cell);
-    }
-    return idx;
-  };
-  const presSubs = buildSubsIndex(presCountySplit);
-  const mayoralSubs = buildSubsIndex(mayoralCountySplit);
 
   return (
     <div className="mx-auto max-w-6xl px-4 sm:px-6 py-12">
@@ -146,55 +113,19 @@ export default async function TrendsPage({
         <LegislativeChart data={legislative} />
       </section>
 
-      {/* 升格前後舊縣 toggle */}
-      <div className="border border-rule p-4 mb-8 flex flex-wrap items-baseline gap-3 text-sm">
-        <span className="text-ink-soft">舊縣顯示方式：</span>
-        <a
-          href="/trends"
-          className={
-            "px-3 py-1.5 border transition " +
-            (!split
-              ? "bg-ink text-paper border-ink"
-              : "border-rule text-ink-soft hover:border-ink hover:text-ink")
-          }
-        >
-          合併到升格後直轄市
-        </a>
-        <a
-          href="/trends?split=1"
-          className={
-            "px-3 py-1.5 border transition " +
-            (split
-              ? "bg-ink text-paper border-ink"
-              : "border-rule text-ink-soft hover:border-ink hover:text-ink")
-          }
-        >
-          保留原始縣市（高雄縣/高雄市分開）
-        </a>
-        <span className="text-xs text-ink-soft ml-auto">
-          {split
-            ? "1996–2008 顯示原始舊縣名稱（高雄縣/桃園縣/臺北縣等）"
-            : "合併版：升格前的格子會內切兩半顯示縣 / 市；升格後合為一格"}
-        </span>
-      </div>
       <p className="text-xs text-ink-soft mb-6">
         色塊顏色 = 該屆勝選政黨；
         <span className="inline-block w-3 h-3 align-middle mr-1" style={{ backgroundColor: "#888" }} />
         灰色 = 連署候選人（無政黨提名，如 1996 彭明敏 / 林洋港 / 陳履安）。
-        點任一格可進入該縣市歷史頁。
+        舊縣（高雄縣/臺北縣等）與升格後直轄市並列為兩 row 對照。點任一格可進入該縣市歷史頁。
       </p>
 
       {/* ④ 總統版圖 */}
       <section id="presidential-county" className="mb-20 scroll-mt-4">
         <CountyHeatmap
           data={presCounty}
-          subsIndex={presSubs}
           title="總統選舉縣市政治版圖"
-          desc={
-            split
-              ? "每屆總統選舉各縣市勝出政黨。1996–2008 保留升格前的舊縣（高雄縣/臺北縣等），可以看到當年的真實行政區分佈。"
-              : "每屆總統選舉各縣市勝出政黨。1996/2000/2004 升格前的高雄縣 + 高雄市等會在同一格內切兩半顯示，2010 後合為單一格。"
-          }
+          desc="每屆總統選舉各縣市勝出政黨。1996/2000/2004 保留升格前的舊縣（高雄縣/臺北縣等）原始名稱，與升格後直轄市並列對照。"
           prefix="④"
         />
       </section>
@@ -203,13 +134,8 @@ export default async function TrendsPage({
       <section id="mayoral-county" className="mb-20 scroll-mt-4">
         <CountyHeatmap
           data={mayoralCounty}
-          subsIndex={mayoralSubs}
           title="縣市長選舉政治版圖"
-          desc={
-            split
-              ? "歷屆縣市長選舉各縣市勝出政黨。1997/2001/2005/2009 保留原始縣市（高雄縣/臺北縣等），對照當年真實行政區分佈。"
-              : "歷屆縣市長選舉各縣市勝出政黨。1997/2001/2005/2009 升格前的高雄縣 + 高雄市等會在同一格內切兩半顯示。"
-          }
+          desc="歷屆縣市長選舉各縣市勝出政黨。1997/2001/2005/2009 保留原始縣市（高雄縣/臺北縣等），與升格後直轄市並列。"
           prefix="⑤"
         />
       </section>

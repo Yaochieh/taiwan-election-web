@@ -64,6 +64,33 @@ export function TargetCard({ target }: { target: PlatformTarget }) {
               {target.category}
             </span>
           )}
+          {/* tense chip */}
+          {target.tense === "past" && (
+            <span className="text-xs px-2 py-0.5 bg-rule/40 text-ink">
+              📜 政績
+            </span>
+          )}
+          {target.tense === "future" && (
+            <span className="text-xs px-2 py-0.5 bg-accent-red/15 text-accent-red border border-accent-red/30">
+              🎯 承諾
+            </span>
+          )}
+          {/* verification chip — 只對 past 顯示 */}
+          {target.tense === "past" && target.verification_status === "pending" && (
+            <span className="text-xs px-2 py-0.5 bg-paper border border-rule text-ink-soft">
+              ❓ 待考證
+            </span>
+          )}
+          {target.verification_status === "verified" && (
+            <span className="text-xs px-2 py-0.5 bg-paper border border-green-600 text-green-700">
+              ✓ 已查證
+            </span>
+          )}
+          {target.verification_status === "disputed" && (
+            <span className="text-xs px-2 py-0.5 bg-paper border border-amber-600 text-amber-700">
+              ⚠ 與公開資料矛盾
+            </span>
+          )}
           <h3 className="font-serif text-xl font-bold flex-1">
             {target.title}
           </h3>
@@ -109,6 +136,29 @@ export function TargetCard({ target }: { target: PlatformTarget }) {
           >
             {target.source_url}
           </a>
+        </div>
+      )}
+
+      {/* 考證資訊 */}
+      {target.tense === "past" && target.verification_status === "verified" && target.verification_source && (
+        <div className="border-t border-rule px-5 sm:px-6 py-3 text-xs text-green-700 bg-green-50/40">
+          ✓ 查證來源：
+          <a
+            href={target.verification_source}
+            target="_blank"
+            rel="noreferrer"
+            className="underline underline-offset-2 hover:text-green-800 break-all"
+          >
+            {target.verification_source}
+          </a>
+          {target.verification_note && (
+            <p className="mt-1 text-ink">{target.verification_note}</p>
+          )}
+        </div>
+      )}
+      {target.tense === "past" && target.verification_status === "pending" && (
+        <div className="border-t border-rule px-5 sm:px-6 py-3 text-xs text-ink-soft">
+          ❓ 此政績尚未有公開資料證實，待考證
         </div>
       )}
     </article>

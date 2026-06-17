@@ -244,8 +244,13 @@ export default async function TopicDetailPage({
       {/* 量化承諾時間軸 */}
       {autoTargets.length > 0 && (() => {
         type AT = (typeof autoTargets)[number];
+        // 量化承諾時間軸只算 future + unknown（past 是政績，不算「待達成承諾」）
+        const futureTargets = autoTargets.filter(
+          (t) => t.tense !== "past",
+        );
+        if (futureTargets.length === 0) return null;
         const byYear = new Map<string, AT[]>();
-        for (const t of autoTargets) {
+        for (const t of futureTargets) {
           const y = (t.election_date || "").slice(0, 4) || "未知";
           if (!byYear.has(y)) byYear.set(y, []);
           byYear.get(y)!.push(t);
@@ -253,14 +258,16 @@ export default async function TopicDetailPage({
         const years = Array.from(byYear.keys()).sort();
         const totalPlats = stats.by_year.reduce((a, b) => a + b.n, 0);
         const qRate = totalPlats > 0
-          ? ((autoTargets.length / totalPlats) * 100).toFixed(1)
+          ? ((futureTargets.length / totalPlats) * 100).toFixed(1)
           : "0";
+        const pastCount = autoTargets.length - futureTargets.length;
         return (
           <section id="targets" className="mb-12 scroll-mt-4">
             <h2 className="font-serif text-2xl font-bold mb-3">
               量化承諾時間軸
               <span className="ml-3 text-sm text-ink-soft font-normal">
-                {autoTargets.length} 個 · 占政見 {qRate}%
+                {futureTargets.length} 個承諾 · 占政見 {qRate}%
+                {pastCount > 0 && <> · 另有 {pastCount} 項政績（已排除）</>}
               </span>
             </h2>
             <p className="text-sm text-ink-soft mb-4 leading-relaxed">

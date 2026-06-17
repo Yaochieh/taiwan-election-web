@@ -213,6 +213,8 @@ export type AutoTarget = {
   election_desc: string | null;
   party_name: string | null;
   color_hex: string | null;
+  tense?: "past" | "future" | "unknown" | null;
+  verification_status?: "pending" | "verified" | "disputed" | null;
 };
 export const getTopicAutoTargets = (name: string) =>
   fetcher<AutoTarget[]>(`/topics/${encodeURIComponent(name)}/targets`);
