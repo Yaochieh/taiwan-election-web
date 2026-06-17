@@ -49,8 +49,10 @@ export default async function TrendsPage({
     getPresidentialCountyWinners(merge).catch(() => []),
     // 合併模式也順便抓 split 資料供 cell 分割用
     merge ? getPresidentialCountyWinners(false).catch(() => []) : Promise.resolve([]),
-    getMayoralCountyWinners(merge).catch(() => []),
-    merge ? getMayoralCountyWinners(false).catch(() => []) : Promise.resolve([]),
+    // 縣市長：縣 + 市 是不同年的選舉（1997 縣 vs 1998 直轄市），
+    // 直接用 split 資料即可保留高雄縣、高雄市等舊縣 row（COUNTY_GROUPS 已併排）
+    getMayoralCountyWinners(false).catch(() => []),
+    Promise.resolve([] as Awaited<ReturnType<typeof getMayoralCountyWinners>>),
   ]);
 
   // 把 split 版本依現代縣市 group → 提供給 CountyHeatmap 用於畫小方塊

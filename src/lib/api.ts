@@ -247,6 +247,20 @@ export const bulletinImageUrl = (localPath: string): string => {
   return `${IMAGE_BASE}/${stripped}`;
 };
 
+// 公報整頁 OCR 圖：data/bulletin_pages/01臺北市市長_p1.png
+export const bulletinPageUrl = (localPath: string): string => {
+  const stripped = localPath.replace(/^data\/bulletin_pages\//, "");
+  return `${API_URL}/static/bulletin_pages/${stripped}`;
+};
+
+// 從 local_path 自動判斷對應 URL（依目錄）
+export const sourceLocalPathUrl = (localPath: string): string | null => {
+  if (!localPath) return null;
+  if (localPath.startsWith("data/bulletin_pages/")) return bulletinPageUrl(localPath);
+  if (localPath.startsWith("data/bulletin_images/")) return bulletinImageUrl(localPath);
+  return null;
+};
+
 const PHOTO_BASE = `${API_URL}/static/candidate_photos`;
 export const candidatePhotoUrl = (localPath: string | null | undefined): string | null => {
   if (!localPath) return null;
