@@ -98,7 +98,7 @@ export function TargetCard({ target }: { target: PlatformTarget }) {
           )}
           {target.verification_status === "in_office" && (
             <span className="text-xs px-2 py-0.5 bg-paper border border-accent-red/40 text-accent-red">
-              ● 任期追蹤中
+              ● 當選·可追蹤
             </span>
           )}
           {target.verification_status === "self_claim" && (
