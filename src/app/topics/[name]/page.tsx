@@ -1,3 +1,4 @@
+import type React from "react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getTopicPlatforms, getTopicStats, getTopics, getTopicAutoTargets } from "@/lib/api";
@@ -52,7 +53,10 @@ export default async function TopicDetailPage({
       if (v) u.set(k, v);
     }
     const qs = u.toString();
-    return `/topics/${encodeURIComponent(name)}${qs ? "?" + qs : ""}`;
+    // 點人物/政黨/類型篩選後，自動定位到「政見原文」section
+    const hasFilter = merged.person || merged.party || merged.election_type;
+    const hash = hasFilter ? "#platforms" : "";
+    return `/topics/${encodeURIComponent(name)}${qs ? "?" + qs : ""}${hash}`;
   };
 
   return (
@@ -300,9 +304,16 @@ export default async function TopicDetailPage({
       )}
 
       {/* 政見內容 */}
-      <section className="mb-12">
+      <section id="platforms" className="mb-12 scroll-mt-4">
         <div className="flex items-baseline gap-3 mb-4">
-          <h2 className="font-serif text-2xl font-bold">政見原文</h2>
+          <h2 className="font-serif text-2xl font-bold">
+            政見原文
+            {q.person && (
+              <span className="ml-2 text-base text-accent-red">
+                · {q.person}
+              </span>
+            )}
+          </h2>
           <span className="text-sm text-ink-soft">
             {platforms.length} 條
             {(q.election_type || q.party || q.person) && (
@@ -347,9 +358,11 @@ export default async function TopicDetailPage({
                   </Link>
                 </div>
                 <p className="text-sm leading-relaxed text-ink whitespace-pre-wrap">
-                  {p.content.length > 500
-                    ? p.content.slice(0, 500) + "…"
-                    : p.content}
+                  {highlightNumbers(
+                    p.content.length > 500
+                      ? p.content.slice(0, 500) + "…"
+                      : p.content,
+                  )}
                 </p>
               </li>
             );
@@ -375,4 +388,24 @@ export default async function TopicDetailPage({
       </p>
     </div>
   );
+}
+
+// 反白政見內文中的數字 + 單位 (戶/萬/億/%/年/天/小時/元/座/班/條/公里 等)
+function highlightNumbers(text: string): React.ReactNode[] {
+  if (!text) return [];
+  const RE = /(\d[\d,\.]*\s?(?:萬戶|戶|萬|億|千|%|元|年內|年|個月|月|天|小時|席|位|座|班|條|公里|公頃|班次|％))/g;
+  const parts = text.split(RE);
+  return parts.map((p, i) => {
+    if (i % 2 === 1) {
+      return (
+        <mark
+          key={i}
+          className="bg-accent-red/15 text-accent-red font-bold tabular-nums px-0.5"
+        >
+          {p}
+        </mark>
+      );
+    }
+    return p;
+  });
 }
