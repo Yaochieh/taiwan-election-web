@@ -241,19 +241,51 @@ export default async function TopicDetailPage({
         </section>
       )}
 
-      {/* 量化承諾（auto-extracted） */}
-      {autoTargets.length > 0 && (
-        <section className="mb-12">
-          <h2 className="font-serif text-2xl font-bold mb-3">
-            可追蹤的量化承諾
-            <span className="ml-3 text-sm text-ink-soft font-normal">
-              {autoTargets.length} 個
-            </span>
-          </h2>
-          <p className="text-sm text-ink-soft mb-4 leading-relaxed">
-            自動從政見原文抽取的數字承諾（如「4 年內 5 萬戶社宅」）。
-            後續可接公開資料來源追蹤達標。
-          </p>
+      {/* 量化承諾時間軸 */}
+      {autoTargets.length > 0 && (() => {
+        type AT = (typeof autoTargets)[number];
+        const byYear = new Map<string, AT[]>();
+        for (const t of autoTargets) {
+          const y = (t.election_date || "").slice(0, 4) || "未知";
+          if (!byYear.has(y)) byYear.set(y, []);
+          byYear.get(y)!.push(t);
+        }
+        const years = Array.from(byYear.keys()).sort();
+        const totalPlats = stats.by_year.reduce((a, b) => a + b.n, 0);
+        const qRate = totalPlats > 0
+          ? ((autoTargets.length / totalPlats) * 100).toFixed(1)
+          : "0";
+        return (
+          <section id="targets" className="mb-12 scroll-mt-4">
+            <h2 className="font-serif text-2xl font-bold mb-3">
+              量化承諾時間軸
+              <span className="ml-3 text-sm text-ink-soft font-normal">
+                {autoTargets.length} 個 · 占政見 {qRate}%
+              </span>
+            </h2>
+            <p className="text-sm text-ink-soft mb-4 leading-relaxed">
+              自動從政見原文抽取的數字承諾（如「4 年內 5 萬戶社宅」）。
+              注意：{name}主題中只有 {qRate}% 的政見有具體數字目標，
+              其餘多為原則性主張。
+            </p>
+            {/* 年度堆疊 bar chart */}
+            <div className="grid grid-cols-[60px_1fr_60px] gap-3 items-center text-sm mb-6">
+              {years.map((y) => {
+                const yearTargets = byYear.get(y) || [];
+                const maxN = Math.max(...years.map((yr) => (byYear.get(yr) || []).length), 1);
+                const pct = (yearTargets.length / maxN) * 100;
+                return (
+                  <div key={y} className="contents">
+                    <div className="font-serif text-lg tabular-nums">{y}</div>
+                    <div className="h-6 bg-rule">
+                      <div className="h-6 bg-accent-red/70" style={{ width: `${pct}%` }} />
+                    </div>
+                    <div className="text-sm tabular-nums">{yearTargets.length} 個</div>
+                  </div>
+                );
+              })}
+            </div>
+            <p className="text-xs text-ink-soft mb-3">完整列表：</p>
           <div className="space-y-2">
             {autoTargets.slice(0, 15).map((t) => {
               const color = partyColor(t.party_name, t.color_hex);
@@ -301,7 +333,8 @@ export default async function TopicDetailPage({
             })}
           </div>
         </section>
-      )}
+        );
+      })()}
 
       {/* 政見內容 */}
       <section id="platforms" className="mb-12 scroll-mt-4">
