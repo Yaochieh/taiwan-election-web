@@ -214,7 +214,14 @@ export type AutoTarget = {
   party_name: string | null;
   color_hex: string | null;
   tense?: "past" | "future" | "unknown" | null;
-  verification_status?: "pending" | "verified" | "disputed" | null;
+  verification_status?:
+    | "pending"
+    | "verified"
+    | "disputed"
+    | "not_executed"
+    | "in_office"
+    | "self_claim"
+    | null;
 };
 export const getTopicAutoTargets = (name: string) =>
   fetcher<AutoTarget[]>(`/topics/${encodeURIComponent(name)}/targets`);
