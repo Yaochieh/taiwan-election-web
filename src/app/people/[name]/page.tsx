@@ -196,102 +196,104 @@ export default async function PersonPage({
 
       {/* ── 政見追蹤 ── */}
       {targets.length > 0 && (() => {
-        const past = targets.filter((t) => t.tense === "past");
-        const future = targets.filter((t) => t.tense === "future");
-        const unknown = targets.filter((t) => !t.tense || t.tense === "unknown");
-        // 承諾再依選舉結果分：當選可追蹤 vs 落選未執行
-        const futureWon = future.filter((t) => t.verification_status === "in_office");
-        const futureLost = future.filter((t) => t.verification_status === "not_executed");
-        const futureOther = future.filter(
-          (t) => t.verification_status !== "in_office" && t.verification_status !== "not_executed",
+        // 「可追蹤」= 有量化數字、或有進度/子目標的（舊手工資料）
+        const trackable = targets.filter(
+          (t) =>
+            t.target_value != null ||
+            (t.children && t.children.length > 0) ||
+            t.progress.length > 0,
         );
-        // 一個 tense 群組：有數值的用完整卡，無數值的用精簡列
-        const renderGroup = (
-          list: typeof targets,
-          heading: React.ReactNode,
-          compactBorder: string,
-        ) => {
-          if (list.length === 0) return null;
-          const withVal = list.filter((t) => t.target_value != null);
-          const noVal = list.filter((t) => t.target_value == null);
-          return (
-            <div className="mb-8">
-              <h3 className="font-serif text-lg font-bold mb-3 flex items-baseline gap-3">
-                {heading}
-                <span className="text-sm text-ink-soft">{list.length} 項</span>
-              </h3>
-              {withVal.length > 0 && (
-                <div className="grid sm:grid-cols-2 gap-6 mb-3">
-                  {withVal.map((t) => (
-                    <TargetCard key={t.target_id} target={t} />
-                  ))}
-                </div>
-              )}
-              {noVal.length > 0 && (
-                <ul className="space-y-1.5">
-                  {noVal.map((t) => (
-                    <li
-                      key={t.target_id}
-                      className="border-l-2 pl-3 py-1 text-sm"
-                      style={{ borderColor: compactBorder }}
-                    >
-                      {t.election_date && (
-                        <span className="text-[10px] text-ink-soft tabular-nums mr-1.5 align-middle">
-                          {t.election_date.slice(0, 4)}
-                        </span>
-                      )}
-                      <span className="font-medium">{t.title}</span>
-                      {t.description && t.description !== t.title && (
-                        <span className="text-ink-soft">
-                          {" "}
-                          — {t.description}
-                        </span>
-                      )}
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </div>
-          );
-        };
+        // 其餘 = 空泛政見方向（無數字，等同政見原文重述）
+        const vague = targets.filter((t) => !trackable.includes(t));
+
+        // trackable 分三類
+        const promiseWon = trackable.filter(
+          (t) =>
+            t.tense !== "past" &&
+            t.verification_status !== "not_executed",
+        );
+        const promiseLost = trackable.filter(
+          (t) => t.tense !== "past" && t.verification_status === "not_executed",
+        );
+        const records = trackable.filter((t) => t.tense === "past");
+
+        const cardGrid = (list: typeof targets) => (
+          <div className="grid sm:grid-cols-2 gap-6 mb-3">
+            {list.map((t) => (
+              <TargetCard key={t.target_id} target={t} />
+            ))}
+          </div>
+        );
+
         return (
           <section className="mb-12">
-            <div className="flex items-baseline justify-between mb-4 gap-4">
+            <div className="flex items-baseline justify-between mb-3 gap-4">
               <h2 className="font-serif text-2xl font-bold">政見追蹤</h2>
-              <span className="text-xs text-ink-soft px-2 py-1 border border-accent-red text-accent-red">
-                BETA · 數據自動抽取
+              <span className="text-xs text-ink-soft px-2 py-1 border border-rule">
+                自動抽取 · BETA
               </span>
             </div>
             <p className="text-sm text-ink-soft mb-6 leading-relaxed max-w-3xl">
-              從候選人公報自動分類為「政績」（過去任內事項）與「承諾」（競選新提）。
-              承諾再依該場選舉是否當選，分「當選·可追蹤」與「未當選·未執行」。
-              有量化數字者以卡片呈現、其餘條列。
+              聚焦<strong>有量化數字、可追蹤</strong>的承諾與政績。
+              承諾依該場選舉是否當選，分「可追蹤」與「未當選未執行」；政績待公開資料查證。
             </p>
-            {renderGroup(
-              futureWon,
-              <span className="text-accent-red">🎯 承諾 · 當選可追蹤</span>,
-              "var(--color-accent-red, #c0392b)",
+
+            {trackable.length === 0 && (
+              <p className="text-sm text-ink-soft border border-rule p-4 mb-6">
+                此人政見目前未抽取到具體量化指標（多為原則性主張），詳見下方政見原文。
+              </p>
             )}
-            {renderGroup(
-              futureLost,
-              <span className="text-ink-soft">✗ 承諾 · 未當選未執行</span>,
-              "#bbb",
+
+            {promiseWon.length > 0 && (
+              <div className="mb-8">
+                <h3 className="font-serif text-lg font-bold mb-3 flex items-baseline gap-3">
+                  <span className="text-accent-red">🎯 可追蹤承諾</span>
+                  <span className="text-sm text-ink-soft">{promiseWon.length} 項</span>
+                </h3>
+                {cardGrid(promiseWon)}
+              </div>
             )}
-            {futureOther.length > 0 &&
-              renderGroup(
-                futureOther,
-                <span className="text-accent-red">🎯 承諾</span>,
-                "var(--color-accent-red, #c0392b)",
-              )}
-            {renderGroup(past, <span>📜 政績</span>, "#999")}
-            {unknown.length > 0 && (
-              <details className="mb-4">
-                <summary className="cursor-pointer text-sm text-ink-soft hover:text-ink">
-                  ⋯ 其他 {unknown.length} 項（未分類）
+
+            {records.length > 0 && (
+              <div className="mb-8">
+                <h3 className="font-serif text-lg font-bold mb-3 flex items-baseline gap-3">
+                  <span>📜 政績</span>
+                  <span className="text-sm text-ink-soft">{records.length} 項</span>
+                </h3>
+                {cardGrid(records)}
+              </div>
+            )}
+
+            {promiseLost.length > 0 && (
+              <details className="mb-6">
+                <summary className="cursor-pointer font-serif text-lg font-bold text-ink-soft hover:text-ink">
+                  ✗ 未當選未執行的承諾（{promiseLost.length} 項）
                 </summary>
-                <div className="mt-3">
-                  {renderGroup(unknown, <span className="text-ink-soft">未分類</span>, "#ccc")}
-                </div>
+                <div className="mt-3">{cardGrid(promiseLost)}</div>
+              </details>
+            )}
+
+            {/* 空泛政見方向：收摺、精簡列 */}
+            {vague.length > 0 && (
+              <details className="mb-2">
+                <summary className="cursor-pointer text-sm text-ink-soft hover:text-ink">
+                  其他政見方向（{vague.length} 項，無量化數字）
+                </summary>
+                <ul className="mt-3 grid sm:grid-cols-2 gap-x-6 gap-y-1">
+                  {vague.map((t) => (
+                    <li
+                      key={t.target_id}
+                      className="text-sm text-ink-soft border-l-2 border-rule pl-3 py-0.5"
+                    >
+                      {t.election_date && (
+                        <span className="text-[10px] tabular-nums mr-1.5">
+                          {t.election_date.slice(0, 4)}
+                        </span>
+                      )}
+                      {t.title}
+                    </li>
+                  ))}
+                </ul>
               </details>
             )}
           </section>
