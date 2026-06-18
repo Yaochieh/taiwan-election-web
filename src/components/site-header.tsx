@@ -10,6 +10,7 @@ const NAV = [
   { href: "/parties", label: "政黨" },
   { href: "/platforms", label: "政見" },
   { href: "/topics", label: "主題" },
+  { href: "/issues", label: "議題缺口" },
   { href: "/data", label: "數據" },
   { href: "/about", label: "關於" },
 ];

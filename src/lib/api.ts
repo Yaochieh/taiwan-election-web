@@ -276,3 +276,15 @@ export const candidatePhotoUrl = (localPath: string | null | undefined): string 
   const stripped = localPath.replace(/^data\/candidate_photos\//, "");
   return `${PHOTO_BASE}/${stripped}`;
 };
+
+// ── 議題缺口 ──────────────────────────────────────────────
+export type FertilityGap = {
+  topic: string;
+  severity_source: string;
+  births: { year: number; births: number }[];
+  drop_pct: number | null;
+  attention: { platforms: number; people: number; total_people: number; pct: number };
+  attention_keywords: string[];
+};
+export const getFertilityGap = () =>
+  fetcher<FertilityGap>("/issues/fertility");
