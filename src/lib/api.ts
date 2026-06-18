@@ -288,3 +288,9 @@ export type FertilityGap = {
 };
 export const getFertilityGap = () =>
   fetcher<FertilityGap>("/issues/fertility");
+
+export type IssueOverview = {
+  total_people: number;
+  topics: { name: string; icon: string; platforms: number; people: number; pct: number }[];
+};
+export const getIssueOverview = () => fetcher<IssueOverview>("/issues/overview");

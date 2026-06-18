@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { getFertilityGap } from "@/lib/api";
+import { getFertilityGap, getIssueOverview } from "@/lib/api";
 
 export const revalidate = 3600;
 export const metadata = {
@@ -8,7 +8,10 @@ export const metadata = {
 };
 
 export default async function IssuesPage() {
-  const fertility = await getFertilityGap().catch(() => null);
+  const [fertility, overview] = await Promise.all([
+    getFertilityGap().catch(() => null),
+    getIssueOverview().catch(() => null),
+  ]);
 
   return (
     <div className="mx-auto max-w-4xl px-4 sm:px-6 py-12">
@@ -25,6 +28,56 @@ export default async function IssuesPage() {
           找出「危機正在加劇、政治人物卻較少著墨」的議題。所有數據皆標來源。
         </p>
       </header>
+
+      {/* 14 主題政治關注度排名 */}
+      {overview && overview.topics.length > 0 && (() => {
+        const maxPct = Math.max(...overview.topics.map((t) => t.pct));
+        return (
+          <section className="mb-12">
+            <h2 className="font-serif text-2xl font-bold mb-1">各議題政治關注度</h2>
+            <p className="text-sm text-ink-soft mb-5 leading-relaxed">
+              {overview.total_people} 位有政見的候選人中，提及各主題的比例。
+              <strong>排在最上面的（提及率低）= 較少政治人物關注</strong>，可能是被忽視的議題。
+            </p>
+            <div className="space-y-1.5">
+              {overview.topics.map((t, i) => {
+                const isLow = i < 4;
+                return (
+                  <Link
+                    key={t.name}
+                    href={`/topics/${encodeURIComponent(t.name)}`}
+                    className="grid grid-cols-[110px_1fr_50px] gap-2 items-center text-sm group"
+                  >
+                    <div className="flex items-center gap-1.5">
+                      <span>{t.icon}</span>
+                      <span className="group-hover:text-accent-red transition">
+                        {t.name}
+                      </span>
+                    </div>
+                    <div className="h-5 bg-rule/40">
+                      <div
+                        className="h-5"
+                        style={{
+                          width: `${(t.pct / maxPct) * 100}%`,
+                          backgroundColor: isLow ? "var(--color-accent-red,#c0392b)" : "#888",
+                          opacity: isLow ? 0.8 : 0.55,
+                        }}
+                      />
+                    </div>
+                    <div className="text-right tabular-nums text-ink-soft">
+                      {t.pct}%
+                    </div>
+                  </Link>
+                );
+              })}
+            </div>
+            <p className="text-xs text-ink-soft mt-3">
+              <span className="inline-block w-3 h-3 align-middle mr-1" style={{ backgroundColor: "#c0392b", opacity: 0.8 }} />
+              紅色 = 關注度最低的 4 個議題。資料：中選會公報政見（已 OCR 部分）。
+            </p>
+          </section>
+        );
+      })()}
 
       {fertility && fertility.births.length > 0 && (() => {
         const maxB = Math.max(...fertility.births.map((b) => b.births));
