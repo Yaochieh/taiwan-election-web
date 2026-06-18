@@ -300,27 +300,31 @@ export default async function PersonPage({
         );
       })()}
 
-      {/* ── 學經歷（分學歷 / 經歷顯示） ── */}
-      {profile.background && (() => {
-        // 解析 background。先依【】tag 分區，再依關鍵字微調（很多筆 OCR 都把
-        // 全部塞在「【學歷】」之下，實際內容是經歷職稱）
-        const text = profile.background.replace(/^【.*?】\s*/g, "\n").replace(/^[•．\-]\s*/gm, "");
-        const lines = text.split(/\n+/).map((l) => l.trim()).filter(Boolean);
-        const EDU_KEYWORDS = /(大學|碩士|博士|學系|學院|高中|中學|小學|科系|系所|學位|EMBA|MBA|專科|MIT|Stanford|Harvard)/;
-        const EXP_KEYWORDS = /(委員|主任|秘書|律師|醫師|部長|署長|局長|長|議員|市長|縣長|總理|理事|董事|顧問|秘書長|主席|代表|處長|科長|執行長)/;
+      {/* ── 學經歷（官方立法院資料優先，否則解析公報） ── */}
+      {(profile.edu_official || profile.career_official || profile.background) && (() => {
+        const hasOfficial = !!(profile.edu_official || profile.career_official);
         let edu = "";
         let exp = "";
-        for (const line of lines) {
-          if (EDU_KEYWORDS.test(line) && !EXP_KEYWORDS.test(line)) {
-            edu += (edu ? "\n" : "") + line;
-          } else if (EXP_KEYWORDS.test(line)) {
-            exp += (exp ? "\n" : "") + line;
-          } else {
-            // 無法判斷：丟到經歷
-            exp += (exp ? "\n" : "") + line;
+        let source = "中選會公報";
+        if (hasOfficial) {
+          // 立法院官方資料：學歷/經歷已乾淨分開
+          edu = profile.edu_official || "";
+          exp = profile.career_official || "";
+          source = profile.official_source || "立法院";
+        } else if (profile.background) {
+          // fallback：解析亂的公報 OCR
+          const text = profile.background
+            .replace(/^【.*?】\s*/g, "\n")
+            .replace(/^[•．\-]\s*/gm, "");
+          const lines = text.split(/\n+/).map((l) => l.trim()).filter(Boolean);
+          const EDU = /(大學|碩士|博士|學系|學院|高中|中學|小學|科系|系所|學位|EMBA|MBA|專科)/;
+          const EXP = /(委員|主任|秘書|律師|醫師|部長|署長|局長|長|議員|市長|縣長|理事|董事|顧問|主席|代表|處長|科長|執行長)/;
+          for (const line of lines) {
+            if (EDU.test(line) && !EXP.test(line)) edu += (edu ? "\n" : "") + line;
+            else exp += (exp ? "\n" : "") + line;
           }
+          if (!edu && !exp) exp = profile.background.trim();
         }
-        if (!edu && !exp) exp = profile.background.trim();
         const Block = ({ label, content }: { label: string; content: string }) =>
           content ? (
             <div>
@@ -343,12 +347,25 @@ export default async function PersonPage({
           ) : null;
         return (
           <section className="mb-12">
-            <h2 className="font-serif text-2xl font-bold mb-4">學歷與經歷</h2>
+            <h2 className="font-serif text-2xl font-bold mb-4">
+              學歷與經歷
+              {hasOfficial && (
+                <span className="ml-3 text-xs font-normal text-green-700 border border-green-600 px-2 py-0.5 align-middle">
+                  ✓ 立法院官方
+                </span>
+              )}
+            </h2>
             <div className="border border-rule p-5 grid sm:grid-cols-2 gap-6">
               <Block label="學歷" content={edu} />
               <Block label="經歷" content={exp} />
             </div>
-            <p className="text-xs text-ink-soft mt-2">資料來源：中選會公報</p>
+            {profile.committees_official && (
+              <div className="mt-3 text-xs text-ink-soft">
+                <span className="font-medium">所屬委員會：</span>
+                {profile.committees_official.split("\n").slice(-2).join("；")}
+              </div>
+            )}
+            <p className="text-xs text-ink-soft mt-2">資料來源：{source}</p>
           </section>
         );
       })()}

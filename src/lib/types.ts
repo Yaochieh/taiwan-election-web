@@ -202,6 +202,10 @@ export interface PersonProfile {
   photo_path: string | null;
   background: string | null;
   background_source: string | null;
+  edu_official: string | null;
+  career_official: string | null;
+  committees_official: string | null;
+  official_source: string | null;
   total_races: number;
   total_wins: number;
   win_rate: number;
