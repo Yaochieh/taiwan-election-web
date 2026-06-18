@@ -370,6 +370,40 @@ export default async function PersonPage({
         );
       })()}
 
+      {/* ── 立委問政紀錄 ── */}
+      {(profile.proposals_count != null || profile.interpellations_count != null) && (
+        <section className="mb-12">
+          <h2 className="font-serif text-2xl font-bold mb-4">
+            立委問政紀錄
+            <span className="ml-3 text-xs font-normal text-green-700 border border-green-600 px-2 py-0.5 align-middle">
+              ✓ 立法院官方
+            </span>
+          </h2>
+          <div className="grid grid-cols-2 gap-4 max-w-md">
+            <div className="border border-rule p-4">
+              <p className="text-xs tracking-widest uppercase text-ink-soft mb-1">
+                提案數
+              </p>
+              <p className="font-serif text-3xl font-bold tabular-nums">
+                {profile.proposals_count ?? "—"}
+              </p>
+            </div>
+            <div className="border border-rule p-4">
+              <p className="text-xs tracking-widest uppercase text-ink-soft mb-1">
+                質詢數
+              </p>
+              <p className="font-serif text-3xl font-bold tabular-nums">
+                {profile.interpellations_count ?? "—"}
+              </p>
+            </div>
+          </div>
+          <p className="text-xs text-ink-soft mt-2 leading-relaxed">
+            本屆任內主導/連署的議案與院會質詢次數。資料來源：立法院開放資料 ly.govapi.tw。
+            提案數高不代表品質，僅供參考。
+          </p>
+        </section>
+      )}
+
       {/* ── 維基百科簡介 ── */}
       {profile.background_source && (() => {
         const text = profile.background_source;

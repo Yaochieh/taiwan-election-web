@@ -206,6 +206,8 @@ export interface PersonProfile {
   career_official: string | null;
   committees_official: string | null;
   official_source: string | null;
+  proposals_count: number | null;
+  interpellations_count: number | null;
   total_races: number;
   total_wins: number;
   win_rate: number;
