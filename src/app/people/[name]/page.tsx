@@ -560,7 +560,7 @@ export default async function PersonPage({
                     ? `${formatVotes(r.votes)} 票`
                     : "—"}
                 </div>
-                {(r.platform_count > 0 || r.image_count > 0) && (
+                {(r.platform_count > 0 || r.image_count > 0) ? (
                   <div className="col-span-12">
                     <Link
                       href={`/platforms?election=${r.election_id}${
@@ -572,6 +572,10 @@ export default async function PersonPage({
                     >
                       看政見（文字 {r.platform_count} 條 + 圖片 {r.image_count} 張）
                     </Link>
+                  </div>
+                ) : (
+                  <div className="col-span-12 text-xs text-ink-soft">
+                    此次未在公報刊登政見（從缺）
                   </div>
                 )}
               </article>

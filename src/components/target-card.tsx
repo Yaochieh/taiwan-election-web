@@ -46,20 +46,18 @@ function formatNumber(n: number | null, unit: string | null): string {
   return new Intl.NumberFormat("zh-TW").format(n) + " " + (unit || "");
 }
 
-// 標題與內文是否「實質重複」：去標點空白後互相包含、或重疊度高
+// 標題與內文是否「實質重複」：長度相近且高度重疊才算。
+// 內文明顯比標題長 → 是原文脈絡，一定保留顯示。
 function isRedundant(title: string, desc: string): boolean {
   const norm = (s: string) => s.replace(/[\s，。、：:（）()「」0-9]/g, "");
   const a = norm(title);
   const b = norm(desc);
   if (!a || !b) return false;
   if (a === b) return true;
-  // 一方完全包含另一方
+  // 內文比標題長 1.4 倍以上 → 視為原文，不隱藏
+  if (b.length > a.length * 1.4) return false;
   if (a.includes(b) || b.includes(a)) return true;
-  // 字元重疊度 > 70%
-  const setA = new Set(a);
-  let overlap = 0;
-  for (const ch of new Set(b)) if (setA.has(ch)) overlap++;
-  return overlap / Math.min(setA.size, new Set(b).size) > 0.7;
+  return false;
 }
 
 export function TargetCard({ target }: { target: PlatformTarget }) {
@@ -127,15 +125,16 @@ export function TargetCard({ target }: { target: PlatformTarget }) {
         <h3 className="font-serif text-xl font-bold leading-snug mb-2">
           {target.title}
         </h3>
-        {/* 內文：與標題明顯不同時才顯示，避免重複 */}
+        {/* 政見原文（引用樣式）：與標題明顯不同時顯示 */}
         {target.description &&
           !isRedundant(target.title, target.description) && (
-            <p className="text-sm text-ink-soft mb-2 leading-relaxed">
-              {target.description}
-            </p>
+            <blockquote className="border-l-2 border-rule pl-3 my-2 text-sm text-ink-soft leading-relaxed">
+              <span className="text-ink-soft/60">政見原文：</span>
+              「{target.description.replace(/^\s*\d+[\.\)、]\s*/, "")}」
+            </blockquote>
           )}
         {target.election_date && (
-          <p className="text-[11px] text-ink-soft">
+          <p className="text-[11px] text-ink-soft mt-1">
             出處：{target.election_date.slice(0, 4)} {target.election_name}
           </p>
         )}
