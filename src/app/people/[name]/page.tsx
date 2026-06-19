@@ -404,24 +404,33 @@ export default async function PersonPage({
         </section>
       )}
 
-      {/* ── 維基百科簡介 ── */}
+      {/* ── 人物簡介（維基百科 or 中選會公報） ── */}
       {profile.background_source && (() => {
         const text = profile.background_source;
         const urlMatch = text.match(/https?:\/\/\S+/);
         const url = urlMatch ? urlMatch[0].replace(/\)$/, "") : null;
-        const bodyText = text
-          .replace(/（資料來源：[^）]*）/, "")
-          .trim();
+        const isGazette = text.includes("中選會選舉公報");
+        // 取來源說明（公報的「（資料來源：…）」）
+        const srcMatch = text.match(/（資料來源：([^）]*)）/);
+        const srcText = srcMatch ? srcMatch[1].trim() : null;
+        const bodyText = text.replace(/（資料來源：[^）]*）/, "").trim();
         return (
           <section className="mb-12">
-            <h2 className="font-serif text-2xl font-bold mb-4">維基百科簡介</h2>
+            <h2 className="font-serif text-2xl font-bold mb-4">
+              {isGazette ? "學歷與經歷" : "維基百科簡介"}
+              {isGazette && (
+                <span className="ml-3 text-xs font-normal text-green-700 border border-green-600 px-2 py-0.5 align-middle">
+                  ✓ 中選會公報
+                </span>
+              )}
+            </h2>
             <div className="border border-rule p-5">
               <p className="leading-[1.85] whitespace-pre-wrap text-sm">
                 {bodyText}
               </p>
-              {url && (
-                <p className="mt-3 text-xs text-ink-soft">
-                  資料來源：
+              <p className="mt-3 text-xs text-ink-soft">
+                資料來源：
+                {url ? (
                   <a
                     href={url}
                     target="_blank"
@@ -430,8 +439,10 @@ export default async function PersonPage({
                   >
                     中文維基百科 →
                   </a>
-                </p>
-              )}
+                ) : (
+                  <span className="ml-1">{srcText || "中選會選舉公報"}</span>
+                )}
+              </p>
             </div>
           </section>
         );
