@@ -7,6 +7,19 @@ import { PersonLink, PartyLink } from "@/components/entity-links";
 
 export const revalidate = 300;
 
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ name: string }>;
+}) {
+  const { name: encoded } = await params;
+  const name = decodeURIComponent(encoded);
+  return {
+    title: `${name}政見 · 正至`,
+    description: `歷屆選舉候選人在「${name}」議題上的政見全文、政黨立場分布與量化承諾追蹤，全部取自中選會選舉公報。`,
+  };
+}
+
 const TYPE_LABEL: Record<string, string> = {
   presidential: "總統",
   legislative: "立委",

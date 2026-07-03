@@ -19,7 +19,7 @@ import type {
   PlatformTarget,
 } from "./types";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
+export const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
 const IMAGE_BASE = `${API_URL}/static/bulletin_images`;
 
 async function fetcher<T>(path: string, init?: RequestInit): Promise<T> {

@@ -42,6 +42,7 @@ export default async function MayorsPage() {
     votes: number;
     color: string;
   };
+  type SubCell = Cell & { originDistrict: string };
   // 升格前舊縣 → 升格後直轄市
   const COUNTY_MERGE: Record<string, string> = {
     "臺北縣": "新北市",
@@ -53,7 +54,7 @@ export default async function MayorsPage() {
   // grid[modern_county][year] = 「合併版」單一勝選 Cell
   // subs[modern_county][year] = 升格前原始各縣市 sub-cells（可能有多筆）
   const grid = new Map<string, Map<string, Cell>>();
-  const subs = new Map<string, Map<string, Cell[]>>();
+  const subs = new Map<string, Map<string, SubCell[]>>();
   const years = new Set<string>();
   const counties = new Set<string>();
 
@@ -66,7 +67,7 @@ export default async function MayorsPage() {
     years.add(year);
     counties.add(modern);
 
-    const subCell: Cell & { originDistrict: string } = {
+    const subCell: SubCell = {
       candidate: h.candidate_name,
       party: h.party_name,
       votes: h.votes,
@@ -79,7 +80,7 @@ export default async function MayorsPage() {
     if (!subRow.has(year)) subRow.set(year, []);
     const list = subRow.get(year)!;
     // 同一 originDistrict 只保留得票最高（多次匯入時去重）
-    const existIdx = list.findIndex((x) => (x as any).originDistrict === rawCounty);
+    const existIdx = list.findIndex((x) => x.originDistrict === rawCounty);
     if (existIdx >= 0) {
       if (h.votes > list[existIdx].votes) list[existIdx] = subCell;
     } else {
@@ -255,11 +256,11 @@ export default async function MayorsPage() {
                               <div
                                 key={si}
                                 className="flex-1 border border-rule px-1 py-0.5 min-w-0"
-                                title={`${(s as any).originDistrict}：${s.candidate} (${s.party || "無黨籍"})\n得票 ${formatVotes(s.votes)}`}
+                                title={`${s.originDistrict}：${s.candidate} (${s.party || "無黨籍"})\n得票 ${formatVotes(s.votes)}`}
                               >
                                 <div className="text-[9px] text-ink-soft tracking-wider">
-                                  {(s as any).originDistrict.replace(/[縣市]$/, "")}
-                                  {(s as any).originDistrict.endsWith("市") ? "市" : "縣"}
+                                  {s.originDistrict.replace(/[縣市]$/, "")}
+                                  {s.originDistrict.endsWith("市") ? "市" : "縣"}
                                 </div>
                                 <div
                                   className="text-xs font-medium leading-tight truncate"

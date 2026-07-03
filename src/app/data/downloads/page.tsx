@@ -1,10 +1,7 @@
 import Link from "next/link";
+import { API_URL } from "@/lib/api";
 
 export const metadata = { title: "開放資料 · 正至" };
-
-const API_URL =
-  process.env.NEXT_PUBLIC_API_URL ||
-  "https://web-production-f7c522.up.railway.app";
 
 interface Endpoint {
   group: string;

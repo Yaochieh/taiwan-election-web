@@ -3,6 +3,7 @@ import { Noto_Sans_TC, Noto_Serif_TC } from "next/font/google";
 import "./globals.css";
 import { SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/site-footer";
+import { SITE_URL } from "@/lib/site";
 
 const notoSans = Noto_Sans_TC({
   variable: "--font-sans",
@@ -22,7 +23,7 @@ export const metadata: Metadata = {
   title: "正至 — 台灣選舉資訊平台",
   description:
     "整合中選會選舉公報，提供候選人政見、歷屆結果、政黨席次的查詢與比對。希望降低公民參與政治的門檻。",
-  metadataBase: new URL("https://taiwan-election-web.vercel.app"),
+  metadataBase: new URL(SITE_URL),
   openGraph: {
     title: "正至 — 台灣選舉資訊平台",
     description: "整合中選會選舉公報，提供候選人政見、歷屆結果、政黨席次的查詢與比對。",
@@ -58,7 +59,7 @@ export default function RootLayout({
               "@type": "WebSite",
               name: "正至 — 台灣選舉資訊平台",
               alternateName: "ZhengZhi · Taiwan Election",
-              url: "https://taiwan-election-web.vercel.app",
+              url: SITE_URL,
               description:
                 "整合中選會選舉公報，提供候選人政見、歷屆當選結果、政黨席次的查詢與比對。",
               inLanguage: "zh-TW",
@@ -68,7 +69,7 @@ export default function RootLayout({
                 target: {
                   "@type": "EntryPoint",
                   urlTemplate:
-                    "https://taiwan-election-web.vercel.app/search?q={search_term_string}",
+                    `${SITE_URL}/search?q={search_term_string}`,
                 },
                 "query-input": "required name=search_term_string",
               },
