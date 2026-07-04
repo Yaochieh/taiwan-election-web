@@ -7,6 +7,7 @@ import {
   getPresidentialTrend,
   getPersonTargets,
   getPersonProfile,
+  getFlagshipTargets,
   candidatePhotoUrl,
 } from "@/lib/api";
 import {
@@ -16,6 +17,7 @@ import {
   sortCounties,
 } from "@/lib/format";
 import { PersonLink, PartyLink } from "@/components/entity-links";
+import { PromiseTracker } from "@/components/promise-tracker";
 
 const TYPE_ZH: Record<string, string> = {
   presidential: "總統",
@@ -73,12 +75,13 @@ async function fetchIncumbentStats(name: string) {
 }
 
 export default async function HomePage() {
-  const [withPlatforms, mayoralHistory, allElections, presidential, ...incumbentStats] =
+  const [withPlatforms, mayoralHistory, allElections, presidential, flagship, ...incumbentStats] =
     await Promise.all([
       getElectionsWithPlatforms().catch(() => []),
       getMayoralHistory().catch(() => []),
       getElections().catch(() => []),
       getPresidentialTrend().catch(() => []),
+      getFlagshipTargets().catch(() => []),
       ...INCUMBENTS.map((o) => fetchIncumbentStats(o.name)),
       ...MAYORS.map((m) => fetchIncumbentStats(m.name)),
     ]);
@@ -218,6 +221,9 @@ export default async function HomePage() {
         </div>
       </section>
 
+      {/* ── ★ 兌現追蹤（首頁招牌）── */}
+      <PromiseTracker items={flagship} />
+
       {/* ── 現任執政者政績追蹤 ── */}
       <section className="border-y border-rule bg-paper">
         <div className="mx-auto max-w-6xl px-4 sm:px-6 py-14">
@@ -272,48 +278,6 @@ export default async function HomePage() {
           </div>
         </div>
       </section>
-
-      {/* ── 下次選舉聚焦 ── */}
-      {nextDate && (
-        <section className="mx-auto max-w-6xl px-4 sm:px-6 py-14 border-b border-rule">
-          <div className="flex items-baseline justify-between flex-wrap gap-3 mb-6">
-            <div>
-              <p className="text-xs tracking-[0.2em] uppercase text-ink-soft mb-2">
-                NEXT ELECTION · 下次選舉
-              </p>
-              <h2 className="font-serif text-3xl sm:text-4xl font-bold">
-                {nextDate.slice(0, 10)}
-                <span className="ml-3 text-base text-ink-soft font-normal">
-                  {nextTypes.slice(0, 4).join("、")}
-                </span>
-              </h2>
-            </div>
-            <div className="text-right">
-              <div className="font-serif text-5xl font-bold text-accent-red tabular-nums">
-                {daysToNext}
-              </div>
-              <div className="text-xs text-ink-soft">天</div>
-            </div>
-          </div>
-          <p className="text-sm text-ink-soft leading-relaxed max-w-3xl">
-            候選人與政見會在中選會公報公告後陸續上線。可先看
-            <Link
-              href="/elections"
-              className="underline underline-offset-4 hover:text-accent-red mx-1"
-            >
-              歷屆選舉
-            </Link>
-            或
-            <Link
-              href="/government/cabinet"
-              className="underline underline-offset-4 hover:text-accent-red mx-1"
-            >
-              現任政府
-            </Link>
-            。
-          </p>
-        </section>
-      )}
 
       {/* ── 平台收錄 三大區塊 ── */}
       <section className="mx-auto max-w-6xl px-4 sm:px-6 py-16">

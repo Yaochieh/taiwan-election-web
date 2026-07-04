@@ -17,6 +17,7 @@ import type {
   SearchResult,
   PersonProfile,
   PlatformTarget,
+  FlagshipTarget,
 } from "./types";
 
 export const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
@@ -245,8 +246,17 @@ export const search = (q: string, limit = 30) =>
 export const getPersonProfile = (name: string) =>
   fetcher<PersonProfile>(`/people/${encodeURIComponent(name)}`);
 
+// 政見追蹤更新頻率高於一般選舉資料 → 5 分鐘快取（覆蓋 fetcher 預設 1 小時）
 export const getPersonTargets = (name: string) =>
-  fetcher<PlatformTarget[]>(`/people/${encodeURIComponent(name)}/targets`);
+  fetcher<PlatformTarget[]>(`/people/${encodeURIComponent(name)}/targets`, {
+    next: { revalidate: 300 },
+  } as RequestInit);
+
+// 首頁兌現追蹤看板：旗艦承諾 + 最新進度
+export const getFlagshipTargets = () =>
+  fetcher<FlagshipTarget[]>(`/platforms/targets/flagship`, {
+    next: { revalidate: 300 },
+  } as RequestInit);
 
 // ── image URL helper ────────────────────────────────────────
 export const bulletinImageUrl = (localPath: string): string => {

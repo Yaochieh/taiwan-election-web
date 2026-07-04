@@ -257,6 +257,25 @@ export interface TargetProgress {
   sources: ProgressSource[];
 }
 
+// 首頁兌現追蹤看板：旗艦承諾 + 最新進度
+export interface FlagshipTarget {
+  target_id: number;
+  person_name: string;
+  title: string;
+  category: string | null;
+  target_value: number | null;
+  metric_unit: string | null;
+  baseline_value: number | null;
+  target_date: string | null;
+  party_name: string | null;
+  color_hex: string | null;
+  latest_value: number;
+  recorded_at: string;
+  progress_note: string | null;
+  progress_source_url: string | null;
+  progress_pct: number | null;
+}
+
 export interface PlatformTarget {
   target_id: number;
   person_name: string;
