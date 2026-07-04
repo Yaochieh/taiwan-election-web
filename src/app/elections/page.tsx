@@ -64,16 +64,16 @@ export default async function ElectionsPage({
             <span>
               {" 預計還有 "}
               <strong className="text-ink">{upcoming.length} 場</strong>{" "}
-              即將舉行。未來日期為依四年週期推算，正式投票日由
+              即將舉行。2026 地方選舉投票日 11 月 28 日為
               <a
-                href="https://www.cec.gov.tw"
+                href="https://web.cec.gov.tw/central/article/61722"
                 target="_blank"
                 rel="noreferrer"
                 className="underline underline-offset-2 hover:text-accent-red"
               >
-                中選會
+                中選會正式公告
               </a>
-              公告為準。
+              （候選人登記 8/31–9/4）；2028 之後日期為依四年週期推算。
             </span>
           )}
         </p>
