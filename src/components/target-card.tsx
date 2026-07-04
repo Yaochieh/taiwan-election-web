@@ -270,10 +270,11 @@ function SubMetric({
         </div>
         <div className="flex justify-between items-baseline mt-1 text-[10px] text-ink-soft">
           <span>
-            基準 {formatNumber(target.baseline_value, target.metric_unit)}（
-            {target.baseline_date}）
+            {target.baseline_value != null
+              ? `基準 ${formatNumber(target.baseline_value, target.metric_unit)}（${target.baseline_date || "—"}）`
+              : "基準 0（自承諾起算）"}
           </span>
-          <span>截止 {target.target_date}</span>
+          {target.target_date && <span>截止 {target.target_date}</span>}
         </div>
       </div>
 
@@ -348,13 +349,22 @@ function SubMetric({
                     {p.note}
                   </p>
                 )}
-                {p.sources && p.sources.length > 0 && (
+                {p.sources && p.sources.length > 0 ? (
                   <div className="mt-1 flex flex-wrap gap-1.5">
                     {p.sources.map((s, j) => (
                       <SourceChip key={j} src={s} />
                     ))}
                   </div>
-                )}
+                ) : p.source_url ? (
+                  <a
+                    href={p.source_url}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="mt-1 inline-block text-[11px] underline underline-offset-2 text-ink-soft hover:text-accent-red break-all"
+                  >
+                    資料來源 →
+                  </a>
+                ) : null}
               </li>
             ))}
           </ul>
