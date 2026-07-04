@@ -56,6 +56,10 @@ async function fetchIncumbentStats(name: string) {
   const past = top.filter((t) => t.tense === "past").length;
   const future = top.filter((t) => t.tense === "future").length;
   const party = profile?.party_history?.[profile.party_history.length - 1];
+  // 是否有政見全文（文字或圖片），用來區分「無量化承諾」與「政見未收錄」
+  const hasPlatform = (profile?.races || []).some(
+    (r) => (r.platform_count || 0) > 0 || (r.image_count || 0) > 0,
+  );
   return {
     name,
     party_name: party?.party || null,
@@ -64,6 +68,7 @@ async function fetchIncumbentStats(name: string) {
     total: top.length,
     past,
     future,
+    hasPlatform,
   };
 }
 
@@ -571,6 +576,7 @@ function IncumbentCard({
         total: number;
         past: number;
         future: number;
+        hasPlatform: boolean;
       }
     | undefined;
 }) {
@@ -617,7 +623,9 @@ function IncumbentCard({
         </div>
         <div className="flex gap-3 text-xs tabular-nums">
           {total === 0 ? (
-            <span className="text-ink-soft">— 政見資料整理中</span>
+            <span className="text-ink-soft">
+              {stats?.hasPlatform ? "— 無量化承諾" : "— 政見未收錄"}
+            </span>
           ) : (
             <>
               <span title="已完成政績">📜 {past}</span>
