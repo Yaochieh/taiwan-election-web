@@ -92,6 +92,7 @@ export interface CandidatePlatformStatus {
   party_name: string | null;
   color_hex: string | null;
   district: string | null;
+  background: string | null; // 總統選舉區分 正總統 / 副總統
   votes: number | null;
   elected: number | null;
   photo_path: string | null;

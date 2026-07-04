@@ -16,12 +16,15 @@ export async function CandidatePlatformCard({
   electionId,
   districtLabel,
   districtTotalVotes,
+  runningMate,
 }: {
   status: CandidatePlatformStatus;
   platforms: Platform[];
   electionId: number;
   districtLabel: string;
   districtTotalVotes?: number;
+  // 總統選舉：同組副手（併入同一張卡）
+  runningMate?: { status: CandidatePlatformStatus; platforms: Platform[] };
 }) {
   const [images, sources] = await Promise.all([
     status.image_count > 0
@@ -80,6 +83,18 @@ export async function CandidatePlatformCard({
           {districtLabel && (
             <span className="text-sm text-ink-soft">· {districtLabel}</span>
           )}
+          {runningMate && (
+            <span className="text-sm text-ink-soft">
+              · 副手{" "}
+              <Link
+                href={`/people/${encodeURIComponent(runningMate.status.candidate_name)}`}
+                className="hover:underline underline-offset-4"
+                style={{ color }}
+              >
+                {runningMate.status.candidate_name}
+              </Link>
+            </span>
+          )}
           {status.votes != null && status.votes > 0 && (
             <span className="text-sm text-ink-soft">
               · 得票 {formatVotes(status.votes)}
@@ -103,82 +118,16 @@ export async function CandidatePlatformCard({
       </header>
 
       {/* ── 文字政見 ── */}
-      {hasText && (
-        <ol className="space-y-4 mb-6 list-none pl-0">
-          {platforms.map((p) => {
-            // 若內文本身已是「1. 2. 3.」條列，就不顯示外層 seq 避免重複
-            const contentIsNumbered = /^\s*\d+[\.\)、]/.test(p.content || "");
-            return (
-            <li key={p.seq} className="flex gap-4">
-              {!contentIsNumbered && (
-                <span className="font-serif text-2xl text-ink-soft tabular-nums shrink-0 min-w-[2ch]">
-                  {p.seq}.
-                </span>
-              )}
-              <div className="flex-1">
-                <p className="leading-[1.85] whitespace-pre-wrap">{p.content}</p>
-                {(p.source_url || p.note || p.content_raw) && (() => {
-                  // 解析 note: 找出 tag (含 [人工潤稿] / [OCR 清理] 等) 與來源說明
-                  const note = p.note || "";
-                  const tags = note.match(/\[[^\]]+\]/g) || [];
-                  // 「來源：」之後當 source text
-                  const srcMatch = note.match(/來源[：:]\s*(.+?)(?:\s*·\s*\[|$)/);
-                  const sourceText = srcMatch ? srcMatch[1].trim() : null;
-                  return (
-                    <div className="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-[11px] text-ink-soft">
-                      {tags.map((t, ti) => {
-                        const isPolish = t.includes("人工潤稿");
-                        const isClean = t.includes("OCR");
-                        const isSplit = t.includes("拆條");
-                        return (
-                          <span
-                            key={ti}
-                            className={
-                              "inline-block px-1.5 py-0.5 text-[10px] " +
-                              (isPolish
-                                ? "bg-accent-red/15 text-accent-red border border-accent-red/30"
-                                : isClean || isSplit
-                                  ? "bg-rule/60 text-ink"
-                                  : "bg-rule/40 text-ink-soft")
-                            }
-                          >
-                            {isPolish ? "人工潤稿" : isClean ? "OCR 清理" : isSplit ? "自動拆條" : t.replace(/[\[\]]/g, "")}
-                          </span>
-                        );
-                      })}
-                      {sourceText && (
-                        <span className="text-ink-soft">
-                          來源：{sourceText}
-                        </span>
-                      )}
-                      {p.source_url && (
-                        <a
-                          href={p.source_url}
-                          target="_blank"
-                          rel="noopener"
-                          className="hover:text-accent-red underline-offset-4 hover:underline"
-                        >
-                          原始公報 →
-                        </a>
-                      )}
-                    </div>
-                  );
-                })()}
-                {p.content_raw && p.content_raw !== p.content && (
-                  <details className="mt-2">
-                    <summary className="text-[11px] text-ink-soft cursor-pointer hover:text-accent-red">
-                      顯示原始 OCR
-                    </summary>
-                    <pre className="mt-1 p-2 bg-rule/30 text-[11px] text-ink-soft whitespace-pre-wrap font-sans leading-relaxed">
-                      {p.content_raw}
-                    </pre>
-                  </details>
-                )}
-              </div>
-            </li>
-            );
-          })}
-        </ol>
+      {hasText && <PlatformList platforms={platforms} />}
+
+      {/* ── 副手政見（總統選舉） ── */}
+      {runningMate && runningMate.platforms.length > 0 && (
+        <div className="mb-6 border-l-2 border-rule pl-4">
+          <p className="text-sm font-medium text-ink-soft mb-3">
+            副手政見 · {runningMate.status.candidate_name}
+          </p>
+          <PlatformList platforms={runningMate.platforms} />
+        </div>
       )}
 
       {/* ── 圖片政見 ── */}
@@ -259,5 +208,84 @@ export async function CandidatePlatformCard({
         </details>
       )}
     </article>
+  );
+}
+
+// 文字政見清單（正、副手共用）
+function PlatformList({ platforms }: { platforms: Platform[] }) {
+  return (
+    <ol className="space-y-4 mb-6 list-none pl-0">
+      {platforms.map((p) => {
+        // 若內文本身已是「1. 2. 3.」條列，就不顯示外層 seq 避免重複
+        const contentIsNumbered = /^\s*\d+[\.\)、]/.test(p.content || "");
+        return (
+          <li key={p.seq} className="flex gap-4">
+            {!contentIsNumbered && (
+              <span className="font-serif text-2xl text-ink-soft tabular-nums shrink-0 min-w-[2ch]">
+                {p.seq}.
+              </span>
+            )}
+            <div className="flex-1">
+              <p className="leading-[1.85] whitespace-pre-wrap">{p.content}</p>
+              {(p.source_url || p.note || p.content_raw) && (() => {
+                // 解析 note: 找出 tag (含 [人工潤稿] / [OCR 清理] 等) 與來源說明
+                const note = p.note || "";
+                const tags = note.match(/\[[^\]]+\]/g) || [];
+                // 「來源：」之後當 source text
+                const srcMatch = note.match(/來源[：:]\s*(.+?)(?:\s*·\s*\[|$)/);
+                const sourceText = srcMatch ? srcMatch[1].trim() : null;
+                return (
+                  <div className="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-[11px] text-ink-soft">
+                    {tags.map((t, ti) => {
+                      const isPolish = t.includes("人工潤稿");
+                      const isClean = t.includes("OCR");
+                      const isSplit = t.includes("拆條");
+                      return (
+                        <span
+                          key={ti}
+                          className={
+                            "inline-block px-1.5 py-0.5 text-[10px] " +
+                            (isPolish
+                              ? "bg-accent-red/15 text-accent-red border border-accent-red/30"
+                              : isClean || isSplit
+                                ? "bg-rule/60 text-ink"
+                                : "bg-rule/40 text-ink-soft")
+                          }
+                        >
+                          {isPolish ? "人工潤稿" : isClean ? "OCR 清理" : isSplit ? "自動拆條" : t.replace(/[\[\]]/g, "")}
+                        </span>
+                      );
+                    })}
+                    {sourceText && (
+                      <span className="text-ink-soft">來源：{sourceText}</span>
+                    )}
+                    {p.source_url && (
+                      <a
+                        href={p.source_url}
+                        target="_blank"
+                        rel="noopener"
+                        className="hover:text-accent-red underline-offset-4 hover:underline"
+                      >
+                        原始公報 →
+                      </a>
+                    )}
+                  </div>
+                );
+              })()}
+              {p.content_raw && p.content_raw !== p.content && (
+                <details className="mt-2">
+                  <summary className="text-[11px] text-ink-soft cursor-pointer hover:text-accent-red">
+                    顯示原始 OCR
+                  </summary>
+                  <pre className="mt-1 p-2 bg-rule/30 text-[11px] text-ink-soft whitespace-pre-wrap font-sans leading-relaxed">
+                    {p.content_raw}
+                  </pre>
+                </details>
+              )}
+            </div>
+          </li>
+        );
+      })}
+    </ol>
   );
 }

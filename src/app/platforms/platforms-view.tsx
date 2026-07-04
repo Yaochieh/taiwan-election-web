@@ -36,6 +36,16 @@ export async function PlatformsView({
     districtTotalVotes.set(key, (districtTotalVotes.get(key) || 0) + r.votes);
   }
 
+  // 總統選舉：把副總統併進正總統那組，用一張卡呈現一組正副
+  const isPresidential =
+    elections.find((e) => e.election_id === electionId)?.type === "presidential";
+  const runningMates = isPresidential
+    ? candidates.filter((c) => c.background === "副總統")
+    : [];
+  const primaryCandidates = isPresidential
+    ? candidates.filter((c) => c.background !== "副總統")
+    : candidates;
+
   const total = candidates.length;
   const withText = candidates.filter((c) => c.platform_count > 0).length;
   const withImageOnly = candidates.filter(
@@ -150,15 +160,27 @@ export async function PlatformsView({
 
       {/* ── 候選人清單 ── */}
       <div className="space-y-8">
-        {(!districtParam && candidates.length > 30
+        {(!districtParam && primaryCandidates.length > 30
           ? []
-          : candidates
+          : primaryCandidates
         ).map((c) => {
           const cPlatforms = allPlatforms.filter(
             (p) => p.candidate_id === c.candidate_id,
           );
           const districtTotal = c.district
             ? districtTotalVotes.get(c.district)
+            : undefined;
+          // 總統選舉：找同黨副手併入同一張卡
+          const mate = isPresidential
+            ? runningMates.find((m) => m.party_name === c.party_name)
+            : undefined;
+          const runningMate = mate
+            ? {
+                status: mate,
+                platforms: allPlatforms.filter(
+                  (p) => p.candidate_id === mate.candidate_id,
+                ),
+              }
             : undefined;
           return (
             <CandidatePlatformCard
@@ -168,6 +190,7 @@ export async function PlatformsView({
               electionId={electionId}
               districtLabel={cleanDistrict(c.district) || c.district || ""}
               districtTotalVotes={districtTotal}
+              runningMate={runningMate}
             />
           );
         })}
