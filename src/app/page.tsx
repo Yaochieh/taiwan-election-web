@@ -54,8 +54,11 @@ async function fetchIncumbentStats(name: string) {
     getPersonProfile(name).catch(() => null),
     getPersonTargets(name).catch(() => []),
   ]);
-  // 只算 parent target，避免 sub-metric 重複計數
-  const top = targets.filter((t) => t.parent_target_id === null);
+  // 只算 parent target，避免 sub-metric 重複計數；
+  // 排除「未當選未執行」（落選場次的承諾不該掛在現任職位卡上）
+  const top = targets.filter(
+    (t) => t.parent_target_id === null && t.verification_status !== "not_executed",
+  );
   const past = top.filter((t) => t.tense === "past").length;
   const future = top.filter((t) => t.tense === "future").length;
   const party = profile?.party_history?.[profile.party_history.length - 1];

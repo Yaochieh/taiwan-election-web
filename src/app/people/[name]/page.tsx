@@ -43,10 +43,11 @@ export default async function PersonPage({
   ]);
   if (!profile) notFound();
 
-  // 最新一場有政見的參選
-  const raceWithPlatform = profile.races.find(
-    (r) => (r.platform_count || 0) > 0,
-  );
+  // 最新政見：優先「最新當選」的參選（= 現任職位的政見，兌現追蹤以此為準）；
+  // 全部落選才退回最新有政見者。避免現任市長頁面掛著總統落選政見當「最新」。
+  const raceWithPlatform =
+    profile.races.find((r) => (r.platform_count || 0) > 0 && r.elected === 1) ??
+    profile.races.find((r) => (r.platform_count || 0) > 0);
   const latestPlatforms = raceWithPlatform
     ? await (async () => {
         const { getCandidatePlatforms } = await import("@/lib/api");
@@ -399,8 +400,19 @@ export default async function PersonPage({
       )}
 
       {/* ── 學經歷（官方立法院資料優先，否則解析公報） ── */}
-      {(profile.edu_official || profile.career_official || profile.background) && (() => {
+      {(() => {
         const hasOfficial = !!(profile.edu_official || profile.career_official);
+        // 「正總統/副總統」是配對標記不是學經歷；過短者也視為無公報資料
+        const bgUsable =
+          !!profile.background &&
+          profile.background.trim().length >= 20 &&
+          !["正總統", "副總統"].includes(profile.background.trim());
+        // 維基簡介 fallback（fetch_wiki_background 存於 background_source）
+        const wikiBio =
+          !hasOfficial && !bgUsable && (profile.background_source || "").length > 50
+            ? profile.background_source
+            : null;
+        if (!hasOfficial && !bgUsable && !wikiBio) return null;
         let edu = "";
         let exp = "";
         let source = "中選會公報";
@@ -409,7 +421,7 @@ export default async function PersonPage({
           edu = profile.edu_official || "";
           exp = profile.career_official || "";
           source = profile.official_source || "立法院";
-        } else if (profile.background) {
+        } else if (bgUsable && profile.background) {
           // fallback：解析亂的公報 OCR
           const text = profile.background
             .replace(/^【.*?】\s*/g, "\n")
@@ -446,24 +458,44 @@ export default async function PersonPage({
         return (
           <section className="mb-12">
             <h2 className="font-serif text-2xl font-bold mb-4">
-              學歷與經歷
+              {wikiBio ? "簡介" : "學歷與經歷"}
               {hasOfficial && (
                 <span className="ml-3 text-xs font-normal text-green-700 border border-green-600 px-2 py-0.5 align-middle">
                   ✓ 立法院官方
                 </span>
               )}
             </h2>
+            {wikiBio ? (
+              <div className="border border-rule p-5">
+                <p className="text-sm leading-[1.9]">{wikiBio}</p>
+                <p className="text-xs text-ink-soft mt-3">
+                  來源：
+                  <a
+                    href={`https://zh.wikipedia.org/wiki/${encodeURIComponent(name)}`}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="underline underline-offset-2 hover:text-accent-red"
+                  >
+                    中文維基百科 →
+                  </a>
+                  （自動擷取，官方學經歷待補）
+                </p>
+              </div>
+            ) : (
             <div className="border border-rule p-5 grid sm:grid-cols-2 gap-6">
               <Block label="學歷" content={edu} />
               <Block label="經歷" content={exp} />
             </div>
+            )}
             {profile.committees_official && (
               <div className="mt-3 text-xs text-ink-soft">
                 <span className="font-medium">所屬委員會：</span>
                 {profile.committees_official.split("\n").slice(-2).join("；")}
               </div>
             )}
-            <p className="text-xs text-ink-soft mt-2">資料來源：{source}</p>
+            {!wikiBio && (
+              <p className="text-xs text-ink-soft mt-2">資料來源：{source}</p>
+            )}
           </section>
         );
       })()}
@@ -549,12 +581,22 @@ export default async function PersonPage({
       {/* ── 最新政見預覽 ── */}
       {latestPlatforms.length > 0 && raceWithPlatform && (
         <section className="mb-12">
-          <h2 className="font-serif text-2xl font-bold mb-3">
-            最新政見
-            <span className="ml-3 text-sm text-ink-soft font-normal">
+          <h2 className="font-serif text-2xl font-bold mb-3 flex items-baseline flex-wrap gap-x-3 gap-y-1">
+            {raceWithPlatform.elected === 1 ? "現任職位政見" : "最新參選政見"}
+            <span className="text-sm text-ink-soft font-normal">
               {raceWithPlatform.election_date.slice(0, 4)}{" "}
               {raceWithPlatform.election_name}
+              {raceWithPlatform.district ? `｜${raceWithPlatform.district}` : ""}
             </span>
+            {raceWithPlatform.elected === 1 ? (
+              <span className="text-[10px] px-1.5 py-0.5 bg-accent-red text-paper font-bold tracking-wider">
+                ★ 當選
+              </span>
+            ) : (
+              <span className="text-[10px] px-1.5 py-0.5 border border-rule text-ink-soft">
+                未當選
+              </span>
+            )}
           </h2>
           <div className="border border-rule p-5 space-y-3 bg-rule/10">
             {latestPlatforms.slice(0, 3).map((p) => (
