@@ -257,6 +257,18 @@ export interface TargetProgress {
   sources: ProgressSource[];
 }
 
+// 首頁政見×提案精選
+export interface BillMatchHighlights {
+  people: number;
+  matches: number;
+  highlights: {
+    person_name: string;
+    n: number;
+    keyword: string;
+    bill_title: string;
+  }[];
+}
+
 // 立委政見×立院提案 關鍵詞對照（一條政見 → 相關提案）
 export interface BillMatchItem {
   item_seq: number;

@@ -19,6 +19,7 @@ import type {
   PlatformTarget,
   FlagshipTarget,
   BillMatchItem,
+  BillMatchHighlights,
 } from "./types";
 
 export const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
@@ -259,6 +260,12 @@ export const getPersonBillMatches = (name: string) =>
     `/people/${encodeURIComponent(name)}/bill-matches`,
     { next: { revalidate: 300 } } as RequestInit,
   );
+
+// 首頁政見×提案精選（總覽數字 + 代表案例）
+export const getBillMatchHighlights = () =>
+  fetcher<BillMatchHighlights>(`/platforms/bill-matches/highlights`, {
+    next: { revalidate: 3600 },
+  } as RequestInit);
 
 // 首頁兌現追蹤看板：旗艦承諾 + 最新進度
 export const getFlagshipTargets = () =>

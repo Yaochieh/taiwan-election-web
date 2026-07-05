@@ -8,6 +8,7 @@ import {
   getPersonTargets,
   getPersonProfile,
   getFlagshipTargets,
+  getBillMatchHighlights,
   candidatePhotoUrl,
 } from "@/lib/api";
 import {
@@ -75,13 +76,14 @@ async function fetchIncumbentStats(name: string) {
 }
 
 export default async function HomePage() {
-  const [withPlatforms, mayoralHistory, allElections, presidential, flagship, ...incumbentStats] =
+  const [withPlatforms, mayoralHistory, allElections, presidential, flagship, billHl, ...incumbentStats] =
     await Promise.all([
       getElectionsWithPlatforms().catch(() => []),
       getMayoralHistory().catch(() => []),
       getElections().catch(() => []),
       getPresidentialTrend().catch(() => []),
       getFlagshipTargets().catch(() => []),
+      getBillMatchHighlights().catch(() => null),
       ...INCUMBENTS.map((o) => fetchIncumbentStats(o.name)),
       ...MAYORS.map((m) => fetchIncumbentStats(m.name)),
     ]);
@@ -223,6 +225,54 @@ export default async function HomePage() {
 
       {/* ── ★ 兌現追蹤（首頁招牌）── */}
       <PromiseTracker items={flagship} />
+
+      {/* ── 政見 × 立院提案 精選帶 ── */}
+      {billHl && billHl.matches > 0 && (
+        <section className="border-b border-rule bg-rule/20">
+          <div className="mx-auto max-w-6xl px-4 sm:px-6 py-10">
+            <div className="flex items-baseline justify-between flex-wrap gap-3 mb-4">
+              <div className="flex items-baseline gap-3 flex-wrap">
+                <h2 className="font-serif text-2xl font-bold">政見 × 立院提案</h2>
+                <span className="text-xs text-ink-soft px-2 py-0.5 border border-rule">
+                  BETA
+                </span>
+              </div>
+              <p className="text-sm text-ink-soft tabular-nums">
+                已對照 <strong className="text-ink">{billHl.people}</strong> 位立委、
+                <strong className="text-ink">{billHl.matches.toLocaleString("zh-TW")}</strong> 筆
+              </p>
+            </div>
+            <p className="text-sm text-ink-soft mb-5 max-w-3xl leading-relaxed">
+              競選政見對照立法院<strong>實際提案</strong>——說過的，有沒有真的提案？
+              點立委名字看逐條對照（相關提案不等於已兌現）。
+            </p>
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-2">
+              {billHl.highlights.slice(0, 6).map((h) => (
+                <Link
+                  key={h.person_name}
+                  href={`/people/${encodeURIComponent(h.person_name)}`}
+                  className="group border border-rule bg-paper px-4 py-3 hover:border-ink transition"
+                >
+                  <div className="flex items-baseline gap-2 mb-1">
+                    <span className="font-serif font-bold group-hover:text-accent-red transition">
+                      {h.person_name}
+                    </span>
+                    <span className="text-[10px] px-1.5 py-0.5 bg-rule/60 text-ink">
+                      {h.keyword}
+                    </span>
+                    <span className="ml-auto text-xs text-ink-soft tabular-nums">
+                      {h.n} 筆對照
+                    </span>
+                  </div>
+                  <p className="text-xs text-ink-soft leading-relaxed truncate">
+                    {h.bill_title.replace(/^「|」，請審議案。?$/g, "").replace(/^廢止「/, "廢止")}
+                  </p>
+                </Link>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* ── 現任執政者政績追蹤 ── */}
       <section className="border-y border-rule bg-paper">

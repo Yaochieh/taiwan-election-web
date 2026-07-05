@@ -9,6 +9,7 @@ const NAV = [
   { href: "/people", label: "政治人物" },
   { href: "/parties", label: "政黨" },
   { href: "/platforms", label: "政見" },
+  { href: "/tracker", label: "兌現追蹤" },
   { href: "/topics", label: "主題" },
   { href: "/issues", label: "議題缺口" },
   { href: "/data", label: "數據" },
