@@ -117,9 +117,18 @@ export function PromiseTracker({ items }: { items: FlagshipTarget[] }) {
                       <>已開辦（排富）</>
                     ) : (
                       <>
+                        {t.baseline_value != null && (
+                          <>
+                            基準 {fmtValue(t.baseline_value, t.metric_unit)}
+                            <span className="mx-1">→</span>
+                          </>
+                        )}
                         最新 <strong className="text-ink">{fmtValue(t.latest_value, t.metric_unit)}</strong>
                         <span className="mx-1">／</span>
                         目標 {fmtValue(t.target_value, t.metric_unit)}
+                        {t.baseline_value != null && (
+                          <span className="ml-1 text-ink-soft/70">（進度以基準後新增計）</span>
+                        )}
                       </>
                     )}
                   </span>
