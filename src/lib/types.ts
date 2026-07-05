@@ -320,6 +320,9 @@ export interface FlagshipTarget {
   progress_source_url: string | null;
   sources: { url: string; publisher: string; authority_level: number }[];
   progress_pct: number | null;
+  verification_status: string | null;
+  verification_source: string | null;
+  verification_note: string | null;
 }
 
 export interface PlatformTarget {

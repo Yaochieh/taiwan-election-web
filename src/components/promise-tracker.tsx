@@ -65,6 +65,23 @@ function BarRow({
             {pct! > 105 ? "超標" : "達標"}
           </span>
         )}
+        {t.verification_status === "disputed" && (
+          t.verification_source ? (
+            <a
+              href={t.verification_source}
+              target="_blank"
+              rel="noreferrer"
+              className="text-[10px] px-1.5 py-0.5 border border-amber-600 text-amber-700 font-bold tracking-wider shrink-0 hover:bg-amber-50"
+              title={t.verification_note || "本人宣稱與查核不符"}
+            >
+              ⚠ 查核有爭議
+            </a>
+          ) : (
+            <span className="text-[10px] px-1.5 py-0.5 border border-amber-600 text-amber-700 font-bold tracking-wider shrink-0">
+              ⚠ 查核有爭議
+            </span>
+          )
+        )}
         <span
           className={
             "ml-auto font-serif font-bold tabular-nums shrink-0 " +
