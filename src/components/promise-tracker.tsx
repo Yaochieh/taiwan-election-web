@@ -167,9 +167,19 @@ function BarRow({
           </a>
         ) : null}
       </div>
+
+      {/* 完整版顯示歸屬/查證註記——真實性優先於簡潔 */}
+      {!compact && t.progress_note && (
+        <p className="mt-1.5 text-[11px] text-ink-soft leading-relaxed max-w-4xl">
+          註：{t.progress_note}
+        </p>
+      )}
     </div>
   );
 }
+
+// 進度 note 含歸屬警語時，首頁精簡清單顯示 ⚠
+const CAVEAT_RE = /低標|排富|含卸任|含前|歸屬|承諾時已|規劃中|跳票|查核/;
 
 export function PromiseTracker({
   items,
@@ -234,12 +244,22 @@ export function PromiseTracker({
               <div className="grid sm:grid-cols-2 border-y border-rule divide-y divide-rule sm:divide-y-0">
                 {met.map((t) => {
                   const color = partyColor(t.party_name ?? t.person_name, t.color_hex);
+                  const caveat = CAVEAT_RE.test(t.progress_note || "");
                   return (
                     <div
                       key={t.target_id}
                       className="flex items-baseline gap-x-2 py-3 sm:pr-8 sm:[&:nth-child(odd)]:border-r sm:border-rule sm:[&:nth-child(n+3)]:border-t"
                     >
                       <span className="text-accent-red font-bold shrink-0">✓</span>
+                      {caveat && (
+                        <Link
+                          href="/tracker"
+                          className="shrink-0 text-amber-600 text-xs font-bold"
+                          title="此項有歸屬/口徑註記，點看完整說明"
+                        >
+                          ⚠
+                        </Link>
+                      )}
                       <Link
                         href={personHref(t)}
                         className="font-serif font-bold hover:underline underline-offset-4 shrink-0"
