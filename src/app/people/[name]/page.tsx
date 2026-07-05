@@ -5,6 +5,7 @@ import {
   candidatePhotoUrl,
   getPersonTargets,
   getPersonTopicDistribution,
+  getPersonBillMatches,
 } from "@/lib/api";
 import { TopicRadar } from "@/components/topic-radar";
 import {
@@ -34,10 +35,11 @@ export default async function PersonPage({
   const { name: encodedName } = await params;
   const name = decodeURIComponent(encodedName);
 
-  const [profile, targets, topicDist] = await Promise.all([
+  const [profile, targets, topicDist, billMatches] = await Promise.all([
     getPersonProfile(name).catch(() => null),
     getPersonTargets(name).catch(() => []),
     getPersonTopicDistribution(name).catch(() => []),
+    getPersonBillMatches(name).catch(() => []),
   ]);
   if (!profile) notFound();
 
@@ -299,6 +301,92 @@ export default async function PersonPage({
           </section>
         );
       })()}
+
+      {/* ── 政見 × 立院提案（立委關鍵詞對照） ── */}
+      {billMatches.length > 0 && (
+        <section className="mb-12">
+          <div className="flex items-baseline justify-between mb-3 gap-4">
+            <h2 className="font-serif text-2xl font-bold">政見 × 立院提案</h2>
+            <span className="text-xs text-ink-soft px-2 py-1 border border-rule">
+              關鍵詞自動對照 · BETA
+            </span>
+          </div>
+          <p className="text-sm text-ink-soft mb-6 leading-relaxed max-w-3xl">
+            把 2024 競選政見與其第 11 屆立法院<strong>實際提案</strong>做關鍵詞對照
+            （資料：立法院開放資料）。「相關提案」代表有在該領域行動，
+            <strong>不等於政見已兌現</strong>——請點提案原文自行判讀。
+          </p>
+          <div className="space-y-5">
+            {billMatches.map((m) => (
+              <div key={m.item_seq} className="border border-rule p-4 sm:p-5">
+                <div className="flex flex-wrap items-baseline gap-2 mb-2">
+                  {m.keywords.map((k) => (
+                    <span
+                      key={k}
+                      className="text-[10px] px-1.5 py-0.5 bg-rule/50 text-ink"
+                    >
+                      {k}
+                    </span>
+                  ))}
+                </div>
+                <p className="text-sm leading-relaxed mb-3">
+                  <span className="text-ink-soft">政見：</span>
+                  {m.item_text.replace(/^\s*\d+[\.、）\)]\s*/, "")}
+                </p>
+                <ul className="space-y-1.5 pl-3 border-l-2 border-rule">
+                  {m.bills.slice(0, 3).map((b) => (
+                    <li key={b.no} className="text-sm flex flex-wrap items-baseline gap-x-2">
+                      {b.url ? (
+                        <a
+                          href={b.url}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="hover:text-accent-red underline-offset-2 hover:underline"
+                        >
+                          {b.title.replace(/^「|」，請審議案。?$/g, "")}
+                        </a>
+                      ) : (
+                        <span>{b.title.replace(/^「|」，請審議案。?$/g, "")}</span>
+                      )}
+                      {b.status && (
+                        <span className="text-[10px] px-1.5 py-0.5 border border-rule text-ink-soft shrink-0">
+                          {b.status}
+                        </span>
+                      )}
+                    </li>
+                  ))}
+                </ul>
+                {m.bills.length > 3 && (
+                  <details className="mt-2 text-xs text-ink-soft">
+                    <summary className="cursor-pointer hover:text-accent-red">
+                      還有 {m.bills.length - 3} 案
+                    </summary>
+                    <ul className="mt-1.5 space-y-1 pl-3 border-l border-rule">
+                      {m.bills.slice(3).map((b) => (
+                        <li key={b.no}>
+                          {b.url ? (
+                            <a
+                              href={b.url}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="hover:text-accent-red underline-offset-2 hover:underline"
+                            >
+                              {b.title.replace(/^「|」，請審議案。?$/g, "")}
+                            </a>
+                          ) : (
+                            b.title.replace(/^「|」，請審議案。?$/g, "")
+                          )}
+                          {b.status ? `｜${b.status}` : ""}
+                        </li>
+                      ))}
+                    </ul>
+                  </details>
+                )}
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
 
       {/* ── 學經歷（官方立法院資料優先，否則解析公報） ── */}
       {(profile.edu_official || profile.career_official || profile.background) && (() => {

@@ -257,6 +257,19 @@ export interface TargetProgress {
   sources: ProgressSource[];
 }
 
+// 立委政見×立院提案 關鍵詞對照（一條政見 → 相關提案）
+export interface BillMatchItem {
+  item_seq: number;
+  item_text: string;
+  keywords: string[];
+  bills: {
+    no: string;
+    title: string;
+    status: string | null;
+    url: string | null;
+  }[];
+}
+
 // 首頁兌現追蹤看板：旗艦承諾 + 最新進度
 export interface FlagshipTarget {
   target_id: number;
