@@ -333,7 +333,17 @@ export default async function PersonPage({
                   <span className="text-ink-soft">政見：</span>
                   {m.item_text.replace(/^\s*\d+[\.、）\)]\s*/, "")}
                 </p>
-                <ul className="space-y-1.5 pl-3 border-l-2 border-rule">
+                {m.bills.length === 0 && (
+                  <p className="text-sm border-l-2 border-accent-red/60 pl-3 py-1 text-ink-soft">
+                    <span className="text-accent-red font-medium">
+                      立院尚無相關提案
+                    </span>
+                    <span className="ml-2 text-xs">
+                      （立委職權不只提案——質詢、預算審查、地方爭取不在此對照範圍）
+                    </span>
+                  </p>
+                )}
+                <ul className={m.bills.length === 0 ? "hidden" : "space-y-1.5 pl-3 border-l-2 border-rule"}>
                   {m.bills.slice(0, 3).map((b) => (
                     <li key={b.no} className="text-sm flex flex-wrap items-baseline gap-x-2">
                       {b.url ? (
