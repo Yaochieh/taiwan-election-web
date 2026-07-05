@@ -10,6 +10,16 @@ export interface Election {
   theme_id: string | null;
 }
 
+// 選舉時程里程碑（中選會工作進行程序表）
+export interface ElectionMilestone {
+  vote_date: string;
+  date: string;
+  date_end: string | null;
+  label: string;
+  note: string | null;
+  source_url: string;
+}
+
 export interface Party {
   party_id: number;
   name: string;

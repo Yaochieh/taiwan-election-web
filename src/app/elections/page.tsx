@@ -1,6 +1,6 @@
 import Link from "next/link";
-import { getElections } from "@/lib/api";
-import type { Election } from "@/lib/types";
+import { getElections, getElectionMilestones } from "@/lib/api";
+import type { Election, ElectionMilestone } from "@/lib/types";
 import { formatElectionLabelShort } from "@/lib/format";
 
 export const metadata = { title: "歷屆選舉 · 正至" };
@@ -28,7 +28,10 @@ export default async function ElectionsPage({
   const params = await searchParams;
   const typeFilter =
     FILTERS.find((f) => f.value === params.type)?.value ?? "all";
-  const allElections = await getElections().catch(() => []);
+  const [allElections, milestones] = await Promise.all([
+    getElections().catch(() => []),
+    getElectionMilestones().catch(() => [] as ElectionMilestone[]),
+  ]);
   const elections =
     typeFilter === "all"
       ? allElections
@@ -127,6 +130,11 @@ export default async function ElectionsPage({
         </section>
       )}
 
+      {/* ── 選舉日曆：中選會時程 ── */}
+      {nextDate && milestones.length > 0 && milestones[0].vote_date === nextDate && (
+        <MilestoneTimeline milestones={milestones} today={today} />
+      )}
+
       {/* ── 即將舉行 ── */}
       {upcomingGroups.length > 0 && (
         <section className="mb-16">
@@ -159,6 +167,87 @@ export default async function ElectionsPage({
         </div>
       </section>
     </div>
+  );
+}
+
+function MilestoneTimeline({
+  milestones,
+  today,
+}: {
+  milestones: ElectionMilestone[];
+  today: string;
+}) {
+  // 事件狀態：已完成（結束日過了）/ 進行中（起訖之間）/ 未來
+  const stateOf = (m: ElectionMilestone) => {
+    const end = m.date_end ?? m.date;
+    if (end < today) return "done";
+    if (m.date <= today) return "active";
+    return "future";
+  };
+  const nextIdx = milestones.findIndex((m) => stateOf(m) !== "done");
+  return (
+    <section className="mb-16">
+      <div className="flex items-baseline justify-between flex-wrap gap-2 mb-6">
+        <h2 className="font-serif text-2xl font-bold">
+          選舉日曆
+          <span className="ml-3 text-sm font-normal text-ink-soft">
+            {milestones[0].vote_date.slice(0, 4)} 地方選舉選務時程
+          </span>
+        </h2>
+        <a
+          href={milestones[0].source_url}
+          target="_blank"
+          rel="noreferrer"
+          className="text-xs text-ink-soft underline underline-offset-2 hover:text-accent-red"
+        >
+          資料來源：中選會工作進行程序表 →
+        </a>
+      </div>
+      <ol className="border-l-2 border-rule ml-2">
+        {milestones.map((m, i) => {
+          const st = stateOf(m);
+          const isNext = i === nextIdx;
+          return (
+            <li key={`${m.date}-${m.label}`} className="relative pl-6 pb-5 last:pb-0">
+              <span
+                className={
+                  "absolute -left-[7px] top-1 h-3 w-3 rounded-full border-2 " +
+                  (st === "done"
+                    ? "bg-rule border-rule"
+                    : st === "active" || isNext
+                      ? "bg-accent-red border-accent-red"
+                      : "bg-paper border-ink")
+                }
+              />
+              <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+                <span
+                  className={
+                    "tabular-nums text-sm " +
+                    (st === "done" ? "text-ink-soft" : "font-bold")
+                  }
+                >
+                  {m.date.slice(5).replace("-", "/")}
+                  {m.date_end && `–${m.date_end.slice(5).replace("-", "/")}`}
+                </span>
+                <span className={st === "done" ? "text-ink-soft line-through decoration-rule" : ""}>
+                  {m.label}
+                </span>
+                {st === "done" && <span className="text-xs text-ink-soft">✓</span>}
+                {st === "active" && (
+                  <span className="text-xs px-1.5 py-0.5 border border-accent-red text-accent-red">
+                    進行中
+                  </span>
+                )}
+                {isNext && st === "future" && (
+                  <span className="text-xs px-1.5 py-0.5 bg-ink text-paper">下一步</span>
+                )}
+                {m.note && <span className="text-xs text-ink-soft">{m.note}</span>}
+              </div>
+            </li>
+          );
+        })}
+      </ol>
+    </section>
   );
 }
 

@@ -1,5 +1,6 @@
 import type {
   Election,
+  ElectionMilestone,
   Candidate,
   CandidateDetail,
   CandidateSearchResult,
@@ -40,6 +41,8 @@ async function fetcher<T>(path: string, init?: RequestInit): Promise<T> {
 // ── elections ────────────────────────────────────────────────
 export const getElections = () => fetcher<Election[]>("/elections");
 export const getElection = (id: number) => fetcher<Election>(`/elections/${id}`);
+export const getElectionMilestones = () =>
+  fetcher<ElectionMilestone[]>("/elections/milestones");
 export const getElectionDistricts = (id: number) =>
   fetcher<District[]>(`/elections/${id}/districts`);
 export const getElectionResults = (id: number, district?: string) => {
