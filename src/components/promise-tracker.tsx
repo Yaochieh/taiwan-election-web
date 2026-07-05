@@ -60,10 +60,17 @@ function BarRow({
         <span className={"font-serif leading-snug " + (compact ? "text-base sm:text-lg" : "text-lg sm:text-xl")}>
           {t.title}
         </span>
-        {met && !compact && (
-          <span className="text-[10px] px-1.5 py-0.5 bg-accent-red text-paper font-bold tracking-wider shrink-0">
-            {pct! > 105 ? "超標" : "達標"}
+        {t.status === "failed" ? (
+          <span className="text-[10px] px-1.5 py-0.5 bg-ink text-paper font-bold tracking-wider shrink-0">
+            ✗ 未兌現・任期結束
           </span>
+        ) : (
+          met &&
+          !compact && (
+            <span className="text-[10px] px-1.5 py-0.5 bg-accent-red text-paper font-bold tracking-wider shrink-0">
+              {pct! > 105 ? "超標" : "達標"}
+            </span>
+          )
         )}
         {t.verification_status === "disputed" && (
           t.verification_source ? (
@@ -207,10 +214,13 @@ export function PromiseTracker({
 }) {
   if (items.length === 0) return null;
   const compact = variant === "home";
-  const inProgress = items
+  // 結案規則：任期結束就結案——failed 獨立分區，不與現任進行中混列
+  const closed = items.filter((t) => t.status === "failed");
+  const active = items.filter((t) => t.status !== "failed");
+  const inProgress = active
     .filter((t) => t.progress_pct == null || t.progress_pct < 100)
     .sort((a, b) => (b.progress_pct ?? -1) - (a.progress_pct ?? -1));
-  const met = items
+  const met = active
     .filter((t) => t.progress_pct != null && t.progress_pct >= 100)
     .sort((a, b) => b.progress_pct! - a.progress_pct!);
 
@@ -298,6 +308,45 @@ export function PromiseTracker({
               <div className="divide-y divide-rule border-y border-rule">
                 {met.map((t, i) => (
                   <BarRow key={t.target_id} t={t} i={i + inProgress.length} compact={false} />
+                ))}
+              </div>
+            )}
+          </>
+        )}
+
+        {/* ── 任期結束・未兌現（結案）── */}
+        {closed.length > 0 && (
+          <>
+            <h3 className="text-xs tracking-[0.2em] uppercase text-ink-soft mb-1 mt-10">
+              任期結束・未兌現 · {closed.length} 項
+            </h3>
+            {compact ? (
+              <div className="border-y border-rule divide-y divide-rule">
+                {closed.map((t) => {
+                  const color = partyColor(t.party_name ?? t.person_name, t.color_hex);
+                  return (
+                    <div key={t.target_id} className="flex items-baseline gap-x-2 py-3">
+                      <span className="text-ink font-bold shrink-0">✗</span>
+                      <Link
+                        href={personHref(t)}
+                        className="font-serif font-bold hover:underline underline-offset-4 shrink-0"
+                        style={{ color }}
+                      >
+                        {t.person_name}
+                      </Link>
+                      <span className="text-sm leading-snug min-w-0">{t.title}</span>
+                      <span className="ml-auto font-serif font-bold tabular-nums shrink-0 text-ink-soft">
+                        {t.progress_pct != null ? `${t.progress_pct.toFixed(0)}%` : "—"}
+                        <span className="ml-1.5 text-[10px] font-normal">終局</span>
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+            ) : (
+              <div className="divide-y divide-rule border-y border-rule">
+                {closed.map((t, i) => (
+                  <BarRow key={t.target_id} t={t} i={i + inProgress.length + met.length} compact={false} />
                 ))}
               </div>
             )}

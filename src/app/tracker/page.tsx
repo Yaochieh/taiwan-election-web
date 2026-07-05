@@ -41,6 +41,74 @@ export default async function TrackerPage() {
 
       <PromiseTracker items={items} variant="full" />
 
+      {/* ── 政治人物達標率（已定案者）── */}
+      {(() => {
+        const by = new Map<string, { achieved: number; failed: number; running: number }>();
+        for (const t of items) {
+          const s = by.get(t.person_name) || { achieved: 0, failed: 0, running: 0 };
+          if (t.status === "achieved") s.achieved += 1;
+          else if (t.status === "failed") s.failed += 1;
+          else s.running += 1;
+          by.set(t.person_name, s);
+        }
+        const rows = Array.from(by.entries()).sort(
+          (a, b) => b[1].achieved + b[1].failed + b[1].running - (a[1].achieved + a[1].failed + a[1].running),
+        );
+        if (rows.length === 0) return null;
+        return (
+          <section className="mt-14 border-t-2 border-ink pt-8">
+            <h2 className="font-serif text-2xl font-bold mb-2">政見達標率</h2>
+            <p className="text-sm text-ink-soft mb-5 max-w-3xl leading-relaxed">
+              只以<strong>已定案</strong>的承諾計算（達標或任期結束未兌現）；
+              進行中的不計入——任期未到，不能提前判他失敗。
+            </p>
+            <table className="w-full max-w-3xl text-sm">
+              <thead>
+                <tr className="border-b border-ink text-left text-xs text-ink-soft">
+                  <th className="py-2 font-normal">政治人物</th>
+                  <th className="py-2 font-normal text-right">達標</th>
+                  <th className="py-2 font-normal text-right">未兌現(結案)</th>
+                  <th className="py-2 font-normal text-right">進行中</th>
+                  <th className="py-2 font-normal text-right">達標率</th>
+                </tr>
+              </thead>
+              <tbody className="tabular-nums">
+                {rows.map(([name, s]) => {
+                  const closedN = s.achieved + s.failed;
+                  return (
+                    <tr key={name} className="border-b border-rule">
+                      <td className="py-2">
+                        <Link
+                          href={`/people/${encodeURIComponent(name)}`}
+                          className="hover:underline underline-offset-4 hover:text-accent-red"
+                        >
+                          {name}
+                        </Link>
+                      </td>
+                      <td className="py-2 text-right">{s.achieved}</td>
+                      <td className="py-2 text-right">{s.failed || "—"}</td>
+                      <td className="py-2 text-right text-ink-soft">{s.running || "—"}</td>
+                      <td className="py-2 text-right font-bold">
+                        {closedN > 0 ? (
+                          <span className={s.failed > 0 && s.achieved === 0 ? "text-ink" : "text-accent-red"}>
+                            {Math.round((s.achieved / closedN) * 100)}%
+                          </span>
+                        ) : (
+                          <span className="text-ink-soft font-normal">尚無定案</span>
+                        )}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+            <p className="mt-2 text-[10px] text-ink-soft">
+              樣本為本站人工查證的旗艦承諾，非該人全部政見；樣本數少時達標率僅供參考。
+            </p>
+          </section>
+        );
+      })()}
+
       {/* ── 量化統計 ── */}
       {stats && (
         <section className="mt-14 border-t-2 border-ink pt-8">
