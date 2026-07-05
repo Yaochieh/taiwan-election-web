@@ -17,7 +17,7 @@ const TICK_POS = (100 / MAX_PCT) * 100; // ≈ 78.1%
 
 function fmtValue(v: number | null, unit: string | null): string {
   if (v == null) return "—";
-  if (unit === "政策開辦") return "已開辦";
+  if (unit === "政策開辦") return "已實現";
   if (unit === "%") return `${v}%`;
   if (unit === "戶" && v >= 10000)
     return `${(v / 10000).toLocaleString("zh-TW", { maximumFractionDigits: 1 })} 萬戶`;
@@ -108,7 +108,8 @@ function BarRow({
       <div className="flex flex-wrap items-baseline gap-x-4 gap-y-1 text-xs text-ink-soft">
         <span className="tabular-nums">
           {t.metric_unit === "政策開辦" ? (
-            <>已開辦（排富）</>
+            // 政策里程碑型：細節（排富/通車日等）在 note 與來源
+            <>政策已實現（細節見來源）</>
           ) : (
             <>
               {t.baseline_value != null && (
@@ -249,7 +250,7 @@ export function PromiseTracker({
                       <span className="text-sm leading-snug min-w-0">{t.title}</span>
                       <span className="ml-auto font-serif font-bold tabular-nums text-accent-red shrink-0">
                         {t.metric_unit === "政策開辦"
-                          ? "已開辦"
+                          ? "已實現"
                           : `${t.progress_pct!.toFixed(0)}%`}
                       </span>
                     </div>

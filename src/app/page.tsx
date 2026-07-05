@@ -91,6 +91,15 @@ export default async function HomePage() {
     incumbentStats.map((s) => [s.name, s]),
   );
 
+  // 每位首長的兌現追蹤摘要（來自旗艦承諾看板資料）
+  const trackerByPerson = new Map<string, { tracked: number; met: number }>();
+  for (const t of flagship) {
+    const cur = trackerByPerson.get(t.person_name) || { tracked: 0, met: 0 };
+    cur.tracked += 1;
+    if (t.progress_pct != null && t.progress_pct >= 100) cur.met += 1;
+    trackerByPerson.set(t.person_name, cur);
+  }
+
   const latestPlatformElection = withPlatforms[0];
 
   // 下一場選舉
@@ -308,6 +317,7 @@ export default async function HomePage() {
                 name={o.name}
                 since={o.since}
                 stats={incumbentStatsByName.get(o.name)}
+                tracker={trackerByPerson.get(o.name)}
               />
             ))}
           </div>
@@ -323,6 +333,7 @@ export default async function HomePage() {
                 name={m.name}
                 since={m.since}
                 stats={incumbentStatsByName.get(m.name)}
+                tracker={trackerByPerson.get(m.name)}
               />
             ))}
           </div>
@@ -578,6 +589,7 @@ function IncumbentCard({
   name,
   since,
   stats,
+  tracker,
 }: {
   role: string;
   name: string;
@@ -593,6 +605,8 @@ function IncumbentCard({
         hasPlatform: boolean;
       }
     | undefined;
+  // 兌現追蹤摘要（有被看板追蹤者優先顯示「達標/追蹤」）
+  tracker?: { tracked: number; met: number };
 }) {
   const color = partyColor(stats?.party_name, stats?.color_hex || undefined);
   const total = stats?.total ?? 0;
@@ -636,7 +650,14 @@ function IncumbentCard({
           {stats?.party_name || "—"} · 上任 {daysInOffice(since)} 天
         </div>
         <div className="flex gap-3 text-xs tabular-nums">
-          {total === 0 ? (
+          {tracker && tracker.tracked > 0 ? (
+            <span
+              className={tracker.met === tracker.tracked ? "text-accent-red font-bold" : ""}
+              title="兌現追蹤：官方統計對照達標數／追蹤中承諾數"
+            >
+              ✓ 達標 {tracker.met}／追蹤 {tracker.tracked}
+            </span>
+          ) : total === 0 ? (
             <span className="text-ink-soft">
               {stats?.hasPlatform ? "— 無量化承諾" : "— 政見未收錄"}
             </span>
