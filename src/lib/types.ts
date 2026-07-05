@@ -257,6 +257,26 @@ export interface TargetProgress {
   sources: ProgressSource[];
 }
 
+// 政見量化統計（/tracker）
+export interface QuantStats {
+  funnel: {
+    items: number;
+    targets: number;
+    elected_targets: number;
+    with_progress: number;
+    met: number;
+  };
+  parties: {
+    party: string;
+    platforms: number;
+    items: number;
+    targets: number;
+    with_target: number;
+    quantified_pct: number;
+  }[];
+  years: { year: string; platforms: number; items: number; targets: number }[];
+}
+
 // 首頁政見×提案精選
 export interface BillMatchHighlights {
   people: number;
@@ -298,6 +318,7 @@ export interface FlagshipTarget {
   recorded_at: string;
   progress_note: string | null;
   progress_source_url: string | null;
+  sources: { url: string; publisher: string; authority_level: number }[];
   progress_pct: number | null;
 }
 

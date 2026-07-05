@@ -20,6 +20,7 @@ import type {
   FlagshipTarget,
   BillMatchItem,
   BillMatchHighlights,
+  QuantStats,
 } from "./types";
 
 export const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
@@ -260,6 +261,12 @@ export const getPersonBillMatches = (name: string) =>
     `/people/${encodeURIComponent(name)}/bill-matches`,
     { next: { revalidate: 300 } } as RequestInit,
   );
+
+// 政見量化統計（/tracker 頁）
+export const getQuantStats = () =>
+  fetcher<QuantStats>(`/platforms/quantification-stats`, {
+    next: { revalidate: 3600 },
+  } as RequestInit);
 
 // 首頁政見×提案精選（總覽數字 + 代表案例）
 export const getBillMatchHighlights = () =>

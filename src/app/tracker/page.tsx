@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { getFlagshipTargets } from "@/lib/api";
+import { getFlagshipTargets, getQuantStats } from "@/lib/api";
 import { PromiseTracker } from "@/components/promise-tracker";
 
 export const revalidate = 300;
@@ -11,7 +11,10 @@ export const metadata = {
 };
 
 export default async function TrackerPage() {
-  const items = await getFlagshipTargets().catch(() => []);
+  const [items, stats] = await Promise.all([
+    getFlagshipTargets().catch(() => []),
+    getQuantStats().catch(() => null),
+  ]);
 
   return (
     <div className="mx-auto max-w-6xl px-4 sm:px-6 py-12">
@@ -37,6 +40,110 @@ export default async function TrackerPage() {
       </header>
 
       <PromiseTracker items={items} variant="full" />
+
+      {/* ── 量化統計 ── */}
+      {stats && (
+        <section className="mt-14 border-t-2 border-ink pt-8">
+          <h2 className="font-serif text-2xl font-bold mb-2">
+            全站量化統計
+          </h2>
+          <p className="text-sm text-ink-soft mb-6 max-w-3xl leading-relaxed">
+            從 {stats.funnel.items.toLocaleString("zh-TW")} 條政見到{" "}
+            {stats.funnel.met} 條已驗證達標——這個漏斗顯示「可問責化」還有多遠。
+          </p>
+
+          {/* 漏斗 */}
+          <div className="grid grid-cols-2 sm:grid-cols-5 gap-px bg-rule border border-rule mb-10">
+            {[
+              { label: "政見條目", value: stats.funnel.items, note: "公報政見拆條" },
+              { label: "量化承諾", value: stats.funnel.targets, note: "有數字可檢驗" },
+              { label: "當選者承諾", value: stats.funnel.elected_targets, note: "有權力執行" },
+              { label: "已對照進度", value: stats.funnel.with_progress, note: "接上公開統計" },
+              { label: "已達標", value: stats.funnel.met, note: "衝過目標線" },
+            ].map((s, i) => (
+              <div key={s.label} className="bg-paper p-4 sm:p-5">
+                <p className="text-[10px] tracking-widest uppercase text-ink-soft mb-1.5">
+                  {i + 1}·{s.label}
+                </p>
+                <p className={"font-serif text-2xl sm:text-3xl font-bold tabular-nums " + (i === 4 ? "text-accent-red" : "")}>
+                  {s.value.toLocaleString("zh-TW")}
+                </p>
+                <p className="text-[10px] text-ink-soft mt-1">{s.note}</p>
+              </div>
+            ))}
+          </div>
+
+          <div className="grid lg:grid-cols-2 gap-10">
+            {/* 政黨量化比例 */}
+            <div>
+              <h3 className="font-serif text-lg font-bold mb-3">
+                各政黨政見量化比例
+              </h3>
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-ink text-left text-xs text-ink-soft">
+                    <th className="py-2 font-normal">政黨</th>
+                    <th className="py-2 font-normal text-right">政見數</th>
+                    <th className="py-2 font-normal text-right">條目</th>
+                    <th className="py-2 font-normal text-right">量化承諾</th>
+                    <th className="py-2 font-normal text-right">含量化比例</th>
+                  </tr>
+                </thead>
+                <tbody className="tabular-nums">
+                  {stats.parties.slice(0, 8).map((p) => (
+                    <tr key={p.party} className="border-b border-rule">
+                      <td className="py-2">{p.party}</td>
+                      <td className="py-2 text-right">{p.platforms}</td>
+                      <td className="py-2 text-right">{p.items.toLocaleString("zh-TW")}</td>
+                      <td className="py-2 text-right">{p.targets}</td>
+                      <td className="py-2 text-right font-bold">{p.quantified_pct}%</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+              <p className="mt-2 text-[10px] text-ink-soft">
+                含量化比例 = 至少含一條量化承諾的政見 ÷ 該黨政見總數。
+              </p>
+            </div>
+
+            {/* 歷年 */}
+            <div>
+              <h3 className="font-serif text-lg font-bold mb-3">歷年收錄與量化</h3>
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-ink text-left text-xs text-ink-soft">
+                    <th className="py-2 font-normal">年份</th>
+                    <th className="py-2 font-normal text-right">政見數</th>
+                    <th className="py-2 font-normal text-right">條目</th>
+                    <th className="py-2 font-normal text-right">量化承諾</th>
+                  </tr>
+                </thead>
+                <tbody className="tabular-nums">
+                  {stats.years.map((y) => (
+                    <tr key={y.year} className="border-b border-rule">
+                      <td className="py-2">{y.year}</td>
+                      <td className="py-2 text-right">{y.platforms}</td>
+                      <td className="py-2 text-right">{y.items.toLocaleString("zh-TW")}</td>
+                      <td className="py-2 text-right">
+                        {y.targets === 0 ? (
+                          <span className="text-ink-soft" title="該年份尚未跑量化抽取">
+                            尚未抽取
+                          </span>
+                        ) : (
+                          y.targets
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+              <p className="mt-2 text-[10px] text-ink-soft">
+                「尚未抽取」= 該年份政見已收錄、量化抽取管線尚未涵蓋。
+              </p>
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* ── 方法說明 ── */}
       <section className="mt-14 border-t-2 border-ink pt-8">

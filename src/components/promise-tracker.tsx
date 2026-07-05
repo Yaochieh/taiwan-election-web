@@ -132,7 +132,30 @@ function BarRow({
         {t.target_date && (
           <span className="tabular-nums">截止 {t.target_date.slice(0, 4)} 年</span>
         )}
-        {t.progress_source_url && (
+        {t.sources && t.sources.length > 0 ? (
+          // 多來源：官方在前（authority_level 升冪），官方標紅
+          t.sources.map((s, si) => (
+            <a
+              key={si}
+              href={s.url}
+              target="_blank"
+              rel="noreferrer"
+              className="underline underline-offset-2 hover:text-accent-red inline-flex items-baseline gap-1"
+            >
+              <span
+                className={
+                  "text-[9px] px-1 " +
+                  (s.authority_level === 1
+                    ? "bg-accent-red text-paper"
+                    : "border border-rule text-ink-soft")
+                }
+              >
+                {s.authority_level === 1 ? "官方" : "媒體"}
+              </span>
+              {s.publisher} →
+            </a>
+          ))
+        ) : t.progress_source_url ? (
           <a
             href={t.progress_source_url}
             target="_blank"
@@ -141,7 +164,7 @@ function BarRow({
           >
             資料來源 →
           </a>
-        )}
+        ) : null}
       </div>
     </div>
   );
