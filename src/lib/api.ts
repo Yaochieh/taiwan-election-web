@@ -1,6 +1,7 @@
 import type {
   Election,
   ElectionMilestone,
+  RecallResult,
   Candidate,
   CandidateDetail,
   CandidateSearchResult,
@@ -43,6 +44,10 @@ export const getElections = () => fetcher<Election[]>("/elections");
 export const getElection = (id: number) => fetcher<Election>(`/elections/${id}`);
 export const getElectionMilestones = () =>
   fetcher<ElectionMilestone[]>("/elections/milestones");
+export const getRecallResults = (electionId?: number) =>
+  fetcher<RecallResult[]>(
+    `/elections/recalls${electionId ? `?election_id=${electionId}` : ""}`,
+  );
 export const getElectionDistricts = (id: number) =>
   fetcher<District[]>(`/elections/${id}/districts`);
 export const getElectionResults = (id: number, district?: string) => {

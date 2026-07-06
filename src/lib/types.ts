@@ -10,6 +10,28 @@ export interface Election {
   theme_id: string | null;
 }
 
+// 罷免投票結果
+export interface RecallResult {
+  election_id: number;
+  election_name: string;
+  date: string;
+  target_name: string;
+  target_office: string;
+  party: string | null;
+  district: string | null;
+  electors: number | null;
+  threshold_votes: number | null;
+  agree_votes: number;
+  disagree_votes: number;
+  valid_votes: number | null;
+  invalid_votes: number | null;
+  total_votes: number | null;
+  threshold_met: number;
+  passed: number;
+  note: string | null;
+  source_url: string;
+}
+
 // 選舉時程里程碑（中選會工作進行程序表）
 export interface ElectionMilestone {
   vote_date: string;

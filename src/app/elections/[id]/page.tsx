@@ -5,7 +5,9 @@ import {
   getElectionResults,
   getCandidatesStatus,
   getElectionDistricts,
+  getRecallResults,
 } from "@/lib/api";
+import type { RecallResult } from "@/lib/types";
 import {
   cleanDistrict,
   formatElectionLabel,
@@ -26,6 +28,95 @@ const TYPE_ZH: Record<string, string> = {
   council: "議員",
 };
 
+function RecallSection({ recalls }: { recalls: RecallResult[] }) {
+  const passedN = recalls.filter((r) => r.passed === 1).length;
+  const metN = recalls.filter((r) => r.threshold_met === 1).length;
+  return (
+    <section>
+      <p className="text-sm text-ink-soft mb-6 leading-relaxed">
+        共 {recalls.length} 案罷免投票，{passedN === 0 ? "全數否決" : `${passedN} 案通過`}
+        {metN > 0 && `；其中 ${metN} 案同意票達選舉人數 1/4 門檻，但不同意票較多`}。
+        罷免通過需「同意多於不同意」且「同意達原選區選舉人總數 1/4」兩條件同時成立。
+        數字為中選會審定結果，來源見各案連結。
+      </p>
+      <div className="border-t-2 border-ink">
+        {recalls.map((r) => {
+          const valid = r.valid_votes ?? r.agree_votes + r.disagree_votes;
+          const agreePct = (r.agree_votes / valid) * 100;
+          const thresholdPct =
+            r.threshold_votes != null ? (r.threshold_votes / valid) * 100 : null;
+          return (
+            <article key={r.target_name} className="py-4 border-b border-rule">
+              <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1 mb-2">
+                <PersonLink
+                  name={r.target_name}
+                  className="font-serif text-lg font-bold hover:underline underline-offset-4"
+                />
+                <span className="text-xs text-ink-soft">
+                  {r.party} · {r.district || r.target_office} · {r.target_office}
+                </span>
+                <span className="ml-auto inline-flex items-center gap-2">
+                  {r.threshold_met === 1 && (
+                    <span className="text-[10px] px-1.5 py-0.5 border border-accent-red text-accent-red">
+                      同意達門檻
+                    </span>
+                  )}
+                  <span
+                    className={
+                      "text-xs font-bold " + (r.passed ? "text-accent-red" : "text-ink-soft")
+                    }
+                  >
+                    {r.passed ? "通過" : "否決"}
+                  </span>
+                </span>
+              </div>
+              {/* 同意/不同意 開票條，黑色刻度＝門檻 */}
+              <div className="relative h-4 bg-rule/40 overflow-hidden">
+                <div
+                  className="absolute inset-y-0 left-0 bg-accent-red/80"
+                  style={{ width: `${agreePct}%` }}
+                />
+                <div
+                  className="absolute inset-y-0 bg-ink/25"
+                  style={{ left: `${agreePct}%`, right: 0 }}
+                />
+                {thresholdPct != null && thresholdPct <= 100 && (
+                  <div
+                    className="absolute inset-y-0 w-[2px] bg-ink"
+                    style={{ left: `${thresholdPct}%` }}
+                    title={`門檻 ${formatVotes(r.threshold_votes!)} 票`}
+                  />
+                )}
+              </div>
+              <div className="mt-1.5 flex flex-wrap gap-x-4 gap-y-1 text-xs text-ink-soft tabular-nums">
+                <span>
+                  同意 <strong className="text-accent-red">{formatVotes(r.agree_votes)}</strong>（
+                  {agreePct.toFixed(1)}%）
+                </span>
+                <span>
+                  不同意 <strong className="text-ink">{formatVotes(r.disagree_votes)}</strong>（
+                  {(100 - agreePct).toFixed(1)}%）
+                </span>
+                {r.threshold_votes != null && <span>門檻 {formatVotes(r.threshold_votes)}</span>}
+                {r.electors != null && <span>選舉人數 {formatVotes(r.electors)}</span>}
+                <a
+                  href={r.source_url}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="underline underline-offset-2 hover:text-accent-red"
+                >
+                  中選會公告 →
+                </a>
+              </div>
+              {r.note && <p className="mt-1 text-[11px] text-ink-soft">註：{r.note}</p>}
+            </article>
+          );
+        })}
+      </div>
+    </section>
+  );
+}
+
 export default async function ElectionDetailPage({
   params,
   searchParams,
@@ -41,10 +132,11 @@ export default async function ElectionDetailPage({
   const election = await getElection(electionId).catch(() => null);
   if (!election) notFound();
 
-  const [results, candidatesStatus, districts] = await Promise.all([
+  const [results, candidatesStatus, districts, recalls] = await Promise.all([
     getElectionResults(electionId).catch(() => []),
     getCandidatesStatus(electionId).catch(() => []),
     getElectionDistricts(electionId).catch(() => []),
+    getRecallResults(electionId).catch(() => [] as RecallResult[]),
   ]);
 
   // 按 district 分組
@@ -148,6 +240,8 @@ export default async function ElectionDetailPage({
             屆時將陸續公布候選人名單與政見資料。
           </p>
         </section>
+      ) : recalls.length > 0 ? (
+        <RecallSection recalls={recalls} />
       ) : results.length === 0 ? (
         <section className="border border-rule p-8 text-center">
           <p className="font-serif text-2xl mb-3">尚無結果資料</p>
