@@ -249,6 +249,23 @@ export interface PersonProfile {
   win_rate: number;
   races: PersonRace[];
   party_history: PartyHistoryEntry[];
+  recalls?: PersonRecall[];
+}
+
+// 個人頁罷免紀錄
+export interface PersonRecall {
+  election_id: number;
+  election_name: string;
+  date: string;
+  target_office: string;
+  district: string | null;
+  agree_votes: number;
+  disagree_votes: number;
+  threshold_votes: number | null;
+  threshold_met: number;
+  passed: number;
+  note: string | null;
+  source_url: string;
 }
 
 export interface PersonRace {

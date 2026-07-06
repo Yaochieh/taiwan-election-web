@@ -638,6 +638,71 @@ export default async function PersonPage({
         </section>
       )}
 
+      {/* ── 罷免紀錄 ── */}
+      {(profile.recalls?.length ?? 0) > 0 && (
+        <section className="mb-12">
+          <h2 className="font-serif text-2xl font-bold mb-4">罷免紀錄</h2>
+          <div className="border-t-2 border-ink">
+            {profile.recalls!.map((rc) => {
+              const valid = rc.agree_votes + rc.disagree_votes;
+              const agreePct = ((rc.agree_votes / valid) * 100).toFixed(1);
+              return (
+                <article
+                  key={`${rc.election_id}-${rc.date}`}
+                  className="py-4 border-b border-rule"
+                >
+                  <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1 mb-1">
+                    <span className="font-serif text-xl tabular-nums">
+                      {rc.date.slice(0, 4)}
+                    </span>
+                    <Link
+                      href={`/elections/${rc.election_id}`}
+                      className="hover:underline underline-offset-4 font-medium"
+                    >
+                      {rc.election_name}
+                    </Link>
+                    <span className="text-xs text-ink-soft">
+                      {rc.target_office}
+                      {rc.district ? ` · ${cleanDistrict(rc.district) || rc.district}` : ""}
+                    </span>
+                    <span
+                      className={
+                        "ml-auto text-sm font-bold " +
+                        (rc.passed ? "text-accent-red" : "text-ink-soft")
+                      }
+                    >
+                      {rc.passed ? "罷免通過" : "罷免否決"}
+                    </span>
+                  </div>
+                  <p className="text-sm text-ink-soft tabular-nums">
+                    同意 {rc.agree_votes.toLocaleString("zh-TW")}（{agreePct}%）／不同意{" "}
+                    {rc.disagree_votes.toLocaleString("zh-TW")}
+                    {rc.threshold_votes != null &&
+                      ` ・門檻 ${rc.threshold_votes.toLocaleString("zh-TW")}`}
+                    {rc.threshold_met === 1 && (
+                      <span className="ml-2 text-[10px] px-1.5 py-0.5 border border-accent-red text-accent-red">
+                        同意達門檻
+                      </span>
+                    )}
+                    <a
+                      href={rc.source_url}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="ml-2 underline underline-offset-2 hover:text-accent-red"
+                    >
+                      中選會 →
+                    </a>
+                  </p>
+                  {rc.note && (
+                    <p className="mt-1 text-[11px] text-ink-soft">註：{rc.note}</p>
+                  )}
+                </article>
+              );
+            })}
+          </div>
+        </section>
+      )}
+
       {/* ── 歷次參選紀錄 ── */}
       <section className="mb-12">
         <h2 className="font-serif text-2xl font-bold mb-4">歷次參選紀錄</h2>
