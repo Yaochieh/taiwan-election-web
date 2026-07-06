@@ -101,6 +101,8 @@ export interface Platform {
   source_url?: string | null;
   note?: string | null;
   content_raw?: string | null;
+  // 由本政見抽出的量化承諾數；0 = 無可客觀檢驗的承諾
+  target_count?: number | null;
 }
 
 export interface PlatformSource {

@@ -213,8 +213,28 @@ export async function CandidatePlatformCard({
 
 // 文字政見清單（正、副手共用）
 function PlatformList({ platforms }: { platforms: Platform[] }) {
+  // 可驗證性標注：本政見抽出的量化承諾數（0 = 無法客觀檢驗）
+  const targetCount = platforms.reduce((n, p) => n + (p.target_count ?? 0), 0);
+  const hasCountInfo = platforms.some((p) => p.target_count != null);
   return (
-    <ol className="space-y-4 mb-6 list-none pl-0">
+    <>
+      {hasCountInfo && (
+        <p className="mb-3 -mt-1">
+          {targetCount > 0 ? (
+            <span className="inline-block text-[11px] px-2 py-0.5 border border-ink/40 text-ink-soft">
+              ✓ 含 {targetCount} 條可驗證承諾（有數字或可查核事實）
+            </span>
+          ) : (
+            <span
+              className="inline-block text-[11px] px-2 py-0.5 border border-accent-red/50 text-accent-red/90"
+              title="量化抽取未在此政見找到具體數字、期限或可查核事實；此類政見難以客觀追蹤兌現"
+            >
+              ⚠ 未抽出可驗證承諾——內容無具體數字或期限
+            </span>
+          )}
+        </p>
+      )}
+      <ol className="space-y-4 mb-6 list-none pl-0">
       {platforms.map((p) => {
         // 若內文本身已是「1. 2. 3.」條列，就不顯示外層 seq 避免重複
         const contentIsNumbered = /^\s*\d+[\.\)、]/.test(p.content || "");
@@ -286,6 +306,7 @@ function PlatformList({ platforms }: { platforms: Platform[] }) {
           </li>
         );
       })}
-    </ol>
+      </ol>
+    </>
   );
 }
