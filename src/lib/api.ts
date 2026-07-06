@@ -2,6 +2,7 @@ import type {
   Election,
   ElectionMilestone,
   RecallResult,
+  PlatformComparison,
   Candidate,
   CandidateDetail,
   CandidateSearchResult,
@@ -44,6 +45,8 @@ export const getElections = () => fetcher<Election[]>("/elections");
 export const getElection = (id: number) => fetcher<Election>(`/elections/${id}`);
 export const getElectionMilestones = () =>
   fetcher<ElectionMilestone[]>("/elections/milestones");
+export const getPersonComparison = (name: string) =>
+  fetcher<PlatformComparison>(`/people/${encodeURIComponent(name)}/comparison`);
 export const getRecallResults = (electionId?: number) =>
   fetcher<RecallResult[]>(
     `/elections/recalls${electionId ? `?election_id=${electionId}` : ""}`,

@@ -252,6 +252,24 @@ export interface PersonProfile {
   recalls?: PersonRecall[];
 }
 
+// 跨屆政見對照
+export interface PlatformComparison {
+  person_name: string;
+  election_type: string;
+  older: ComparisonSide;
+  newer: ComparisonSide;
+  topics_continued: string[];
+  topics_added: string[];
+  topics_dropped: string[];
+}
+export interface ComparisonSide {
+  election_id: number;
+  election_name: string;
+  date: string;
+  content: string;
+  elected: number | null;
+}
+
 // 個人頁罷免紀錄
 export interface PersonRecall {
   election_id: number;

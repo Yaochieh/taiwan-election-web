@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import {
+  getPersonComparison,
   getPersonProfile,
   candidatePhotoUrl,
   getPersonTargets,
@@ -35,11 +36,12 @@ export default async function PersonPage({
   const { name: encodedName } = await params;
   const name = decodeURIComponent(encodedName);
 
-  const [profile, targets, topicDist, billMatches] = await Promise.all([
+  const [profile, targets, topicDist, billMatches, comparison] = await Promise.all([
     getPersonProfile(name).catch(() => null),
     getPersonTargets(name).catch(() => []),
     getPersonTopicDistribution(name).catch(() => []),
     getPersonBillMatches(name).catch(() => []),
+    getPersonComparison(name).catch(() => null),
   ]);
   if (!profile) notFound();
 
@@ -635,6 +637,78 @@ export default async function PersonPage({
           <div className="border border-rule p-5">
             <TopicRadar data={topicDist} accent={accent} />
           </div>
+        </section>
+      )}
+
+      {/* ── 跨屆政見對照 ── */}
+      {comparison && (
+        <section className="mb-12">
+          <div className="flex items-baseline justify-between flex-wrap gap-2 mb-2">
+            <h2 className="font-serif text-2xl font-bold">跨屆政見對照</h2>
+            <p className="text-xs text-ink-soft">
+              同類型選舉前後兩屆，政見原文並列＋主題增減
+            </p>
+          </div>
+          {/* 主題增減 */}
+          <div className="flex flex-wrap gap-x-5 gap-y-2 text-xs mb-5 border-y border-rule py-3">
+            {comparison.topics_continued.length > 0 && (
+              <span>
+                <span className="text-ink-soft mr-1.5">延續</span>
+                {comparison.topics_continued.map((t) => (
+                  <span key={t} className="inline-block mr-1 px-1.5 py-0.5 border border-rule">{t}</span>
+                ))}
+              </span>
+            )}
+            {comparison.topics_added.length > 0 && (
+              <span>
+                <span className="text-accent-red mr-1.5">＋新增</span>
+                {comparison.topics_added.map((t) => (
+                  <span key={t} className="inline-block mr-1 px-1.5 py-0.5 border border-accent-red/50 text-accent-red">{t}</span>
+                ))}
+              </span>
+            )}
+            {comparison.topics_dropped.length > 0 && (
+              <span>
+                <span className="text-ink-soft mr-1.5">－不再提</span>
+                {comparison.topics_dropped.map((t) => (
+                  <span key={t} className="inline-block mr-1 px-1.5 py-0.5 border border-rule text-ink-soft line-through decoration-ink-soft/60">{t}</span>
+                ))}
+              </span>
+            )}
+          </div>
+          <div className="grid md:grid-cols-2 gap-6">
+            {[comparison.older, comparison.newer].map((side, i) => (
+              <article key={side.election_id} className="border border-rule p-4">
+                <div className="flex items-baseline gap-2 mb-3 pb-2 border-b border-rule">
+                  <span className="font-serif text-xl font-bold tabular-nums">
+                    {side.date.slice(0, 4)}
+                  </span>
+                  <Link
+                    href={`/elections/${side.election_id}`}
+                    className="text-sm hover:underline underline-offset-4"
+                  >
+                    {side.election_name}
+                  </Link>
+                  <span
+                    className={
+                      "ml-auto text-xs px-1.5 py-0.5 border " +
+                      (side.elected === 1
+                        ? "border-accent-red text-accent-red"
+                        : "border-rule text-ink-soft")
+                    }
+                  >
+                    {side.elected === 1 ? "★ 當選" : "未當選"}
+                  </span>
+                </div>
+                <p className="text-sm leading-[1.9] whitespace-pre-wrap max-h-[32rem] overflow-y-auto">
+                  {side.content}
+                </p>
+              </article>
+            ))}
+          </div>
+          <p className="mt-2 text-[10px] text-ink-soft">
+            主題增減依本站 14 主題關鍵字自動標注，僅供快速比對；請以左右政見原文為準。
+          </p>
         </section>
       )}
 
