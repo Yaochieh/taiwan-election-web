@@ -241,8 +241,15 @@ function MilestoneTimeline({
                 {isNext && st === "future" && (
                   <span className="text-xs px-1.5 py-0.5 bg-ink text-paper">下一步</span>
                 )}
-                {m.note && <span className="text-xs text-ink-soft">{m.note}</span>}
+                {m.note && m.note.length <= 20 && (
+                  <span className="text-xs text-ink-soft">{m.note}</span>
+                )}
               </div>
+              {m.note && m.note.length > 20 && (
+                <p className="text-xs text-ink-soft leading-relaxed mt-1 max-w-2xl">
+                  {m.note}
+                </p>
+              )}
             </li>
           );
         })}

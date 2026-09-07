@@ -169,7 +169,7 @@ export default function AboutPage() {
             <FeatureRow
               stage="planned"
               name="2026 縣市長選舉"
-              note="11/28 投票。登記名單與公報出來後會第一時間收錄"
+              note="11/28 投票。登記已截止，全國 19,695 人角逐 11,051 席（直轄市長 23 人、縣市長 58 人）；正式名單 11/12 與 11/17 公告，屆時第一時間收錄"
             />
             <FeatureRow
               stage="planned"
