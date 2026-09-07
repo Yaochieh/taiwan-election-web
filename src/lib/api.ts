@@ -31,7 +31,10 @@ const IMAGE_BASE = `${API_URL}/static/bulletin_images`;
 
 async function fetcher<T>(path: string, init?: RequestInit): Promise<T> {
   const res = await fetch(`${API_URL}${path}`, {
-    next: { revalidate: 3600 }, // 1 小時 ISR 快取
+    // 1 小時 ISR 快取。注意 Vercel 的 Data Cache 跨部署保留，改了後端資料
+    // 後重新部署也不會馬上反映——這是預期行為，不是部署失敗。
+    // 選舉開票日等需要即時的場合，再對個別端點傳 next.revalidate 覆寫。
+    next: { revalidate: 3600 },
     ...init,
   });
   if (!res.ok) {
@@ -43,12 +46,8 @@ async function fetcher<T>(path: string, init?: RequestInit): Promise<T> {
 // ── elections ────────────────────────────────────────────────
 export const getElections = () => fetcher<Election[]>("/elections");
 export const getElection = (id: number) => fetcher<Election>(`/elections/${id}`);
-// 選舉時程在選舉期間會頻繁增補（登記人數、審定名單、公告…），
-// 用預設的 1 小時快取會讓更新遲遲不上線 —— 縮短為 10 分鐘。
 export const getElectionMilestones = () =>
-  fetcher<ElectionMilestone[]>("/elections/milestones", {
-    next: { revalidate: 600 },
-  });
+  fetcher<ElectionMilestone[]>("/elections/milestones");
 export const getPersonComparison = (name: string) =>
   fetcher<PlatformComparison>(`/people/${encodeURIComponent(name)}/comparison`);
 export const getRecallResults = (electionId?: number) =>
