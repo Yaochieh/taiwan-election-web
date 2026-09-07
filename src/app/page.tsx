@@ -356,7 +356,7 @@ export default async function HomePage() {
           <FeatureCard
             number="01"
             title="候選人政見"
-            desc={`抓取中選會選舉公報原檔（含 PDF 文字、圖檔），標註是否提交、來源連結。已收錄 ${withPlatforms.length} 場選舉${platformCount ? `、${platformCount.toLocaleString()} 條政見` : ""}，每條都保留原始 OCR 全文可對照查證。`}
+            desc={`抓取中選會選舉公報原檔（含 PDF 文字、圖檔），標註是否提交、來源連結。已收錄 ${withPlatforms.length} 場選舉${platformCount ? `的 ${platformCount.toLocaleString()} 條政見` : "的候選人政見"}，每一條都保留原始 OCR 全文可對照查證。`}
             href="/platforms"
           />
           <FeatureCard
