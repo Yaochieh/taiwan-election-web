@@ -329,6 +329,7 @@ export interface TargetProgress {
 // 政見量化統計（/tracker）
 export interface QuantStats {
   funnel: {
+    platforms: number;   // 政見總筆數（不可用 parties 加總代替，那只有前 10 大政黨）
     items: number;
     targets: number;
     elected_targets: number;

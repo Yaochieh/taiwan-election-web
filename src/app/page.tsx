@@ -95,9 +95,8 @@ export default async function HomePage() {
   const incumbentStatsByName = new Map(
     incumbentStats.map((s) => [s.name, s]),
   );
-  // 政見總數：由政黨別統計加總，避免在頁面硬編會過期的數字
-  const platformCount =
-    quantStats?.parties?.reduce((n, p) => n + (p.platforms || 0), 0) ?? 0;
+  // 政見總數取自 funnel（parties 只有前 10 大政黨，加總會少算）
+  const platformCount = quantStats?.funnel?.platforms ?? 0;
 
   // 每位首長的兌現追蹤摘要（來自旗艦承諾看板資料）
   const trackerByPerson = new Map<string, { tracked: number; met: number }>();
