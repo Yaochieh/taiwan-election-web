@@ -248,6 +248,20 @@ function MilestoneTimeline({
               {m.note && m.note.length > 20 && (
                 <p className="text-xs text-ink-soft leading-relaxed mt-1 max-w-2xl">
                   {m.note}
+                  {/* 這筆的來源與整體程序表不同時，單獨附連結（資料一定標來源） */}
+                  {m.source_url !== milestones[0].source_url && (
+                    <>
+                      {" "}
+                      <a
+                        href={m.source_url}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="underline underline-offset-2 hover:text-ink whitespace-nowrap"
+                      >
+                        來源 →
+                      </a>
+                    </>
+                  )}
                 </p>
               )}
             </li>
