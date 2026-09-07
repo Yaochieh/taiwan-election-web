@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { getFlagshipTargets, getQuantStats } from "@/lib/api";
 import { PromiseTracker } from "@/components/promise-tracker";
+import { PreviewBadge, PreviewNote } from "@/components/preview-badge";
 
 export const revalidate = 300;
 
@@ -29,14 +30,22 @@ export default async function TrackerPage() {
             </p>
           )}
         </div>
-        <h1 className="article-title font-serif text-4xl sm:text-5xl font-bold leading-tight mb-4">
-          說到，做到了嗎？
-        </h1>
+        <div className="flex items-baseline gap-3 flex-wrap mb-4">
+          <h1 className="article-title font-serif text-4xl sm:text-5xl font-bold leading-tight">
+            說到，做到了嗎？
+          </h1>
+          <PreviewBadge />
+        </div>
         <p className="text-ink-soft max-w-3xl leading-relaxed">
           把現任者的競選承諾逐條對照政府公開統計。黑色刻度是目標線，
           條衝過線代表做到；有設「基準」者，進度以<strong>上任後新增</strong>計算，
           避免把前任的成績算到現任頭上。每一筆進度都附來源，歡迎自行查證。
         </p>
+        <PreviewNote>
+          目前只追蹤 20 條逐條人工查證的旗艦承諾，是示範而非全面盤點 —
+          沒被列入不代表沒兌現。部分目標由中央政策達成或跨越多任期，
+          這類歸屬爭議都在該筆下方標註，請一併閱讀。
+        </PreviewNote>
       </header>
 
       <PromiseTracker items={items} variant="full" />

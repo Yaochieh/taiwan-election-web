@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { getTopics } from "@/lib/api";
+import { PreviewBadge, PreviewNote } from "@/components/preview-badge";
 
 export const revalidate = 300;
 export const metadata = {
@@ -17,13 +18,20 @@ export default async function TopicsPage() {
         <p className="text-xs tracking-[0.2em] uppercase text-ink-soft mb-3">
           TOPICS
         </p>
-        <h1 className="article-title font-serif text-4xl sm:text-5xl font-bold leading-tight mb-3">
-          政見主題
-        </h1>
+        <div className="flex items-baseline gap-3 flex-wrap mb-3">
+          <h1 className="article-title font-serif text-4xl sm:text-5xl font-bold leading-tight">
+            政見主題
+          </h1>
+          <PreviewBadge />
+        </div>
         <p className="text-ink-soft leading-relaxed max-w-2xl">
           按主題瀏覽政見：同一議題被誰提過、提幾次、哪一年、有沒有達標。
           目前共 {topics.length} 個主題、累計 {total.toLocaleString()} 個政見標籤。
         </p>
+        <PreviewNote>
+          主題由關鍵字自動標註 — 政見裡出現「社宅、租屋」就會歸到住宅主題，
+          不代表候選人真的著墨該議題。分類準確度尚未系統性驗證。
+        </PreviewNote>
       </header>
 
       <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">

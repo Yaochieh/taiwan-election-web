@@ -17,8 +17,8 @@ const SECTIONS = [
   },
   {
     href: "/data/downloads",
-    title: "開放資料",
-    desc: "選舉結果、政見、候選人資料 CSV/JSON 下載。",
+    title: "資料來源與方法",
+    desc: "資料從哪裡來、怎麼處理、哪些地方需要保留懷疑。",
     status: "✓",
   },
 ];

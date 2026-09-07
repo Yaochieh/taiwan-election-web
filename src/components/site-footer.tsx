@@ -50,7 +50,7 @@ export function SiteFooter() {
             href="/data/downloads"
             className="underline underline-offset-2 hover:text-ink"
           >
-            開放資料 API
+            資料來源與方法
           </a>
         </p>
       </div>

@@ -1,6 +1,7 @@
 import { Suspense } from "react";
 import { getElectionsWithPlatforms } from "@/lib/api";
 import { PlatformsView } from "./platforms-view";
+import { PreviewBadge, PreviewNote } from "@/components/preview-badge";
 
 export const metadata = {
   title: "候選人政見 · 正至",
@@ -30,9 +31,12 @@ export default async function PlatformsPage({
         <p className="text-xs tracking-[0.2em] uppercase text-ink-soft mb-3">
           POLITICAL PLATFORMS
         </p>
-        <h1 className="article-title font-serif text-4xl sm:text-5xl font-bold leading-tight mb-4">
-          候選人政見
-        </h1>
+        <div className="flex items-baseline gap-3 flex-wrap mb-4">
+          <h1 className="article-title font-serif text-4xl sm:text-5xl font-bold leading-tight">
+            候選人政見
+          </h1>
+          <PreviewBadge />
+        </div>
         <p className="text-ink-soft max-w-3xl leading-relaxed">
           資料來源為
           <a
@@ -46,6 +50,10 @@ export default async function PlatformsPage({
           。每位候選人都附有原始 PDF 連結。
           若候選人未在公報刊登政見，將特別標註，民眾可至公報原檔自行查證。
         </p>
+        <PreviewNote>
+          政見收錄仍在進行中：縣市長 38.7%、立委 14.9%、議員尚未開始。
+          公報為掃描影像，OCR 可能有錯字，每條政見都保留原始辨識文字可對照。
+        </PreviewNote>
       </header>
 
       {/* 類型切換 */}

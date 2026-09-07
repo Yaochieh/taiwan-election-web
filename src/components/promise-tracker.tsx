@@ -1,6 +1,7 @@
 import Link from "next/link";
 import type { FlagshipTarget } from "@/lib/types";
 import { partyColor } from "@/lib/format";
+import { PreviewBadge } from "@/components/preview-badge";
 
 /**
  * 兌現追蹤看板
@@ -237,12 +238,16 @@ export function PromiseTracker({
                 更新 {items[0]?.recorded_at}
               </p>
             </div>
-            <h2 className="font-serif text-3xl sm:text-4xl font-bold leading-tight mb-2">
-              說到，做到了嗎？
-            </h2>
+            <div className="flex items-baseline gap-3 flex-wrap mb-2">
+              <h2 className="font-serif text-3xl sm:text-4xl font-bold leading-tight">
+                說到，做到了嗎？
+              </h2>
+              <PreviewBadge />
+            </div>
             <p className="text-sm text-ink-soft leading-relaxed max-w-2xl mb-8">
               現任者的競選承諾，逐條對照政府公開統計——黑色刻度是目標線。
-              每一筆進度都附來源可查證。
+              每一筆進度都附來源可查證。目前是 {items.length} 條人工查證的示範，
+              <strong>不是全面盤點</strong>——沒被列入不代表沒兌現。
             </p>
           </>
         )}

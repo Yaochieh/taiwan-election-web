@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { getFertilityGap, getIssueOverview } from "@/lib/api";
+import { PreviewBadge, PreviewNote } from "@/components/preview-badge";
 
 export const revalidate = 3600;
 export const metadata = {
@@ -19,14 +20,21 @@ export default async function IssuesPage() {
         <p className="text-xs tracking-[0.2em] uppercase text-ink-soft mb-3">
           ISSUE GAPS
         </p>
-        <h1 className="article-title font-serif text-4xl sm:text-5xl font-bold leading-tight mb-3">
-          議題缺口分析
-        </h1>
+        <div className="flex items-baseline gap-3 flex-wrap mb-3">
+          <h1 className="article-title font-serif text-4xl sm:text-5xl font-bold leading-tight">
+            議題缺口分析
+          </h1>
+          <PreviewBadge />
+        </div>
         <p className="text-ink-soft leading-relaxed max-w-2xl">
           反過來看：把<strong>政府公開統計（社會嚴重度）</strong>對照
           <strong>政見提及率（政治關注度）</strong>，
           找出「危機正在加劇、政治人物卻較少著墨」的議題。所有數據皆標來源。
         </p>
+        <PreviewNote>
+          政治關注度只採計目前已收錄政見的 759 位候選人（政見覆蓋率仍低，議員尚未收錄），
+          樣本偏差大，趨勢僅供參考、不宜當成定論引用。
+        </PreviewNote>
       </header>
 
       {/* 14 主題政治關注度排名 */}
