@@ -43,8 +43,12 @@ async function fetcher<T>(path: string, init?: RequestInit): Promise<T> {
 // ── elections ────────────────────────────────────────────────
 export const getElections = () => fetcher<Election[]>("/elections");
 export const getElection = (id: number) => fetcher<Election>(`/elections/${id}`);
+// 選舉時程在選舉期間會頻繁增補（登記人數、審定名單、公告…），
+// 用預設的 1 小時快取會讓更新遲遲不上線 —— 縮短為 10 分鐘。
 export const getElectionMilestones = () =>
-  fetcher<ElectionMilestone[]>("/elections/milestones");
+  fetcher<ElectionMilestone[]>("/elections/milestones", {
+    next: { revalidate: 600 },
+  });
 export const getPersonComparison = (name: string) =>
   fetcher<PlatformComparison>(`/people/${encodeURIComponent(name)}/comparison`);
 export const getRecallResults = (electionId?: number) =>
