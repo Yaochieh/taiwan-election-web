@@ -5,7 +5,7 @@
 
 線上：
 - 前端 https://taiwan-election-web.vercel.app
-- API  https://web-production-f7c522.up.railway.app
+- API  https://taiwan-election-api.onrender.com
 
 ## 開發 / 部署
 
@@ -175,8 +175,9 @@ OCR 後人工潤稿的政見一定要在卡片上掛一個小 tag「人工整理
 1. **不要在 hooks 後面寫 `if (...) return`**（React #310）
 2. **不要用 `.sort((a,b) => a.localeCompare(b))` 排縣市** — 改用 `sortCounties`
 3. **不要 hardcode「台北市」**（要用「臺北市」）
-4. **不要直接 fetch 而不 `.catch(() => [])`** — Railway API 在 build
-   時可能還沒 deploy 完，cold start 也可能 timeout
+4. **不要直接 fetch 而不 `.catch(() => [])`** — 後端在 Render 免費層，
+   閒置 15 分鐘會休眠，冷啟動約 1 分鐘；build 時也可能還沒 deploy 完。
+   （2026-09-07 從 Railway 搬到 Render，試用期到期、部署被回收）
 5. **不要在 server component 用 `useState`** — 沒這回事
 6. **不要在 client component 用 Server Component dynamic
    imports + ssr:false** — App Router 不支援；用 mount guard 或 Suspense

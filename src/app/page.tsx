@@ -9,6 +9,7 @@ import {
   getPersonProfile,
   getFlagshipTargets,
   getBillMatchHighlights,
+  getQuantStats,
   candidatePhotoUrl,
 } from "@/lib/api";
 import {
@@ -79,7 +80,7 @@ async function fetchIncumbentStats(name: string) {
 }
 
 export default async function HomePage() {
-  const [withPlatforms, mayoralHistory, allElections, presidential, flagship, billHl, ...incumbentStats] =
+  const [withPlatforms, mayoralHistory, allElections, presidential, flagship, billHl, quantStats, ...incumbentStats] =
     await Promise.all([
       getElectionsWithPlatforms().catch(() => []),
       getMayoralHistory().catch(() => []),
@@ -87,12 +88,16 @@ export default async function HomePage() {
       getPresidentialTrend().catch(() => []),
       getFlagshipTargets().catch(() => []),
       getBillMatchHighlights().catch(() => null),
+      getQuantStats().catch(() => null),
       ...INCUMBENTS.map((o) => fetchIncumbentStats(o.name)),
       ...MAYORS.map((m) => fetchIncumbentStats(m.name)),
     ]);
   const incumbentStatsByName = new Map(
     incumbentStats.map((s) => [s.name, s]),
   );
+  // 政見總數：由政黨別統計加總，避免在頁面硬編會過期的數字
+  const platformCount =
+    quantStats?.parties?.reduce((n, p) => n + (p.platforms || 0), 0) ?? 0;
 
   // 每位首長的兌現追蹤摘要（來自旗艦承諾看板資料）
   const trackerByPerson = new Map<string, { tracked: number; met: number }>();
@@ -352,7 +357,7 @@ export default async function HomePage() {
           <FeatureCard
             number="01"
             title="候選人政見"
-            desc={`抓取中選會選舉公報原檔（含 PDF 文字、圖檔），標註是否提交、來源連結。已收錄 ${withPlatforms.length} 場選舉、約 1,600 條政見，其中 300+ 條經人工潤稿整理。`}
+            desc={`抓取中選會選舉公報原檔（含 PDF 文字、圖檔），標註是否提交、來源連結。已收錄 ${withPlatforms.length} 場選舉${platformCount ? `、${platformCount.toLocaleString()} 條政見` : ""}，每條都保留原始 OCR 全文可對照查證。`}
             href="/platforms"
           />
           <FeatureCard
