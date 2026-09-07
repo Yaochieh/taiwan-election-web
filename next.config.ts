@@ -5,7 +5,7 @@ const nextConfig: NextConfig = {
     remotePatterns: [
       {
         protocol: "https",
-        hostname: "web-production-f7c522.up.railway.app",
+        hostname: "taiwan-election-api.onrender.com",
         pathname: "/static/**",
       },
     ],
