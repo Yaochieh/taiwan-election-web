@@ -178,10 +178,15 @@ OCR 後人工潤稿的政見一定要在卡片上掛一個小 tag「人工整理
 4. **不要直接 fetch 而不 `.catch(() => [])`** — 後端在 Render 免費層，
    閒置 15 分鐘會休眠，冷啟動約 1 分鐘；build 時也可能還沒 deploy 完。
    （2026-09-07 從 Railway 搬到 Render，試用期到期、部署被回收）
-5. **不要在 server component 用 `useState`** — 沒這回事
-6. **不要在 client component 用 Server Component dynamic
+5. **改了後端資料但前端沒變 ≠ 部署失敗** — `fetcher` 統一設
+   `next: { revalidate: 3600 }`，而 Vercel 的 Data Cache **跨部署保留**，
+   重新部署不會清掉。要嘛等 revalidate 到期，要嘛對該端點單獨設較短的
+   秒數（例：`getElectionMilestones` 設 600，因為選舉期間時程會頻繁增補）。
+   新加的 fetch 端點沒有舊快取，所以會立刻生效——這個差異很容易誤導判斷。
+6. **不要在 server component 用 `useState`** — 沒這回事
+7. **不要在 client component 用 Server Component dynamic
    imports + ssr:false** — App Router 不支援；用 mount guard 或 Suspense
-7. **不要動 `metadataBase`** — 已設為 vercel.app 完整 URL
+8. **不要動 `metadataBase`** — 已設為 vercel.app 完整 URL
 
 ## 常用 lib/format.ts helper
 
