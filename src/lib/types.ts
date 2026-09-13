@@ -395,6 +395,21 @@ export interface FlagshipTarget {
   verification_status: string | null;
   verification_source: string | null;
   verification_note: string | null;
+  // 口徑拆解：官方常把「完工／興建中／待開工／包租代管」加總為單一數字。
+  // 有拆解者一併回傳各項，前端分層呈現，避免寬鬆口徑看起來像達標。
+  breakdown: ProgressBreakdown[];
+  // 已實際交付（完工）的合計；無拆解資料時為 null
+  delivered_value: number | null;
+  // 已交付佔目標的比例。算法與 progress_pct 不同（不扣 baseline），
+  // 因為 baseline 是含包租代管的累計基準，與完工數口徑不可相減。
+  delivered_of_target_pct: number | null;
+}
+
+export interface ProgressBreakdown {
+  label: string;
+  value: number;
+  delivered: number; // 1 = 已實際交付可用
+  note: string | null;
 }
 
 export interface PlatformTarget {

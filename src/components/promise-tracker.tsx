@@ -44,6 +44,12 @@ function BarRow({
   const pct = t.progress_pct;
   const width = pct != null ? (Math.min(pct, MAX_PCT) / MAX_PCT) * 100 : 0;
   const met = pct != null && pct >= 100;
+  // 已交付段寬度（相對同一條刻度），只在有拆解資料時畫
+  const dPct = t.delivered_of_target_pct;
+  const deliveredWidth =
+    t.breakdown && t.breakdown.length > 0 && dPct != null
+      ? (Math.min(dPct, MAX_PCT) / MAX_PCT) * 100
+      : null;
   return (
     <div className={compact ? "py-3.5" : "py-5 sm:py-6"}>
       {/* 標題列 */}
@@ -107,14 +113,40 @@ function BarRow({
         role="img"
         aria-label={`進度 ${pct ?? "未知"}%，目標 ${fmtValue(t.target_value, t.metric_unit)}`}
       >
-        <div
-          className="promise-bar-fill absolute inset-y-0 left-0"
-          style={{
-            width: `${width}%`,
-            backgroundColor: color,
-            animationDelay: `${i * 80}ms`,
-          }}
-        />
+        {/* 有口徑拆解時分兩段：已交付（實色）+ 尚未交付（淡色斜線），
+            避免「興建中／包租代管」被算進去後看起來像已達標 */}
+        {deliveredWidth != null ? (
+          <>
+            <div
+              className="promise-bar-fill absolute inset-y-0 left-0"
+              style={{
+                width: `${width}%`,
+                backgroundColor: color,
+                opacity: 0.28,
+                backgroundImage:
+                  "repeating-linear-gradient(45deg, rgba(255,255,255,.55) 0 3px, transparent 3px 6px)",
+                animationDelay: `${i * 80}ms`,
+              }}
+            />
+            <div
+              className="promise-bar-fill absolute inset-y-0 left-0"
+              style={{
+                width: `${deliveredWidth}%`,
+                backgroundColor: color,
+                animationDelay: `${i * 80}ms`,
+              }}
+            />
+          </>
+        ) : (
+          <div
+            className="promise-bar-fill absolute inset-y-0 left-0"
+            style={{
+              width: `${width}%`,
+              backgroundColor: color,
+              animationDelay: `${i * 80}ms`,
+            }}
+          />
+        )}
         <div
           className="absolute inset-y-[-3px] w-[2px] bg-ink"
           style={{ left: `${TICK_POS}%` }}
@@ -151,6 +183,18 @@ function BarRow({
               目標 {fmtValue(t.target_value, t.metric_unit)}
               {t.baseline_value != null && !compact && (
                 <span className="ml-1 text-ink-soft/70">（進度以基準後新增計）</span>
+              )}
+              {t.delivered_value != null && (
+                <>
+                  <span className="mx-1">·</span>
+                  <span className="text-ink">
+                    其中{t.breakdown[0]?.label ?? "已完成"}{" "}
+                    <strong>{fmtValue(t.delivered_value, t.metric_unit)}</strong>
+                    {t.delivered_of_target_pct != null && (
+                      <>（目標的 {t.delivered_of_target_pct}%）</>
+                    )}
+                  </span>
+                </>
               )}
             </>
           )}
@@ -192,6 +236,38 @@ function BarRow({
           </a>
         ) : null}
       </div>
+
+      {/* 口徑拆解明細：官方合計是怎麼算出來的，逐項攤開 */}
+      {!compact && t.breakdown && t.breakdown.length > 0 && (
+        <div className="mt-2.5 border-l-2 border-rule pl-3 max-w-md">
+          <p className="text-[10px] tracking-widest uppercase text-ink-soft mb-1">
+            官方合計的組成
+          </p>
+          <ul className="text-xs tabular-nums">
+            {t.breakdown.map((b) => (
+              <li
+                key={b.label}
+                className="flex items-baseline justify-between gap-3 py-0.5"
+              >
+                <span className={b.delivered ? "text-ink font-medium" : "text-ink-soft"}>
+                  {b.delivered ? "✓" : "·"} {b.label}
+                  {b.note && (
+                    <span className="text-ink-soft/70 font-normal">（{b.note}）</span>
+                  )}
+                </span>
+                <span className={b.delivered ? "text-ink font-medium" : "text-ink-soft"}>
+                  {fmtValue(b.value, t.metric_unit)}
+                </span>
+              </li>
+            ))}
+          </ul>
+          <p className="text-[11px] text-ink-soft leading-relaxed mt-1.5">
+            進度條實心段為已實際交付的部分，斜線段為尚未交付（興建中、待開工、
+            或非自建）。兩者的百分比算法不同：總進度扣除就任時的基準，
+            已交付則直接以目標值計算。
+          </p>
+        </div>
+      )}
 
       {/* 完整版顯示歸屬/查證註記——真實性優先於簡潔 */}
       {!compact && t.progress_note && (
