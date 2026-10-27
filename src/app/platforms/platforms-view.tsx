@@ -1,3 +1,4 @@
+import type React from "react";
 import Link from "next/link";
 import {
   getCandidatesStatus,
@@ -53,14 +54,22 @@ export async function PlatformsView({
   ).length;
   const withoutAny = total - withText - withImageOnly;
 
+  const currentElection = elections.find((e) => e.election_id === electionId);
+  const currentElectionLabel = currentElection
+    ? formatElectionLabelShort(currentElection.date, currentElection.name) +
+      (currentElection.description ? `（${currentElection.description}）` : "")
+    : "請選擇";
+  const currentDistrictLabel = districtParam
+    ? cleanDistrict(districtParam) || districtParam
+    : "全部";
+  // 候選人太多又沒選選區時，結果區不會顯示，選區清單要直接展開讓人選
+  const needDistrict = !districtParam && primaryCandidates.length > 30;
+
   return (
     <div className="space-y-12">
-      {/* ── 切換器 ── */}
-      <div className="grid sm:grid-cols-2 gap-6 pb-8 border-b border-rule">
-        <div>
-          <p className="text-xs tracking-[0.2em] uppercase text-ink-soft mb-2">
-            選舉
-          </p>
+      {/* ── 切換器：預設收合，只顯示目前選擇；點選後頁面重新渲染即自動收回 ── */}
+      <div className="grid sm:grid-cols-2 gap-4 items-start pb-8 border-b border-rule">
+        <Picker key={`e-${electionId}`} label="選舉" current={currentElectionLabel}>
           <div className="flex flex-wrap gap-2">
             {elections.map((e) => (
               <Link
@@ -81,11 +90,13 @@ export async function PlatformsView({
               </Link>
             ))}
           </div>
-        </div>
-        <div>
-          <p className="text-xs tracking-[0.2em] uppercase text-ink-soft mb-2">
-            選區
-          </p>
+        </Picker>
+        <Picker
+          key={`d-${electionId}-${districtParam ?? ""}`}
+          label="選區"
+          current={currentDistrictLabel}
+          defaultOpen={needDistrict}
+        >
           <div className="flex flex-wrap gap-2">
             <Link
               href={`/platforms?election=${electionId}`}
@@ -118,7 +129,7 @@ export async function PlatformsView({
               );
             })}
           </div>
-        </div>
+        </Picker>
       </div>
 
       {/* ── 統計 ── */}
@@ -147,7 +158,7 @@ export async function PlatformsView({
       })()}
 
       {/* ── 提示：候選人多 + 未選選區 ── */}
-      {!districtParam && candidates.length > 30 && (
+      {needDistrict && (
         <div className="border border-rule p-6 bg-rule/30 text-center">
           <p className="font-serif text-lg mb-2">
             本場選舉有 {candidates.length} 位候選人
@@ -160,10 +171,7 @@ export async function PlatformsView({
 
       {/* ── 候選人清單 ── */}
       <div className="space-y-8">
-        {(!districtParam && primaryCandidates.length > 30
-          ? []
-          : primaryCandidates
-        ).map((c) => {
+        {(needDistrict ? [] : primaryCandidates).map((c) => {
           const cPlatforms = allPlatforms.filter(
             (p) => p.candidate_id === c.candidate_id,
           );
@@ -196,6 +204,39 @@ export async function PlatformsView({
         })}
       </div>
     </div>
+  );
+}
+
+function Picker({
+  label,
+  current,
+  defaultOpen = false,
+  children,
+}: {
+  label: string;
+  current: string;
+  defaultOpen?: boolean;
+  children: React.ReactNode;
+}) {
+  return (
+    <details open={defaultOpen} className="group border border-rule">
+      <summary className="flex cursor-pointer list-none items-center justify-between gap-3 px-4 py-3 hover:bg-rule/20 [&::-webkit-details-marker]:hidden">
+        <span className="min-w-0">
+          <span className="mr-3 text-xs tracking-[0.2em] uppercase text-ink-soft">
+            {label}
+          </span>
+          <span className="font-medium">{current}</span>
+        </span>
+        <span className="shrink-0 text-sm text-ink-soft">
+          <span className="group-open:hidden">切換</span>
+          <span className="hidden group-open:inline">收合</span>
+          <span className="ml-1 inline-block transition-transform group-open:rotate-180">
+            ▾
+          </span>
+        </span>
+      </summary>
+      <div className="border-t border-rule px-4 py-4">{children}</div>
+    </details>
   );
 }
 
