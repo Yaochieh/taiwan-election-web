@@ -406,6 +406,12 @@ export interface FlagshipTarget {
   // 官方數字口徑的異議來源（回饋 R2）：人工審過、引句照抄原文。
   // 只並列給讀者，不算正反比例、不下判決。
   disputes?: TargetDispute[];
+  // 政見公布時的官方數值（承諾提出當下已達多少）。高比例代表低標承諾
+  announce_value?: number | null;
+  announce_date?: string | null;
+  announce_source_url?: string | null;
+  announce_note?: string | null;
+  announce_of_target_pct?: number | null;
 }
 
 export interface TargetDispute {

@@ -31,6 +31,9 @@ function personHref(t: FlagshipTarget): string {
     : `/people/${encodeURIComponent(t.person_name)}`;
 }
 
+// 政見公布時已達目標 75% 以上，標「低標承諾」
+const LOW_BAR_PCT = 75;
+
 const DISPUTE_TYPE_LABEL: Record<string, string> = {
   oversight: "監督機構",
   factcheck: "事實查核",
@@ -50,6 +53,18 @@ function BarRow({
   const color = partyColor(t.party_name ?? t.person_name, t.color_hex);
   const pct = t.progress_pct;
   const disputes = t.disputes ?? [];
+  // 政見公布時已達目標的比例；≥75% 視為低標承諾（承諾時大半已做到）
+  const annPct = t.announce_of_target_pct ?? null;
+  const lowBar = annPct != null && annPct >= LOW_BAR_PCT;
+  // 公布時的位置要跟進度條用同一把尺：進度條以「基準後新增」計（無基準時基準為 0），
+  // 所以位置 = (公布時 - 基準) / (目標 - 基準)；落在基準之前就不畫
+  const base = t.baseline_value ?? 0;
+  const annScaled =
+    t.announce_value != null && t.target_value != null && t.target_value !== base
+      ? ((t.announce_value - base) / (t.target_value - base)) * 100
+      : null;
+  const annPos =
+    annScaled != null && annScaled > 0 ? (Math.min(annScaled, MAX_PCT) / MAX_PCT) * 100 : null;
   const width = pct != null ? (Math.min(pct, MAX_PCT) / MAX_PCT) * 100 : 0;
   const met = pct != null && pct >= 100;
   // 已交付段寬度（相對同一條刻度），只在有拆解資料時畫
@@ -103,6 +118,14 @@ function BarRow({
               ⚠ 查核有爭議
             </span>
           )
+        )}
+        {lowBar && (
+          <span
+            className="text-[10px] px-1.5 py-0.5 border border-ink-soft text-ink-soft font-bold tracking-wider shrink-0"
+            title={`政見公布時已達目標的 ${annPct}%`}
+          >
+            低標承諾
+          </span>
         )}
         {disputes.length > 0 && (
           <span
@@ -167,6 +190,13 @@ function BarRow({
           className="absolute inset-y-[-3px] w-[2px] bg-ink"
           style={{ left: `${TICK_POS}%` }}
         />
+        {annPos != null && (
+          <div
+            className="absolute inset-y-[-3px] w-0 border-l-2 border-dashed border-ink-soft"
+            style={{ left: `${annPos}%` }}
+            title={`政見公布時 ${fmtValue(t.announce_value ?? null, t.metric_unit)}`}
+          />
+        )}
         {!compact && (
           <span
             className="absolute top-[-4px] translate-y-[-100%] text-[9px] tracking-widest text-ink-soft hidden sm:block"
@@ -217,6 +247,23 @@ function BarRow({
         </span>
         {t.target_date && (
           <span className="tabular-nums">截止 {t.target_date.slice(0, 4)} 年</span>
+        )}
+        {t.announce_value != null && (
+          <span className="tabular-nums">
+            政見公布時{t.announce_date ? `（${t.announce_date.slice(0, 7)}）` : ""}{" "}
+            {fmtValue(t.announce_value, t.metric_unit)}
+            {annPct != null && <>，已是目標的 {annPct}%</>}
+            {t.announce_source_url && (
+              <a
+                href={t.announce_source_url}
+                target="_blank"
+                rel="noreferrer"
+                className="ml-1 underline underline-offset-2 hover:text-accent-red"
+              >
+                來源 →
+              </a>
+            )}
+          </span>
         )}
         {t.sources && t.sources.length > 0 ? (
           // 多來源：官方在前（authority_level 升冪），官方標紅
