@@ -186,7 +186,7 @@ export default function DataMethodPage() {
             · <strong>量化承諾由 AI 抽取</strong>，可能漏抽、誤判單位或抓錯期限。
           </li>
           <li>
-            · <strong>兌現追蹤只有 20 條</strong>，是逐條人工查證的示範，不是全面盤點。
+            · <strong>兌現追蹤只有 18 條</strong>，是逐條人工查證的示範，不是全面盤點。
             沒被追蹤不代表沒兌現。
           </li>
           <li>

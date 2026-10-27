@@ -127,7 +127,7 @@ export default function AboutPage() {
             <FeatureRow
               stage="preview"
               name="量化承諾抽取"
-              note="1,692 筆，由 AI 從政見全文抽出數字目標，可能漏抽或誤判"
+              note="1,579 筆，由 AI 從政見全文抽出數字目標，可能漏抽或誤判"
             />
             <FeatureRow
               stage="preview"
@@ -143,7 +143,7 @@ export default function AboutPage() {
             <FeatureRow
               stage="preview"
               name="旗艦承諾追蹤"
-              note="20 條人工查證、附官方統計來源的承諾。這是精選示範，不是全面追蹤"
+              note="18 條人工查證、附官方統計來源的承諾。這是精選示範，不是全面追蹤"
             />
             <FeatureRow
               stage="preview"
@@ -241,7 +241,7 @@ export default function AboutPage() {
               分類只要政見出現關鍵字就會被歸類，不代表候選人真的著墨該議題。
             </li>
             <li>
-              · <strong>兌現追蹤只有 20 條</strong>，是逐條人工查證的示範，不是全面盤點。
+              · <strong>兌現追蹤只有 18 條</strong>，是逐條人工查證的示範，不是全面盤點。
               沒被追蹤的承諾不代表沒兌現，只代表還沒做到那條。
             </li>
             <li>
@@ -262,7 +262,7 @@ export default function AboutPage() {
             <Stat label="得票紀錄" value="9,077 筆" desc="含縣市/選區層級" />
             <Stat label="鄉鎮級得票" value="18,418 筆" desc="總統 1996–2024" />
             <Stat label="政見全文" value="883 條" desc="OCR + PDF 解析" />
-            <Stat label="量化承諾" value="1,692 筆" desc="AI 自動抽取" />
+            <Stat label="量化承諾" value="1,579 筆" desc="AI 自動抽取" />
             <Stat label="罷免案" value="33 案" desc="2025 大罷免" />
             <Stat label="政黨" value="410 個" desc="含歷史小黨" />
           </div>
