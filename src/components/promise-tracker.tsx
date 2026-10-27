@@ -31,6 +31,13 @@ function personHref(t: FlagshipTarget): string {
     : `/people/${encodeURIComponent(t.person_name)}`;
 }
 
+const DISPUTE_TYPE_LABEL: Record<string, string> = {
+  oversight: "監督機構",
+  factcheck: "事實查核",
+  ngo: "倡議團體",
+  media: "媒體報導",
+};
+
 function BarRow({
   t,
   i,
@@ -42,6 +49,7 @@ function BarRow({
 }) {
   const color = partyColor(t.party_name ?? t.person_name, t.color_hex);
   const pct = t.progress_pct;
+  const disputes = t.disputes ?? [];
   const width = pct != null ? (Math.min(pct, MAX_PCT) / MAX_PCT) * 100 : 0;
   const met = pct != null && pct >= 100;
   // 已交付段寬度（相對同一條刻度），只在有拆解資料時畫
@@ -95,6 +103,14 @@ function BarRow({
               ⚠ 查核有爭議
             </span>
           )
+        )}
+        {disputes.length > 0 && (
+          <span
+            className="text-[10px] px-1.5 py-0.5 border border-amber-600 text-amber-700 font-bold tracking-wider shrink-0"
+            title="有監督機構、查核、倡議團體或媒體對這個數字的統計口徑提出不同看法"
+          >
+            ⚠ 此數字口徑有爭議
+          </span>
         )}
         <span
           className={
@@ -265,6 +281,42 @@ function BarRow({
             進度條實心段為已實際交付的部分，斜線段為尚未交付（興建中、待開工、
             或非自建）。兩者的百分比算法不同：總進度扣除就任時的基準，
             已交付則直接以目標值計算。
+          </p>
+        </div>
+      )}
+
+      {/* 口徑爭議：並列異議來源與原文引句，不算比例、不下判決（回饋 R2） */}
+      {!compact && disputes.length > 0 && (
+        <div className="mt-3 border-l-2 border-amber-600/60 pl-3 max-w-3xl">
+          <p className="text-[10px] tracking-widest uppercase text-amber-700 mb-1.5">
+            對這個數字的不同看法
+          </p>
+          <ul className="space-y-2.5">
+            {disputes.map((d) => (
+              <li key={d.url} className="text-xs leading-relaxed">
+                <div className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5 mb-0.5">
+                  <span className="text-[9px] px-1 border border-rule text-ink-soft shrink-0">
+                    {DISPUTE_TYPE_LABEL[d.source_type] ?? d.source_type}
+                  </span>
+                  <a
+                    href={d.url}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="font-medium text-ink underline underline-offset-2 hover:text-accent-red"
+                  >
+                    {d.publisher}
+                    {d.title && <span className="font-normal text-ink-soft">《{d.title}》</span>} →
+                  </a>
+                  {d.published_at && (
+                    <span className="text-ink-soft tabular-nums">{d.published_at.slice(0, 10)}</span>
+                  )}
+                </div>
+                <blockquote className="text-ink-soft">「{d.quote}」</blockquote>
+              </li>
+            ))}
+          </ul>
+          <p className="text-[11px] text-ink-soft/80 leading-relaxed mt-2">
+            引句照抄原文，經人工核對。本站不判斷哪一方正確，請點來源自行比對。
           </p>
         </div>
       )}

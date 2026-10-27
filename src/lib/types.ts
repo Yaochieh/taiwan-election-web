@@ -403,6 +403,19 @@ export interface FlagshipTarget {
   // 已交付佔目標的比例。算法與 progress_pct 不同（不扣 baseline），
   // 因為 baseline 是含包租代管的累計基準，與完工數口徑不可相減。
   delivered_of_target_pct: number | null;
+  // 官方數字口徑的異議來源（回饋 R2）：人工審過、引句照抄原文。
+  // 只並列給讀者，不算正反比例、不下判決。
+  disputes?: TargetDispute[];
+}
+
+export interface TargetDispute {
+  // oversight=政府監督機構 / factcheck=事實查核 / ngo=倡議團體 / media=媒體查證報導
+  source_type: "oversight" | "factcheck" | "ngo" | "media";
+  publisher: string;
+  title: string | null;
+  url: string;
+  quote: string;
+  published_at: string | null;
 }
 
 export interface ProgressBreakdown {
