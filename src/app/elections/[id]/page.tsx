@@ -6,6 +6,7 @@ import {
   getCandidatesStatus,
   getElectionDistricts,
   getRecallResults,
+  getCandidates,
 } from "@/lib/api";
 import type { RecallResult } from "@/lib/types";
 import {
@@ -20,6 +21,7 @@ import {
 import { PersonLink, PartyLink } from "@/components/entity-links";
 import { VoteMap } from "./vote-map";
 import { ResultTreemap } from "./result-treemap";
+import { UpcomingRoster } from "./upcoming-roster";
 
 const TYPE_ZH: Record<string, string> = {
   presidential: "總統",
@@ -193,6 +195,7 @@ export default async function ElectionDetailPage({
   );
 
   const isFuture = new Date(election.date) > new Date();
+  const roster = isFuture ? await getCandidates(electionId).catch(() => []) : [];
 
   return (
     <div className="mx-auto max-w-6xl px-4 sm:px-6 py-12">
@@ -233,13 +236,7 @@ export default async function ElectionDetailPage({
       </header>
 
       {isFuture ? (
-        <section className="border border-rule p-8 text-center">
-          <p className="font-serif text-2xl mb-3">這場選舉尚未舉行</p>
-          <p className="text-ink-soft max-w-xl mx-auto leading-relaxed">
-            候選人登記預計於投票日前 2-3 個月開始。
-            屆時將陸續公布候選人名單與政見資料。
-          </p>
-        </section>
+        <UpcomingRoster candidates={roster} />
       ) : recalls.length > 0 ? (
         <RecallSection recalls={recalls} />
       ) : results.length === 0 ? (

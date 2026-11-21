@@ -58,6 +58,22 @@ export interface Candidate {
   district: string | null;
   votes: number | null;
   elected: number | null;
+  photo_path?: string | null;
+  ballot_no?: number | null;
+  background?: string | null;
+}
+
+/** 選舉公報刊登的候選人資料（原文照抄，source_url 為公報 PDF） */
+export interface BulletinProfile {
+  ballot_no: number | null;
+  gender: string | null;
+  birth_date_raw: string | null;
+  birthplace: string | null;
+  party_raw: string | null;
+  education: string[];
+  career: string[];
+  source_url: string;
+  source_page: number | null;
 }
 
 export interface CandidateDetail extends Candidate {
@@ -303,6 +319,8 @@ export interface PersonRace {
   background?: string | null;
   counties_won?: string[];
   counties_total?: number;
+  photo_path?: string | null;
+  bulletin?: BulletinProfile | null;
 }
 
 export interface PartyHistoryEntry {

@@ -163,6 +163,52 @@ export default async function PersonPage({
         </div>
       </header>
 
+      {/* ── 選舉公報刊登資料（2026 起；原文照抄）── */}
+      {(() => {
+        const br = profile.races.find((r) => r.bulletin);
+        if (!br || !br.bulletin) return null;
+        const b = br.bulletin;
+        return (
+          <section className="mb-12 border border-rule p-5">
+            <h2 className="font-serif text-2xl font-bold mb-1">
+              {br.election_date.slice(0, 4)} 選舉公報資料
+            </h2>
+            <p className="text-xs text-ink-soft mb-4">
+              {br.election_name} · {br.district}
+              {b.ballot_no != null && <> · 號次 <b className="text-ink">{b.ballot_no}</b></>}
+              {b.party_raw && <> · 推薦政黨：{b.party_raw}</>}
+            </p>
+            <dl className="grid sm:grid-cols-2 gap-x-8 gap-y-4 text-sm">
+              {(b.gender || b.birth_date_raw || b.birthplace) && (
+                <div className="sm:col-span-2 text-ink-soft">
+                  {[b.gender, b.birth_date_raw && `民國 ${b.birth_date_raw} 生`, b.birthplace && `出生地 ${b.birthplace}`]
+                    .filter(Boolean)
+                    .join(" · ")}
+                </div>
+              )}
+              {b.education.length > 0 && (
+                <div>
+                  <dt className="font-bold mb-1">學歷</dt>
+                  <dd><ul className="space-y-0.5">{b.education.map((e, i) => <li key={i}>{e}</li>)}</ul></dd>
+                </div>
+              )}
+              {b.career.length > 0 && (
+                <div>
+                  <dt className="font-bold mb-1">經歷</dt>
+                  <dd><ul className="space-y-0.5">{b.career.map((e, i) => <li key={i}>{e}</li>)}</ul></dd>
+                </div>
+              )}
+            </dl>
+            <p className="mt-4 text-xs text-ink-soft">
+              候選人自行填報、選委會依法刊登，本站逐字照錄未經改寫。來源：
+              <a href={b.source_url} target="_blank" rel="noopener noreferrer" className="underline">
+                中選會選舉公報{b.source_page ? `（第 ${b.source_page} 頁）` : ""}
+              </a>
+            </p>
+          </section>
+        );
+      })()}
+
       {/* ── 政黨歷程（時間軸）── */}
       {profile.party_history.length > 0 && (
         <section className="mb-12">
