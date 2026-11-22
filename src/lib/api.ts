@@ -29,8 +29,13 @@ import type {
 export const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
 const IMAGE_BASE = `${API_URL}/static/bulletin_images`;
 
+// 資料版本：Vercel Data Cache 跨部署保留，後端大批更新資料後把這個數字加一，
+// 快取鍵（URL）改變就會重抓。後端忽略這個參數。
+const DATA_VERSION = "2026-11-22b";
+
 async function fetcher<T>(path: string, init?: RequestInit): Promise<T> {
-  const res = await fetch(`${API_URL}${path}`, {
+  const sep = path.includes("?") ? "&" : "?";
+  const res = await fetch(`${API_URL}${path}${sep}_v=${DATA_VERSION}`, {
     // 1 小時 ISR 快取。注意 Vercel 的 Data Cache 跨部署保留，改了後端資料
     // 後重新部署也不會馬上反映——這是預期行為，不是部署失敗。
     // 選舉開票日等需要即時的場合，再對個別端點傳 next.revalidate 覆寫。
