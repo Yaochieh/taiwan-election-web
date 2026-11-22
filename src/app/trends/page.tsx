@@ -4,11 +4,13 @@ import {
   getLegislativeSeatTrend,
   getPresidentialCountyWinners,
   getMayoralCountyWinners,
+  getCouncilCountySeats,
 } from "@/lib/api";
 import { PresidentialChart } from "./presidential-chart";
 import { PartyListChart } from "./party-list-chart";
 import { LegislativeChart } from "./legislative-chart";
 import { CountyHeatmap } from "./county-heatmap";
+import { CouncilSeats } from "./council-seats";
 
 export const revalidate = 30;
 
@@ -24,6 +26,7 @@ const SECTIONS = [
   { id: "legislative-seats", label: "立委席次", emoji: "③" },
   { id: "presidential-county", label: "總統版圖", emoji: "④" },
   { id: "mayoral-county", label: "縣市長版圖", emoji: "⑤" },
+  { id: "council-seats", label: "議會席次", emoji: "⑥" },
 ];
 
 export default async function TrendsPage() {
@@ -33,6 +36,7 @@ export default async function TrendsPage() {
     legislative,
     presCounty,
     mayoralCounty,
+    councilSeats,
   ] = await Promise.all([
     getPresidentialTrend().catch(() => []),
     getPartyListTrend().catch(() => []),
@@ -40,6 +44,7 @@ export default async function TrendsPage() {
     // 縣 + 市 一律保留原始 row（COUNTY_GROUPS 已併排）
     getPresidentialCountyWinners(false).catch(() => []),
     getMayoralCountyWinners(false).catch(() => []),
+    getCouncilCountySeats().catch(() => []),
   ]);
 
   return (
@@ -138,6 +143,11 @@ export default async function TrendsPage() {
           desc="歷屆縣市長選舉各縣市勝出政黨。1997/2001/2005/2009 保留原始縣市（高雄縣/臺北縣等），與升格後直轄市並列。"
           prefix="⑤"
         />
+      </section>
+
+      {/* ⑥ 議會席次 */}
+      <section id="council-seats" className="mb-20 scroll-mt-4">
+        <CouncilSeats data={councilSeats} />
       </section>
 
       {/* 結尾 */}

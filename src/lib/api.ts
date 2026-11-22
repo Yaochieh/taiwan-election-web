@@ -165,6 +165,16 @@ export const getPresidentialCountyWinners = (mergeOld = true) =>
   fetcher<CountyWinnerCell[]>(
     `/trends/presidential/county-winners?merge_old=${mergeOld}`,
   );
+export interface CouncilSeatRow {
+  year: number;
+  county: string;
+  party: string;
+  color: string | null;
+  seats: number;
+}
+export const getCouncilCountySeats = () =>
+  fetcher<CouncilSeatRow[]>(`/trends/council/county-seats`);
+
 export const getMayoralCountyWinners = (mergeOld = true) =>
   fetcher<CountyWinnerCell[]>(
     `/trends/mayoral/county-winners?merge_old=${mergeOld}`,
