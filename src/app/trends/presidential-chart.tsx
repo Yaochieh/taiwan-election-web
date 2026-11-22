@@ -106,6 +106,7 @@ export function PresidentialChart({ data }: { data: PresidentialTrend[] }) {
                 dot={{ r: 4 }}
                 activeDot={{ r: 6 }}
                 connectNulls
+                isAnimationActive={false}
               />
             ))}
           </LineChart>

@@ -99,7 +99,7 @@ export default async function PersonPage({
             <img
               src={photoUrl}
               alt={`${name} 大頭照`}
-              className="w-32 h-40 object-cover border-2 shrink-0"
+              className="bulletin-photo w-32 h-40 object-cover object-top border-2 shrink-0"
               style={{ borderColor: accent }}
             />
           ) : (
@@ -153,8 +153,9 @@ export default async function PersonPage({
             )}
             <div className="grid grid-cols-3 gap-3 max-w-md">
               <Stat
-                label={profile.upcoming_races ? `參選次數（含 ${profile.upcoming_races} 場即將投票）` : "參選次數"}
+                label="參選次數"
                 value={profile.total_races}
+                note={profile.upcoming_races ? `含 ${profile.upcoming_races} 場即將投票` : undefined}
               />
               {profile.decided_races === 0 ? (
                 <>
@@ -936,19 +937,22 @@ function Stat({
   label,
   value,
   accent = "text-ink",
+  note,
 }: {
   label: string;
   value: number | string;
   accent?: string;
+  note?: string;
 }) {
   return (
     <div className="border border-rule p-2">
-      <p className="text-[10px] tracking-widest uppercase text-ink-soft mb-1">
+      <p className="text-[10px] tracking-widest uppercase text-ink-soft mb-1 whitespace-nowrap">
         {label}
       </p>
       <p className={`font-serif text-2xl font-bold tabular-nums ${accent}`}>
         {value}
       </p>
+      {note && <p className="text-[10px] text-ink-soft mt-0.5">{note}</p>}
     </div>
   );
 }

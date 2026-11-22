@@ -25,12 +25,12 @@ function CandidateCard({ c, showCounty = false }: { c: Candidate; showCounty?: b
   const color = partyColor(c.party_name || "無黨籍", c.color_hex);
   const pending = c.background === REG_MARK;
   return (
-    <li className="border border-rule bg-paper transition hover:-translate-y-0.5 hover:shadow-sm">
+    <li className="group border border-rule bg-paper transition hover:-translate-y-0.5 hover:shadow-sm">
       <Link href={`/people/${encodeURIComponent(c.name)}`} className="block">
-        <div className="relative aspect-[4/5] bg-ink/5 overflow-hidden">
+        <div className="relative aspect-[4/5] bg-paper overflow-hidden">
           {photo ? (
             // eslint-disable-next-line @next/next/no-img-element
-            <img src={photo} alt={`${c.name} 公報照片`} loading="lazy" className="w-full h-full object-cover" />
+            <img src={photo} alt={`${c.name} 公報照片`} loading="lazy" className="bulletin-photo w-full h-full object-cover object-top transition duration-300 group-hover:scale-[1.03]" />
           ) : (
             <div className="w-full h-full flex items-center justify-center font-serif text-4xl text-ink-soft">
               {c.name.slice(0, 1)}

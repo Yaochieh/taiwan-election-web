@@ -166,7 +166,16 @@ export default async function ElectionDetailPage({
     for (const k of SUMMARY_KEYS) byDistrict.delete(k);
   }
 
-  const districtList = Array.from(byDistrict.keys()).sort();
+  // 依全站一致的縣市順序（北→南→東→離島），同縣市再依選區號碼
+  const countyRank = (d: string) => {
+    const m = d.match(/^(.{2}[市縣])/);
+    const i = m ? COUNTY_ORDER.indexOf(m[1]) : -1;
+    return i === -1 ? 99 : i;
+  };
+  const districtNo = (d: string) => Number(d.match(/第(\d+)/)?.[1] ?? 0);
+  const districtList = Array.from(byDistrict.keys()).sort(
+    (a, b) => countyRank(a) - countyRank(b) || districtNo(a) - districtNo(b) || a.localeCompare(b),
+  );
 
   // 把 districts 按縣市分組 (例：'臺北市第07選區' → 臺北市)
   const districtToCounty = (d: string): string => {

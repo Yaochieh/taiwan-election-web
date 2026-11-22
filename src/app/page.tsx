@@ -670,7 +670,7 @@ function IncumbentCard({
         <img
           src={photo}
           alt={name}
-          className="w-12 h-16 object-cover border shrink-0"
+          className="bulletin-photo w-12 h-16 object-cover object-top border shrink-0"
           style={{ borderColor: color }}
         />
       ) : (

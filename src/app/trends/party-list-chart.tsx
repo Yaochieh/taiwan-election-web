@@ -115,6 +115,7 @@ export function PartyListChart({ data }: { data: PartyListTrend[] }) {
                 dot={{ r: 3 }}
                 activeDot={{ r: 6 }}
                 connectNulls
+                isAnimationActive={false}
               />
             ))}
           </LineChart>

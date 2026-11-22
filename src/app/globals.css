@@ -178,3 +178,14 @@
 @media (prefers-reduced-motion: reduce) {
   .promise-bar-fill { animation: none; }
 }
+
+/* 公報大頭照：選舉公報是黑白印刷，照片本來就是灰階（不做 AI 上色，避免失真）。
+   用 multiply 讓照片白底融入紙色、略加暖調，看起來是刻意的版面而不是掃描圖。 */
+.bulletin-photo {
+  mix-blend-mode: multiply;
+  filter: sepia(0.12) contrast(1.06);
+}
+.dark .bulletin-photo {
+  mix-blend-mode: normal;
+  filter: none;
+}

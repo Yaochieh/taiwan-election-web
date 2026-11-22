@@ -56,7 +56,7 @@ export async function CandidatePlatformCard({
           <img
             src={photoUrl}
             alt={`${status.candidate_name} 大頭照`}
-            className="w-20 h-24 sm:w-24 sm:h-28 object-cover border border-rule shrink-0 bg-rule/30"
+            className="bulletin-photo w-20 h-24 sm:w-24 sm:h-28 object-cover object-top border border-rule shrink-0"
             loading="lazy"
           />
         ) : (

@@ -132,8 +132,9 @@ export function formatElectionLabel(
 ): string {
   const year = date.slice(0, 4);
   // 從 name 開頭剝掉「111年」「第 X 屆」這類前綴
+  // 名稱本身已帶西元年（如「2025年8月大罷免投票」）就不再前置年份
   const cleanName = name.replace(/^\d{2,3}年/, "").trim();
-  let label = `${year} 年 ${cleanName}`;
+  let label = cleanName.startsWith(year) ? cleanName : `${year} 年 ${cleanName}`;
   // 加民國年註記
   const ad = parseInt(year, 10);
   if (!Number.isNaN(ad)) {
@@ -155,7 +156,7 @@ export function formatElectionLabelShort(
 ): string {
   const year = date.slice(0, 4);
   const cleanName = name.replace(/^\d{2,3}年/, "").trim();
-  return `${year} 年${cleanName}`;
+  return cleanName.startsWith(year) ? cleanName : `${year} 年${cleanName}`;
 }
 
 /**
