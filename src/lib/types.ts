@@ -61,6 +61,8 @@ export interface Candidate {
   photo_path?: string | null;
   ballot_no?: number | null;
   background?: string | null;
+  /** 上一屆同類型選舉中，同縣市同名者當選的年份（例 "2022"） */
+  prev_win_year?: string | null;
 }
 
 /** 選舉公報刊登的候選人資料（原文照抄，source_url 為公報 PDF） */

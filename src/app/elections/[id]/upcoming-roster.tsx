@@ -36,6 +36,14 @@ function CandidateCard({ c, showCounty = false }: { c: Candidate; showCounty?: b
               {c.name.slice(0, 1)}
             </div>
           )}
+          {c.prev_win_year && (
+            <span
+              className="absolute bottom-0 right-0 px-1.5 py-0.5 text-[11px] font-medium bg-ink text-paper"
+              title={`${c.prev_win_year} 年同縣市同名候選人當選`}
+            >
+              {c.prev_win_year} 當選
+            </span>
+          )}
           {c.ballot_no != null && (
             <span
               className="absolute top-0 left-0 min-w-8 px-2 py-0.5 text-center text-paper text-base font-bold tabular-nums"
@@ -104,6 +112,8 @@ export function UpcomingRoster({
   });
   const countyN = (c: string) => byCounty.get(c)!.reduce((s, d) => s + byDistrict.get(d)!.length, 0);
   const pending = candidates.filter((c) => c.background === REG_MARK).length;
+  const prevWins = candidates.filter((c) => c.prev_win_year).length;
+  const prevYear = candidates.find((c) => c.prev_win_year)?.prev_win_year;
   // 縣市長、直轄市長：一縣市一選區，不需要第二層
   const singleSeat = counties.every((c) => byCounty.get(c)!.length === 1 && byCounty.get(c)![0] === c);
   const sourceUrl = districtInfo[0]?.source_url;
@@ -129,6 +139,7 @@ export function UpcomingRoster({
           </>
         )}
         。
+        {prevWins > 0 && `其中 ${prevWins} 位在 ${prevYear} 年同類選舉當選（照片右下角標示，依中選會得票資料比對同縣市同名者）。`}
         {pending > 0 && (
           <span className="text-accent-red">（{pending} 位仍為登記名冊資料，公報未刊登，待確認）</span>
         )}
