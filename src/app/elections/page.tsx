@@ -10,6 +10,7 @@ const TYPE_ZH: Record<string, string> = {
   legislative: "立委",
   mayoral: "縣市長",
   council: "議員",
+  village_chief: "村里長",
 };
 
 const FILTERS: { value: string; label: string }[] = [
@@ -18,6 +19,7 @@ const FILTERS: { value: string; label: string }[] = [
   { value: "legislative", label: "立委" },
   { value: "mayoral", label: "縣市長" },
   { value: "council", label: "議員" },
+  { value: "village_chief", label: "村里長" },
 ];
 
 export default async function ElectionsPage({

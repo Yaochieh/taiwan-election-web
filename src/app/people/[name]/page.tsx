@@ -26,6 +26,7 @@ const TYPE_ZH: Record<string, string> = {
   legislative: "立委",
   mayoral: "縣市長",
   council: "議員",
+  village_chief: "村里長",
 };
 
 export default async function PersonPage({

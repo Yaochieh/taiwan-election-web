@@ -26,6 +26,7 @@ const TYPE_ZH: Record<string, string> = {
   legislative: "立委",
   mayoral: "縣市長",
   council: "議員",
+  village_chief: "村里長",
 };
 
 // 現任政府首長（手動策展，與 /government/cabinet 同步）

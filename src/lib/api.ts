@@ -75,8 +75,12 @@ export const getTownshipResults = (id: number, county?: string) => {
 };
 
 // ── candidates ──────────────────────────────────────────────
-export const getCandidates = (electionId: number) =>
-  fetcher<Candidate[]>(`/candidates?election_id=${electionId}`);
+export const getCandidates = (electionId: number, county?: string) =>
+  fetcher<Candidate[]>(
+    `/candidates?election_id=${electionId}${county ? `&county=${encodeURIComponent(county)}` : ""}`,
+  );
+export const getCandidateCountyCounts = (electionId: number) =>
+  fetcher<{ county: string; n: number }[]>(`/candidates/county-counts?election_id=${electionId}`);
 export const getCandidate = (id: number) =>
   fetcher<CandidateDetail>(`/candidates/${id}`);
 export const searchCandidates = (q: string) =>

@@ -51,8 +51,9 @@ export default async function PlatformsPage({
           若候選人未在公報刊登政見，將特別標註，民眾可至公報原檔自行查證。
         </p>
         <PreviewNote>
-          政見收錄仍在進行中：縣市長 38.7%、立委 14.9%、議員尚未開始。
-          公報為掃描影像，OCR 可能有錯字，每條政見都保留原始辨識文字可對照。
+          2026 年直轄市長、縣市長、議員 1,546 位候選人已收錄，政見逐字取自公報文字，
+          印成圖片的政見尚未收錄。歷屆政見仍在補：縣市長 38.7%、立委 14.9%；
+          舊公報多為掃描影像，OCR 可能有錯字，每條政見都保留原始辨識文字可對照。
         </PreviewNote>
       </header>
 
@@ -63,6 +64,7 @@ export default async function PlatformsPage({
           { value: "presidential", label: "總統" },
           { value: "legislative", label: "立法委員" },
           { value: "mayoral", label: "縣市長" },
+          { value: "council", label: "議員" },
         ].map((t) => {
           const active = t.value === typeFilter;
           return (

@@ -7,6 +7,7 @@ import {
   getElectionDistricts,
   getRecallResults,
   getCandidates,
+  getCandidateCountyCounts,
 } from "@/lib/api";
 import type { RecallResult } from "@/lib/types";
 import {
@@ -22,12 +23,14 @@ import { PersonLink, PartyLink } from "@/components/entity-links";
 import { VoteMap } from "./vote-map";
 import { ResultTreemap } from "./result-treemap";
 import { UpcomingRoster } from "./upcoming-roster";
+import { VillageRoster } from "./village-roster";
 
 const TYPE_ZH: Record<string, string> = {
   presidential: "總統",
   legislative: "立委",
   mayoral: "縣市長",
   council: "議員",
+  village_chief: "村里長",
 };
 
 function RecallSection({ recalls }: { recalls: RecallResult[] }) {
@@ -195,7 +198,16 @@ export default async function ElectionDetailPage({
   );
 
   const isFuture = new Date(election.date) > new Date();
-  const roster = isFuture ? await getCandidates(electionId).catch(() => []) : [];
+  const isVillage = election.type === "village_chief";
+  // 村里長 1.4 萬人：只取選定縣市，其餘只拿各縣市人數
+  const roster = isFuture
+    ? isVillage
+      ? countyParam ? await getCandidates(electionId, countyParam).catch(() => []) : []
+      : await getCandidates(electionId).catch(() => [])
+    : [];
+  const countyCounts = isVillage
+    ? await getCandidateCountyCounts(electionId).catch(() => [])
+    : [];
 
   return (
     <div className="mx-auto max-w-6xl px-4 sm:px-6 py-12">
@@ -235,7 +247,9 @@ export default async function ElectionDetailPage({
         )}
       </header>
 
-      {isFuture ? (
+      {isFuture && isVillage ? (
+        <VillageRoster electionId={electionId} county={countyParam} counts={countyCounts} candidates={roster} />
+      ) : isFuture ? (
         <UpcomingRoster candidates={roster} />
       ) : recalls.length > 0 ? (
         <RecallSection recalls={recalls} />
