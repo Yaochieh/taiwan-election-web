@@ -4,7 +4,9 @@ import { partyColor, COUNTY_ORDER } from "@/lib/format";
 
 /** 村里長：沒有選舉公報，名單取自中選會候選人登記名冊。人數多，按縣市分頁。 */
 
-const SPLIT = /^(.{2}[市縣])(.+?[區鄉鎮市])(.+)$/;
+// 先找「區」（避免「平鎮區」在「鎮」被切開），沒有才找鄉鎮市
+const SPLITS = [/^(.{2}[市縣])(.+?區)(.+[村里])$/, /^(.{2}[市縣])(.+?[鄉鎮市])(.+[村里])$/];
+const splitDistrict = (d: string) => SPLITS.map((r) => d.match(r)).find(Boolean) ?? null;
 
 export function VillageRoster({
   electionId,
@@ -27,7 +29,7 @@ export function VillageRoster({
   // 鄉鎮市區 → 村里 → 候選人
   const byTown = new Map<string, Map<string, Candidate[]>>();
   for (const c of candidates) {
-    const m = (c.district || "").match(SPLIT);
+    const m = splitDistrict(c.district || "");
     const town = m ? m[2] : "（未分類）";
     const village = m ? m[3] : c.district || "";
     if (!byTown.has(town)) byTown.set(town, new Map());
