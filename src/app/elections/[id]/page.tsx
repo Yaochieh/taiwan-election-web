@@ -128,22 +128,26 @@ export default async function ElectionDetailPage({
   searchParams,
 }: {
   params: Promise<{ id: string }>;
-  searchParams: Promise<{ county?: string }>;
+  searchParams: Promise<{ county?: string; district?: string; town?: string }>;
 }) {
   const { id } = await params;
-  const { county: countyParam } = await searchParams;
+  const { county: countyParam, district: districtParam, town: townParam } = await searchParams;
   const electionId = Number(id);
   if (!Number.isFinite(electionId)) notFound();
 
   const election = await getElection(electionId).catch(() => null);
   if (!election) notFound();
 
-  const [results, candidatesStatus, districts, recalls] = await Promise.all([
-    getElectionResults(electionId).catch(() => []),
-    getCandidatesStatus(electionId).catch(() => []),
-    getElectionDistricts(electionId).catch(() => []),
-    getRecallResults(electionId).catch(() => [] as RecallResult[]),
-  ]);
+  // 尚未投票的選舉沒有得票資料；村里長 1.4 萬人時這幾支 API 會拖垮免費主機，直接跳過
+  const upcoming = new Date(election.date) > new Date();
+  const [results, candidatesStatus, districts, recalls] = upcoming
+    ? [[], [], [], [] as RecallResult[]]
+    : await Promise.all([
+        getElectionResults(electionId).catch(() => []),
+        getCandidatesStatus(electionId).catch(() => []),
+        getElectionDistricts(electionId).catch(() => []),
+        getRecallResults(electionId).catch(() => [] as RecallResult[]),
+      ]);
 
   // 按 district 分組
   type ResultRow = (typeof results)[number];
@@ -252,9 +256,21 @@ export default async function ElectionDetailPage({
       </header>
 
       {isFuture && isVillage ? (
-        <VillageRoster electionId={electionId} county={countyParam} counts={countyCounts} candidates={roster} />
+        <VillageRoster
+          electionId={electionId}
+          county={countyParam}
+          town={townParam}
+          counts={countyCounts}
+          candidates={roster}
+        />
       ) : isFuture ? (
-        <UpcomingRoster candidates={roster} districtInfo={districtInfo} />
+        <UpcomingRoster
+          electionId={electionId}
+          candidates={roster}
+          districtInfo={districtInfo}
+          county={countyParam}
+          district={districtParam}
+        />
       ) : recalls.length > 0 ? (
         <RecallSection recalls={recalls} />
       ) : results.length === 0 ? (

@@ -2,9 +2,11 @@ import Link from "next/link";
 import type { Candidate } from "@/lib/types";
 import { candidatePhotoUrl, type DistrictInfo } from "@/lib/api";
 import { partyColor, COUNTY_ORDER } from "@/lib/format";
+import { PickerBox, PickerRow, PickerChip, PickerHint } from "./picker";
 
 /** 尚未投票的選舉：依選舉公報列出候選人（號次、照片、政黨）。
- *  縣市 → 選舉區兩層皆可收合；選舉區標題列出範圍與應選名額（中選會選舉公告）。 */
+ *  上方方框先選縣市、再選選舉區，選定後才列出候選人；
+ *  選舉區列出範圍與應選名額（中選會選舉公告）。 */
 
 const REG_MARK = "[登記中未經審定]";
 
@@ -58,11 +60,17 @@ function CandidateCard({ c, showCounty = false }: { c: Candidate; showCounty?: b
 }
 
 export function UpcomingRoster({
+  electionId,
   candidates,
   districtInfo = [],
+  county,
+  district,
 }: {
+  electionId: number;
   candidates: Candidate[];
   districtInfo?: DistrictInfo[];
+  county?: string;
+  district?: string;
 }) {
   if (candidates.length === 0) {
     return (
@@ -88,18 +96,28 @@ export function UpcomingRoster({
     if (!byCounty.has(c)) byCounty.set(c, []);
     byCounty.get(c)!.push(d);
   }
+  for (const ds of byCounty.values()) ds.sort((a, b) => districtNum(a) - districtNum(b));
   const counties = Array.from(byCounty.keys()).sort((a, b) => {
     const ia = COUNTY_ORDER.indexOf(a);
     const ib = COUNTY_ORDER.indexOf(b);
     return (ia === -1 ? 99 : ia) - (ib === -1 ? 99 : ib);
   });
+  const countyN = (c: string) => byCounty.get(c)!.reduce((s, d) => s + byDistrict.get(d)!.length, 0);
   const pending = candidates.filter((c) => c.background === REG_MARK).length;
   // 縣市長、直轄市長：一縣市一選區，不需要第二層
   const singleSeat = counties.every((c) => byCounty.get(c)!.length === 1 && byCounty.get(c)![0] === c);
   const sourceUrl = districtInfo[0]?.source_url;
+  const base = `/elections/${electionId}`;
+  const qs = (c?: string, d?: string) =>
+    c ? `${base}?county=${encodeURIComponent(c)}${d ? `&district=${encodeURIComponent(d)}` : ""}` : base;
+
+  const activeCounty = county && byCounty.has(county) ? county : undefined;
+  const countyDistricts = activeCounty ? byCounty.get(activeCounty)! : [];
+  const activeDistrict = district && countyDistricts.includes(district) ? district : undefined;
+  const sortByBallot = (l: Candidate[]) => l.slice().sort((a, b) => (a.ballot_no ?? 999) - (b.ballot_no ?? 999));
 
   return (
-    <section className="space-y-4">
+    <section className="space-y-6">
       <p className="text-sm text-ink-soft leading-relaxed">
         共 {candidates.length} 位候選人、{byDistrict.size} 個選舉區。號次、照片與學經歷取自中選會選舉公報
         {sourceUrl && (
@@ -110,86 +128,112 @@ export function UpcomingRoster({
             </a>
           </>
         )}
-        。{!singleSeat && "點縣市、選舉區標題可展開或收合。"}
+        。
         {pending > 0 && (
           <span className="text-accent-red">（{pending} 位仍為登記名冊資料，公報未刊登，待確認）</span>
         )}
       </p>
 
+      <PickerBox>
+        <PickerRow label="選縣市" clearHref={activeCounty ? base : undefined}>
+          {counties.map((c) => (
+            <PickerChip key={c} href={qs(c)} active={c === activeCounty} label={c} count={countyN(c)} />
+          ))}
+        </PickerRow>
+        {activeCounty && !singleSeat && (
+          <PickerRow label="選選舉區" clearHref={activeDistrict ? qs(activeCounty) : undefined}>
+            {countyDistricts.map((d) => (
+              <PickerChip
+                key={d}
+                href={qs(activeCounty, d)}
+                active={d === activeDistrict}
+                label={d.replace(activeCounty, "")}
+                count={byDistrict.get(d)!.length}
+              />
+            ))}
+          </PickerRow>
+        )}
+      </PickerBox>
+
       {singleSeat ? (
+        // 市長／縣市長人數少：未選縣市時列出全部，選了只看該縣市
         <div className="grid gap-x-6 gap-y-6 md:grid-cols-2">
-          {counties.map((county) => {
-            const list = byDistrict.get(byCounty.get(county)![0])!.slice().sort(
-              (a, b) => (a.ballot_no ?? 999) - (b.ballot_no ?? 999),
-            );
+          {(activeCounty ? [activeCounty] : counties).map((c) => {
+            const list = sortByBallot(byDistrict.get(byCounty.get(c)![0])!);
             return (
-              <div key={county} className="border-t-2 border-ink pt-2">
+              <div key={c} className="border-t-2 border-ink pt-2 min-w-0">
                 <h3 className="font-serif text-lg font-bold mb-2">
-                  {county} <span className="text-sm font-normal text-ink-soft">{list.length} 人</span>
+                  {c} <span className="text-sm font-normal text-ink-soft">{list.length} 人</span>
                 </h3>
                 <ul className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-5 gap-2">
-                  {list.map((c) => (
-                    <CandidateCard key={c.candidate_id} c={c} />
+                  {list.map((x) => (
+                    <CandidateCard key={x.candidate_id} c={x} />
                   ))}
                 </ul>
               </div>
             );
           })}
         </div>
-      ) : (
-        counties.map((county, ci) => {
-          const districts = byCounty.get(county)!.sort((a, b) => districtNum(a) - districtNum(b));
-          const n = districts.reduce((s, d) => s + byDistrict.get(d)!.length, 0);
-          const seats = districts.reduce((s, d) => s + (info.get(d)?.seats ?? 0), 0);
-          return (
-            <details key={county} open={ci === 0} className="group/county border border-rule bg-paper">
-              <summary className="cursor-pointer list-none flex items-baseline gap-3 px-4 py-3 hover:bg-ink/5">
-                <span className="text-ink-soft transition-transform group-open/county:rotate-90">›</span>
-                <span className="font-serif text-xl font-bold">{county}</span>
-                <span className="text-sm text-ink-soft">
-                  {districts.length} 個選舉區 · {n} 人參選{seats > 0 && ` · 應選 ${seats} 席`}
+      ) : !activeCounty ? (
+        <PickerHint>請先在上方選縣市，再選選舉區，就會列出該選舉區的候選人。</PickerHint>
+      ) : !activeDistrict ? (
+        <div className="border border-rule divide-y divide-rule">
+          <p className="px-4 py-2 text-sm text-ink-soft bg-ink/5">
+            {activeCounty}共 {countyDistricts.length} 個選舉區、{countyN(activeCounty)} 人參選
+            {(() => {
+              const seats = countyDistricts.reduce((s, d) => s + (info.get(d)?.seats ?? 0), 0);
+              return seats > 0 ? `、應選 ${seats} 席` : "";
+            })()}
+            。點選舉區看候選人。
+          </p>
+          {countyDistricts.map((d) => {
+            const di = info.get(d);
+            return (
+              <Link
+                key={d}
+                href={qs(activeCounty, d)}
+                scroll={false}
+                className="flex flex-col sm:flex-row sm:items-baseline gap-x-4 gap-y-0.5 px-4 py-3 hover:bg-ink/5"
+              >
+                <span className="font-bold shrink-0 sm:w-28">{d.replace(activeCounty, "")}</span>
+                <span className="text-sm text-ink-soft shrink-0 sm:w-40">
+                  {byDistrict.get(d)!.length} 人參選
+                  {di?.seats != null && ` · 應選 ${di.seats} 席`}
                 </span>
-              </summary>
-              <div className="px-4 pb-4 space-y-3">
-                {districts.map((d) => {
-                  const list = byDistrict.get(d)!.slice().sort(
-                    (a, b) => (a.ballot_no ?? 999) - (b.ballot_no ?? 999),
-                  );
-                  const di = info.get(d);
-                  return (
-                    <details key={d} open className="group/d border-t border-rule pt-3">
-                      <summary className="cursor-pointer list-none">
-                        <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
-                          <span className="text-ink-soft text-sm transition-transform group-open/d:rotate-90">›</span>
-                          <span className="font-bold">{d.replace(county, "")}</span>
-                          <span className="text-sm text-ink-soft">
-                            {list.length} 人參選
-                            {di?.seats != null && (
-                              <>
-                                {" · "}應選 <strong className="text-ink">{di.seats}</strong> 席
-                                {di.women_seats ? `（婦女保障 ${di.women_seats}）` : ""}
-                              </>
-                            )}
-                          </span>
-                        </div>
-                        {di && (
-                          <p className="text-sm text-ink-soft mt-1 ml-5 line-clamp-2 group-open/d:line-clamp-none">
-                            範圍：{di.area}
-                          </p>
-                        )}
-                      </summary>
-                      <ul className="mt-3 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
-                        {list.map((c) => (
-                          <CandidateCard key={c.candidate_id} c={c} />
-                        ))}
-                      </ul>
-                    </details>
-                  );
-                })}
+                {di && <span className="text-sm text-ink-soft min-w-0">範圍：{di.area}</span>}
+              </Link>
+            );
+          })}
+        </div>
+      ) : (
+        (() => {
+          const list = sortByBallot(byDistrict.get(activeDistrict)!);
+          const di = info.get(activeDistrict);
+          return (
+            <div>
+              <div className="border-t-2 border-ink pt-3 mb-4">
+                <h3 className="font-serif text-xl font-bold">
+                  {activeDistrict}
+                  <span className="ml-3 text-sm font-normal text-ink-soft">
+                    {list.length} 人參選
+                    {di?.seats != null && (
+                      <>
+                        {" · "}應選 <strong className="text-ink">{di.seats}</strong> 席
+                        {di.women_seats ? `（婦女保障 ${di.women_seats}）` : ""}
+                      </>
+                    )}
+                  </span>
+                </h3>
+                {di && <p className="text-sm text-ink-soft mt-1 leading-relaxed">範圍：{di.area}</p>}
               </div>
-            </details>
+              <ul className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
+                {list.map((c) => (
+                  <CandidateCard key={c.candidate_id} c={c} />
+                ))}
+              </ul>
+            </div>
           );
-        })
+        })()
       )}
     </section>
   );
