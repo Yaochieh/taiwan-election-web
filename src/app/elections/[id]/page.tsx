@@ -8,6 +8,7 @@ import {
   getRecallResults,
   getCandidates,
   getCandidateCountyCounts,
+  getElectionDistrictInfo,
 } from "@/lib/api";
 import type { RecallResult } from "@/lib/types";
 import {
@@ -205,6 +206,9 @@ export default async function ElectionDetailPage({
       ? countyParam ? await getCandidates(electionId, countyParam).catch(() => []) : []
       : await getCandidates(electionId).catch(() => [])
     : [];
+  const districtInfo = isFuture && !isVillage
+    ? await getElectionDistrictInfo(electionId).catch(() => [])
+    : [];
   const countyCounts = isVillage
     ? await getCandidateCountyCounts(electionId).catch(() => [])
     : [];
@@ -250,7 +254,7 @@ export default async function ElectionDetailPage({
       {isFuture && isVillage ? (
         <VillageRoster electionId={electionId} county={countyParam} counts={countyCounts} candidates={roster} />
       ) : isFuture ? (
-        <UpcomingRoster candidates={roster} />
+        <UpcomingRoster candidates={roster} districtInfo={districtInfo} />
       ) : recalls.length > 0 ? (
         <RecallSection recalls={recalls} />
       ) : results.length === 0 ? (

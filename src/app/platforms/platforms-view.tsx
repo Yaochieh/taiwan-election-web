@@ -52,7 +52,11 @@ export async function PlatformsView({
   const withImageOnly = candidates.filter(
     (c) => c.platform_count === 0 && c.image_count > 0,
   ).length;
-  const withoutAny = total - withText - withImageOnly;
+  // 有刊登於公報、但政見還沒整理進來（多為印成圖片）→「整理中」，不能算成未繳
+  const pendingN = candidates.filter(
+    (c) => c.platform_count === 0 && c.image_count === 0 && c.bulletin_url,
+  ).length;
+  const withoutAny = total - withText - withImageOnly - pendingN;
 
   const currentElection = elections.find((e) => e.election_id === electionId);
   const currentElectionLabel = currentElection
@@ -137,13 +141,29 @@ export async function PlatformsView({
         <Stat label="候選人" value={total} />
         <Stat label="文字政見" value={withText} accent="text-ink" />
         <Stat label="圖片政見" value={withImageOnly} accent="text-ink" />
-        <Stat label="完全未繳" value={withoutAny} accent="text-accent-red" />
+        {pendingN > 0 ? (
+          <Stat label="整理中（見公報原檔）" value={pendingN} accent="text-ink-soft" />
+        ) : (
+          <Stat label="完全未繳" value={withoutAny} accent="text-accent-red" />
+        )}
       </div>
 
       {/* ── 潤稿說明 ── */}
       {(() => {
+        // 2026 起：公報文字層逐字照抄（note 含「公報原文照抄」），不是潤稿也不是 OCR 清理
+        const verbatim = allPlatforms.filter((p) => p.note && p.note.includes("公報原文照抄")).length;
         const polished = allPlatforms.filter((p) => p.note && p.note.includes("人工潤稿")).length;
-        const cleaned = allPlatforms.filter((p) => p.note && p.note.includes("OCR")).length;
+        const cleaned = allPlatforms.filter(
+          (p) => p.note && p.note.includes("OCR") && !p.note.includes("公報原文照抄"),
+        ).length;
+        if (verbatim > 0 && polished === 0 && cleaned === 0) {
+          return (
+            <div className="border-l-4 border-rule bg-rule/20 px-4 py-3 text-sm leading-relaxed text-ink-soft">
+              本場文字政見皆<strong className="text-ink">逐字照抄</strong>選舉公報（AI 只負責切分欄位，每個字都比對過公報原文），未經改寫。
+              公報上印成圖片的政見，直接放公報原圖，並附電腦辨識的文字供搜尋參考。
+            </div>
+          );
+        }
         if (polished === 0 && cleaned === 0) return null;
         return (
           <div className="border-l-4 border-accent-red/60 bg-rule/20 px-4 py-3 text-sm leading-relaxed">

@@ -152,13 +152,21 @@ export default async function PersonPage({
               </p>
             )}
             <div className="grid grid-cols-3 gap-3 max-w-md">
-              <Stat label="參選次數" value={profile.total_races} />
               <Stat
-                label="當選次數"
-                value={profile.total_wins}
-                accent="text-accent-red"
+                label={profile.upcoming_races ? `參選次數（含 ${profile.upcoming_races} 場即將投票）` : "參選次數"}
+                value={profile.total_races}
               />
-              <Stat label="勝選率" value={`${winRate}%`} />
+              {profile.decided_races === 0 ? (
+                <>
+                  <Stat label="當選次數" value="—" />
+                  <Stat label="勝選率" value="尚未開票" />
+                </>
+              ) : (
+                <>
+                  <Stat label="當選次數" value={profile.total_wins} accent="text-accent-red" />
+                  <Stat label="勝選率" value={`${winRate}%`} />
+                </>
+              )}
             </div>
           </div>
         </div>

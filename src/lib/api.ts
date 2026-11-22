@@ -31,7 +31,7 @@ const IMAGE_BASE = `${API_URL}/static/bulletin_images`;
 
 // 資料版本：Vercel Data Cache 跨部署保留，後端大批更新資料後把這個數字加一，
 // 快取鍵（URL）改變就會重抓。後端忽略這個參數。
-const DATA_VERSION = "2026-11-22c";
+const DATA_VERSION = "2026-11-22d";
 
 async function fetcher<T>(path: string, init?: RequestInit): Promise<T> {
   const sep = path.includes("?") ? "&" : "?";
@@ -84,6 +84,15 @@ export const getCandidates = (electionId: number, county?: string) =>
   fetcher<Candidate[]>(
     `/candidates?election_id=${electionId}${county ? `&county=${encodeURIComponent(county)}` : ""}`,
   );
+export interface DistrictInfo {
+  district: string;
+  area: string;
+  seats: number | null;
+  women_seats: number | null;
+  source_url: string;
+}
+export const getElectionDistrictInfo = (electionId: number) =>
+  fetcher<DistrictInfo[]>(`/elections/${electionId}/district-info`);
 export const getCandidateCountyCounts = (electionId: number) =>
   fetcher<{ county: string; n: number }[]>(`/candidates/county-counts?election_id=${electionId}`);
 export const getCandidate = (id: number) =>

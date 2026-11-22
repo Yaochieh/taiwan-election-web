@@ -37,7 +37,12 @@ export async function CandidatePlatformCard({
   const elected = status.elected === 1;
   const hasText = status.platform_count > 0;
   const hasImage = status.image_count > 0;
-  const noContent = !hasText && !hasImage;
+  // 2026：公報有刊登，但政見尚未整理進來（多為印成圖片）——不是「未刊登」
+  const pending = !hasText && !hasImage && !!status.bulletin_url;
+  const bulletinHref = status.bulletin_url
+    ? `${status.bulletin_url}#page=${status.bulletin_page ?? 1}`
+    : null;
+  const noContent = !hasText && !hasImage && !pending;
 
   const photoUrl = candidatePhotoUrl(status.photo_path);
 
@@ -112,7 +117,9 @@ export async function CandidatePlatformCard({
               ? `文字政見 ${status.platform_count} 條`
               : hasImage
                 ? `圖片政見 ${status.image_count} 張`
-                : "未刊登政見"}
+                : pending
+                  ? "政見整理中"
+                  : "未刊登政見"}
           </span>
         </div>
       </header>
@@ -135,11 +142,11 @@ export async function CandidatePlatformCard({
         <div className="space-y-4 mb-6">
           {!hasText && (
             <p className="text-sm text-ink-soft italic">
-              此候選人提交的是<strong>圖片版</strong>政見（含設計排版），以下為公報原圖：
+              以下為選舉公報政見欄<strong>原圖</strong>（多為圖片排版，文字無法直接擷取）：
             </p>
           )}
           {images.map((img) => (
-            <figure key={img.local_path} className="border border-rule bg-paper">
+            <figure key={img.local_path} className="border border-rule bg-paper max-w-3xl">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src={bulletinImageUrl(img.local_path)}
@@ -167,6 +174,17 @@ export async function CandidatePlatformCard({
             </figure>
           ))}
         </div>
+      )}
+
+      {/* ── 公報有刊登、政見整理中 ── */}
+      {pending && bulletinHref && (
+        <p className="mb-6 p-4 border-l-2 border-rule bg-paper text-ink-soft leading-relaxed">
+          此候選人的政見<strong>已刊登於選舉公報</strong>，多為圖片排版，網站仍在整理中。
+          請先看{" "}
+          <a href={bulletinHref} target="_blank" rel="noreferrer" className="underline underline-offset-2 hover:text-ink">
+            公報原檔第 {status.bulletin_page ?? 1} 頁 →
+          </a>
+        </p>
       )}
 
       {/* ── 完全未繳 ── */}

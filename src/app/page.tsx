@@ -240,6 +240,40 @@ export default async function HomePage() {
         </div>
       </section>
 
+      {/* ── 2026 地方選舉候選人入口（投票前最常被找的） ── */}
+      <section className="border-b border-rule">
+        <div className="mx-auto max-w-6xl px-4 sm:px-6 py-10">
+          <p className="text-xs tracking-[0.2em] uppercase text-ink-soft mb-2">2026 · 11 月 28 日投票</p>
+          <h2 className="font-serif text-2xl sm:text-3xl font-bold mb-2">查自己選區的候選人</h2>
+          <p className="text-sm text-ink-soft mb-5 leading-relaxed">
+            號次、照片、學經歷、政見全部取自中選會選舉公報；議員附選舉區範圍與應選名額。
+          </p>
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+            {[
+              { id: 77, label: "直轄市長", n: "23 人" },
+              { id: 78, label: "縣市長", n: "58 人" },
+              { id: 79, label: "直轄市議員", n: "依選舉區" },
+              { id: 82, label: "縣市議員", n: "依選舉區" },
+              { id: 92, label: "村里長", n: "依縣市查" },
+            ].map((x) => (
+              <Link
+                key={x.id}
+                href={`/elections/${x.id}`}
+                className="group border border-ink px-4 py-4 hover:bg-ink hover:text-paper transition"
+              >
+                <span className="block font-serif text-lg font-bold">{x.label} →</span>
+                <span className="block text-xs text-ink-soft group-hover:text-paper/80 mt-1">{x.n}</span>
+              </Link>
+            ))}
+          </div>
+          <p className="text-sm text-ink-soft mt-3">
+            直轄市原住民議員：
+            <Link href="/elections/81" className="underline underline-offset-2 hover:text-ink mx-1">平地原住民</Link>·
+            <Link href="/elections/80" className="underline underline-offset-2 hover:text-ink mx-1">山地原住民</Link>
+          </p>
+        </div>
+      </section>
+
       {/* ── ★ 兌現追蹤（首頁招牌）── */}
       <PromiseTracker items={flagship} />
 

@@ -28,7 +28,9 @@ export function VillageRoster({
 
   // 鄉鎮市區 → 村里 → 候選人
   const byTown = new Map<string, Map<string, Candidate[]>>();
-  for (const c of candidates) {
+  // 依中選會名冊順序（匯入時 candidate_id 遞增），不要用字串排序
+  const ordered = candidates.slice().sort((a, b) => a.candidate_id - b.candidate_id);
+  for (const c of ordered) {
     const m = splitDistrict(c.district || "");
     const town = m ? m[2] : "（未分類）";
     const village = m ? m[3] : c.district || "";

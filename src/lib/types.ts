@@ -148,6 +148,8 @@ export interface CandidatePlatformStatus {
   photo_path: string | null;
   platform_count: number;
   image_count: number;
+  bulletin_url?: string | null; // 2026：有刊登於選舉公報
+  bulletin_page?: number | null;
 }
 
 export interface PresidentialTrend {
@@ -263,6 +265,8 @@ export interface PersonProfile {
   total_races: number;
   total_wins: number;
   win_rate: number;
+  decided_races?: number; // 已開票場次（勝選率分母）
+  upcoming_races?: number; // 尚未投票
   races: PersonRace[];
   party_history: PartyHistoryEntry[];
   recalls?: PersonRecall[];
