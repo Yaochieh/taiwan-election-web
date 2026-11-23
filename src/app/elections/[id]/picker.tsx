@@ -50,6 +50,8 @@ export function PickerChip({
     <Link
       href={href}
       scroll={false}
+      prefetch={false}
+      rel="nofollow"
       className={
         "text-xs px-3 py-1.5 border transition " +
         (active

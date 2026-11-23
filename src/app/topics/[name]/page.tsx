@@ -5,7 +5,7 @@ import { getTopicPlatforms, getTopicStats, getTopics, getTopicAutoTargets } from
 import { partyColor, formatElectionLabelShort } from "@/lib/format";
 import { PersonLink, PartyLink } from "@/components/entity-links";
 
-export const revalidate = 300;
+export const revalidate = 3600;
 
 export async function generateMetadata({
   params,

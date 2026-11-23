@@ -6,7 +6,7 @@ import {
 } from "@/lib/api";
 import { partyColor } from "@/lib/format";
 
-export const revalidate = 60;
+export const revalidate = 3600;
 
 const COUNTY_MERGE: Record<string, string> = {
   "臺北縣": "新北市",

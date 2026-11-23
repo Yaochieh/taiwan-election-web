@@ -12,7 +12,7 @@ import { LegislativeChart } from "./legislative-chart";
 import { CountyHeatmap } from "./county-heatmap";
 import { CouncilSeats } from "./council-seats";
 
-export const revalidate = 30;
+export const revalidate = 3600;
 
 export const metadata = {
   title: "趨勢分析 · 正至",

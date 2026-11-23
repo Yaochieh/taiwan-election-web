@@ -2,7 +2,7 @@ import Link from "next/link";
 import { getTopics } from "@/lib/api";
 import { PreviewBadge, PreviewNote } from "@/components/preview-badge";
 
-export const revalidate = 300;
+export const revalidate = 3600;
 export const metadata = {
   title: "政見主題 · 正至",
   description: "依主題瀏覽歷屆候選人政見 — 住宅、長照、教育、交通…等",

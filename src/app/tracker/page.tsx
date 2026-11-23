@@ -3,7 +3,7 @@ import { getFlagshipTargets, getQuantStats } from "@/lib/api";
 import { PromiseTracker } from "@/components/promise-tracker";
 import { PreviewBadge, PreviewNote } from "@/components/preview-badge";
 
-export const revalidate = 300;
+export const revalidate = 3600;
 
 export const metadata = {
   title: "兌現追蹤 · 正至",
