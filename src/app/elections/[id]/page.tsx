@@ -18,13 +18,22 @@ import {
   votePct,
   partyColor,
   COUNTY_ORDER,
-  COUNTY_TO_GROUP,
 } from "@/lib/format";
 import { PersonLink, PartyLink } from "@/components/entity-links";
 import { VoteMap } from "./vote-map";
 import { ResultTreemap } from "./result-treemap";
 import { UpcomingRoster } from "./upcoming-roster";
 import { VillageRoster } from "./village-roster";
+import { CountySections } from "./county-sections";
+
+// 篩選（縣市／選區／鄉鎮）都在瀏覽器端做，頁面不讀 searchParams，整頁走 ISR 快取。
+export const revalidate = 3600;
+
+// 回傳空陣列＝不在 build 時預先產生，但第一次被請求後就快取（ISR），
+// 不加這個的話動態路由每次請求都會重算（build 輸出標 ƒ）。
+export function generateStaticParams() {
+  return [];
+}
 
 const TYPE_ZH: Record<string, string> = {
   presidential: "總統",
@@ -125,13 +134,10 @@ function RecallSection({ recalls }: { recalls: RecallResult[] }) {
 
 export default async function ElectionDetailPage({
   params,
-  searchParams,
 }: {
   params: Promise<{ id: string }>;
-  searchParams: Promise<{ county?: string; district?: string; town?: string }>;
 }) {
   const { id } = await params;
-  const { county: countyParam, district: districtParam, town: townParam } = await searchParams;
   const electionId = Number(id);
   if (!Number.isFinite(electionId)) notFound();
 
@@ -198,11 +204,6 @@ export default async function ElectionDetailPage({
   });
   const useCountyFilter =
     election.type === "legislative" && countyList.length > 6;
-  const filteredDistrictList = useCountyFilter
-    ? countyParam
-      ? countyToDistricts.get(countyParam) || []
-      : []
-    : districtList;
 
   // 找有政見資料的候選人 ID 集合（用來顯示連結）
   const hasPlatform = new Set(
@@ -213,11 +214,9 @@ export default async function ElectionDetailPage({
 
   const isFuture = new Date(election.date) > new Date();
   const isVillage = election.type === "village_chief";
-  // 村里長 1.4 萬人：只取選定縣市，其餘只拿各縣市人數
-  const roster = isFuture
-    ? isVillage
-      ? countyParam ? await getCandidates(electionId, countyParam).catch(() => []) : []
-      : await getCandidates(electionId).catch(() => [])
+  // 村里長 1.4 萬人：頁面只帶各縣市人數，名單選了縣市才由瀏覽器向 API 要
+  const roster = isFuture && !isVillage
+    ? await getCandidates(electionId).catch(() => [])
     : [];
   const districtInfo = isFuture && !isVillage
     ? await getElectionDistrictInfo(electionId).catch(() => [])
@@ -265,21 +264,9 @@ export default async function ElectionDetailPage({
       </header>
 
       {isFuture && isVillage ? (
-        <VillageRoster
-          electionId={electionId}
-          county={countyParam}
-          town={townParam}
-          counts={countyCounts}
-          candidates={roster}
-        />
+        <VillageRoster electionId={electionId} counts={countyCounts} />
       ) : isFuture ? (
-        <UpcomingRoster
-          electionId={electionId}
-          candidates={roster}
-          districtInfo={districtInfo}
-          county={countyParam}
-          district={districtParam}
-        />
+        <UpcomingRoster candidates={roster} districtInfo={districtInfo} />
       ) : recalls.length > 0 ? (
         <RecallSection recalls={recalls} />
       ) : results.length === 0 ? (
@@ -366,58 +353,8 @@ export default async function ElectionDetailPage({
               </div>
             );
           })()}
-          {/* 立委選舉：縣市篩選器（73 個選區直接列太多） */}
-          {useCountyFilter && (
-            <section className="border border-rule p-5 mb-6">
-              <p className="text-sm font-medium mb-3">
-                按縣市瀏覽選區
-                {countyParam && (
-                  <a
-                    href={`/elections/${electionId}`}
-                    className="ml-3 text-xs text-ink-soft hover:text-accent-red underline underline-offset-2"
-                  >
-                    清除篩選
-                  </a>
-                )}
-              </p>
-              <div className="flex flex-wrap gap-2 items-center">
-                {countyList.map((c, idx) => {
-                  const active = countyParam === c;
-                  const group = COUNTY_TO_GROUP.get(c);
-                  const prevGroup =
-                    idx > 0 ? COUNTY_TO_GROUP.get(countyList[idx - 1]) : null;
-                  const isFirstOfGroup = group && group !== prevGroup;
-                  return (
-                    <span key={c} className="flex items-center gap-2">
-                      {isFirstOfGroup && idx > 0 && (
-                        <span className="text-ink-soft mx-1">｜</span>
-                      )}
-                      <a
-                        href={`/elections/${electionId}?county=${encodeURIComponent(c)}`}
-                        className={
-                          "text-xs px-3 py-1.5 border transition " +
-                          (active
-                            ? "bg-ink text-paper border-ink"
-                            : "border-rule hover:border-ink text-ink-soft hover:text-ink")
-                        }
-                      >
-                        {c}
-                        <span className="ml-1.5 opacity-70">
-                          {countyToDistricts.get(c)!.length}
-                        </span>
-                      </a>
-                    </span>
-                  );
-                })}
-              </div>
-              {!countyParam && (
-                <p className="text-xs text-ink-soft mt-3">
-                  共 73 個選區、{countyList.length} 個縣市，請選縣市開始瀏覽。
-                </p>
-              )}
-            </section>
-          )}
-          {election.type !== "presidential" && filteredDistrictList.map((district) => {
+          {election.type !== "presidential" && (() => {
+          const blocks = districtList.map((district) => {
             const rows = byDistrict.get(district)!;
             // 總統選舉每組正副候選人各有一筆 row，副總統不能納入總票數
             const total = rows
@@ -555,7 +492,16 @@ export default async function ElectionDetailPage({
                 </ol>
               </div>
             );
-          })}
+          });
+          return useCountyFilter ? (
+            <CountySections
+              blocks={districtList.map((d, i) => ({ county: districtToCounty(d), node: blocks[i] }))}
+              counties={countyList.map((c) => ({ county: c, n: countyToDistricts.get(c)!.length }))}
+            />
+          ) : (
+            blocks
+          );
+          })()}
         </section>
       )}
     </div>

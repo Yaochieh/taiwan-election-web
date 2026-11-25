@@ -1,7 +1,10 @@
-import Link from "next/link";
+"use client";
+
+import { useEffect, useState } from "react";
 import type { Candidate } from "@/lib/types";
+import { getCandidates } from "@/lib/api";
 import { partyColor, COUNTY_ORDER } from "@/lib/format";
-import { PickerBox, PickerRow, PickerChip, PickerHint } from "./picker";
+import { PickerBox, PickerRow, PickerChip, PickerHint, queryString, useQueryParams } from "./picker";
 
 /** 村里長：名單取自中選會候選人登記名冊。人數多：先選縣市、再選鄉鎮市區，才列出各村里候選人。 */
 
@@ -9,19 +12,30 @@ import { PickerBox, PickerRow, PickerChip, PickerHint } from "./picker";
 const SPLITS = [/^(.{2}[市縣])(.+?區)(.+[村里])$/, /^(.{2}[市縣])(.+?[鄉鎮市])(.+[村里])$/];
 const splitDistrict = (d: string) => SPLITS.map((r) => d.match(r)).find(Boolean) ?? null;
 
+const KEYS = ["county", "town"] as const;
+
 export function VillageRoster({
   electionId,
-  county,
-  town,
   counts,
-  candidates,
 }: {
   electionId: number;
-  county?: string;
-  town?: string;
   counts: { county: string; n: number }[];
-  candidates: Candidate[];
 }) {
+  const [{ county, town }, go] = useQueryParams(KEYS);
+  // 1.4 萬人全塞進頁面太重：選了縣市才在瀏覽器向 API 要該縣市名單，同縣市只抓一次
+  const [cache, setCache] = useState<Record<string, Candidate[] | "error">>({});
+  useEffect(() => {
+    if (!county || cache[county]) return;
+    let alive = true;
+    getCandidates(electionId, county)
+      .then((list) => alive && setCache((m) => ({ ...m, [county]: list })))
+      .catch(() => alive && setCache((m) => ({ ...m, [county]: "error" })));
+    return () => {
+      alive = false;
+    };
+  }, [county, electionId, cache]);
+  const loaded = county ? cache[county] : undefined;
+  const candidates = Array.isArray(loaded) ? loaded : [];
   const total = counts.reduce((s, c) => s + c.n, 0);
   const sorted = counts.slice().sort((a, b) => {
     const ia = COUNTY_ORDER.indexOf(a.county);
@@ -42,8 +56,8 @@ export function VillageRoster({
     v.get(village)!.push(c);
   }
   const townN = (t: string) => Array.from(byTown.get(t)!.values()).reduce((s, l) => s + l.length, 0);
-  const base = `/elections/${electionId}`;
-  const countyHref = (c: string) => `${base}?county=${encodeURIComponent(c)}`;
+  const qs = (c?: string, t?: string) => queryString({ county: c, town: c ? t : undefined });
+  const pick = (c?: string, t?: string) => () => go({ county: c, town: c ? t : undefined });
   const activeTown = town && byTown.has(town) ? town : undefined;
   const villages = activeTown ? byTown.get(activeTown)! : null;
 
@@ -64,17 +78,18 @@ export function VillageRoster({
       </p>
 
       <PickerBox>
-        <PickerRow label="選縣市" clearHref={county ? base : undefined}>
+        <PickerRow label="選縣市" onClear={county ? pick() : undefined}>
           {sorted.map((c) => (
-            <PickerChip key={c.county} href={countyHref(c.county)} active={c.county === county} label={c.county} count={c.n} />
+            <PickerChip key={c.county} query={qs(c.county)} onSelect={pick(c.county)} active={c.county === county} label={c.county} count={c.n} />
           ))}
         </PickerRow>
         {county && byTown.size > 0 && (
-          <PickerRow label="選鄉鎮市區" clearHref={activeTown ? countyHref(county) : undefined}>
+          <PickerRow label="選鄉鎮市區" onClear={activeTown ? pick(county) : undefined} clearQuery={qs(county)}>
             {Array.from(byTown.keys()).map((t) => (
               <PickerChip
                 key={t}
-                href={`${countyHref(county)}&town=${encodeURIComponent(t)}`}
+                query={qs(county, t)}
+                onSelect={pick(county, t)}
                 active={t === activeTown}
                 label={t}
                 count={townN(t)}
@@ -86,6 +101,10 @@ export function VillageRoster({
 
       {!county ? (
         <PickerHint>請先在上方選縣市，再選鄉鎮市區，就會列出各村里的登記參選人。</PickerHint>
+      ) : loaded === undefined ? (
+        <PickerHint>載入{county}名單中…（資料庫休眠時第一次約需半分鐘）</PickerHint>
+      ) : loaded === "error" ? (
+        <PickerHint>{county}名單載入失敗，請重新整理再試一次。</PickerHint>
       ) : candidates.length === 0 ? (
         <PickerHint>{county}沒有資料。</PickerHint>
       ) : !villages ? (

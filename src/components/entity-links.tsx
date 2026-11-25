@@ -18,7 +18,7 @@ export function PersonLink({
   if (!name) return <span className={className}>{children ?? "—"}</span>;
   return (
     <Link
-      href={`/people/${encodeURIComponent(name)}`}
+      prefetch={false} href={`/people/${encodeURIComponent(name)}`}
       className={
         "hover:underline underline-offset-4 transition " + (className || "")
       }
@@ -52,7 +52,7 @@ export function PartyLink({
   }
   return (
     <Link
-      href={`/parties/${encodeURIComponent(name)}`}
+      prefetch={false} href={`/parties/${encodeURIComponent(name)}`}
       className={
         "hover:underline underline-offset-4 transition " + (className || "")
       }

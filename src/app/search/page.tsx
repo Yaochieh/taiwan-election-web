@@ -108,7 +108,7 @@ export default async function SearchPage({
             {result.candidates.map((c) => (
               <Link
                 key={c.name}
-                href={`/people/${encodeURIComponent(c.name)}`}
+                prefetch={false} href={`/people/${encodeURIComponent(c.name)}`}
                 className="border border-rule p-3 hover:border-ink hover:bg-rule/30 transition"
               >
                 <h3 className="font-medium">{c.name}</h3>
@@ -138,7 +138,7 @@ export default async function SearchPage({
             {result.parties.map((p) => (
               <Link
                 key={p.party_id}
-                href={`/parties/${encodeURIComponent(p.name)}`}
+                prefetch={false} href={`/parties/${encodeURIComponent(p.name)}`}
                 className="inline-block px-3 py-1.5 text-sm border border-rule hover:border-ink transition"
                 style={{ color: p.color_hex || partyColor(p.name) }}
               >

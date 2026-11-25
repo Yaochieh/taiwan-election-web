@@ -88,7 +88,7 @@ export default async function TrackerPage() {
                     <tr key={name} className="border-b border-rule">
                       <td className="py-2">
                         <Link
-                          href={`/people/${encodeURIComponent(name)}`}
+                          prefetch={false} href={`/people/${encodeURIComponent(name)}`}
                           className="hover:underline underline-offset-4 hover:text-accent-red"
                         >
                           {name}

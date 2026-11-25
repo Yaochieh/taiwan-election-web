@@ -93,7 +93,7 @@ export default async function ComparePage({
               return (
                 <Link
                   key={p.label}
-                  href={`/people/compare?names=${q}`}
+                  prefetch={false} href={`/people/compare?names=${q}`}
                   className="border border-rule p-4 hover:border-ink transition block"
                 >
                   <div className="text-xs text-ink-soft mb-1">{p.label}</div>

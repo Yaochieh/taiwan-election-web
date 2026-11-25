@@ -301,7 +301,7 @@ export default async function HomePage() {
               {billHl.highlights.slice(0, 6).map((h) => (
                 <Link
                   key={h.person_name}
-                  href={`/people/${encodeURIComponent(h.person_name)}`}
+                  prefetch={false} href={`/people/${encodeURIComponent(h.person_name)}`}
                   className="group border border-rule bg-paper px-4 py-3 hover:border-ink transition"
                 >
                   <div className="flex items-baseline gap-2 mb-1">
@@ -658,7 +658,7 @@ function IncumbentCard({
   const photo = candidatePhotoUrl(stats?.photo_path ?? null);
   return (
     <Link
-      href={`/people/${encodeURIComponent(name)}`}
+      prefetch={false} href={`/people/${encodeURIComponent(name)}`}
       className="border border-rule p-4 hover:bg-rule/20 transition group flex items-start gap-3"
     >
       <div

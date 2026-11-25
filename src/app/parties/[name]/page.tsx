@@ -17,6 +17,14 @@ import {
 import { PARTY_INFO } from "@/lib/party-info";
 import { PersonLink } from "@/components/entity-links";
 
+export const revalidate = 3600;
+
+// 回傳空陣列＝不在 build 時預先產生，但第一次被請求後就快取（ISR），
+// 不加這個的話動態路由每次請求都會重算（build 輸出標 ƒ）。
+export function generateStaticParams() {
+  return [];
+}
+
 export default async function PartyPage({
   params,
 }: {

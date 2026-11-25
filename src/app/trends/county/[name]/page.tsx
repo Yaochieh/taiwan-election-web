@@ -8,6 +8,12 @@ import { partyColor } from "@/lib/format";
 
 export const revalidate = 3600;
 
+// 回傳空陣列＝不在 build 時預先產生，但第一次被請求後就快取（ISR），
+// 不加這個的話動態路由每次請求都會重算（build 輸出標 ƒ）。
+export function generateStaticParams() {
+  return [];
+}
+
 const COUNTY_MERGE: Record<string, string> = {
   "臺北縣": "新北市",
   "桃園縣": "桃園市",

@@ -1,8 +1,10 @@
+"use client";
+
 import Link from "next/link";
 import type { Candidate } from "@/lib/types";
 import { candidatePhotoUrl, type DistrictInfo } from "@/lib/api";
 import { partyColor, COUNTY_ORDER } from "@/lib/format";
-import { PickerBox, PickerRow, PickerChip, PickerHint } from "./picker";
+import { PickerBox, PickerRow, PickerChip, PickerHint, ClientLink, queryString, useQueryParams } from "./picker";
 
 /** 尚未投票的選舉：依選舉公報列出候選人（號次、照片、政黨）。
  *  上方方框先選縣市、再選選舉區，選定後才列出候選人；
@@ -26,7 +28,7 @@ function CandidateCard({ c, showCounty = false }: { c: Candidate; showCounty?: b
   const pending = c.background === REG_MARK;
   return (
     <li className="group border border-rule bg-paper transition hover:-translate-y-0.5 hover:shadow-sm">
-      <Link href={`/people/${encodeURIComponent(c.name)}`} className="block">
+      <Link prefetch={false} href={`/people/${encodeURIComponent(c.name)}`} className="block">
         <div className="relative aspect-[4/5] bg-paper overflow-hidden">
           {photo ? (
             // eslint-disable-next-line @next/next/no-img-element
@@ -67,19 +69,16 @@ function CandidateCard({ c, showCounty = false }: { c: Candidate; showCounty?: b
   );
 }
 
+const KEYS = ["county", "district"] as const;
+
 export function UpcomingRoster({
-  electionId,
   candidates,
   districtInfo = [],
-  county,
-  district,
 }: {
-  electionId: number;
   candidates: Candidate[];
   districtInfo?: DistrictInfo[];
-  county?: string;
-  district?: string;
 }) {
+  const [{ county, district }, go] = useQueryParams(KEYS);
   if (candidates.length === 0) {
     return (
       <section className="border border-rule p-8 text-center">
@@ -117,9 +116,8 @@ export function UpcomingRoster({
   // 縣市長、直轄市長：一縣市一選區，不需要第二層
   const singleSeat = counties.every((c) => byCounty.get(c)!.length === 1 && byCounty.get(c)![0] === c);
   const sourceUrl = districtInfo[0]?.source_url;
-  const base = `/elections/${electionId}`;
-  const qs = (c?: string, d?: string) =>
-    c ? `${base}?county=${encodeURIComponent(c)}${d ? `&district=${encodeURIComponent(d)}` : ""}` : base;
+  const qs = (c?: string, d?: string) => queryString({ county: c, district: c ? d : undefined });
+  const pick = (c?: string, d?: string) => () => go({ county: c, district: c ? d : undefined });
 
   const activeCounty = county && byCounty.has(county) ? county : undefined;
   const countyDistricts = activeCounty ? byCounty.get(activeCounty)! : [];
@@ -146,17 +144,18 @@ export function UpcomingRoster({
       </p>
 
       <PickerBox>
-        <PickerRow label="選縣市" clearHref={activeCounty ? base : undefined}>
+        <PickerRow label="選縣市" onClear={activeCounty ? pick() : undefined}>
           {counties.map((c) => (
-            <PickerChip key={c} href={qs(c)} active={c === activeCounty} label={c} count={countyN(c)} />
+            <PickerChip key={c} query={qs(c)} onSelect={pick(c)} active={c === activeCounty} label={c} count={countyN(c)} />
           ))}
         </PickerRow>
         {activeCounty && !singleSeat && (
-          <PickerRow label="選選舉區" clearHref={activeDistrict ? qs(activeCounty) : undefined}>
+          <PickerRow label="選選舉區" onClear={activeDistrict ? pick(activeCounty) : undefined} clearQuery={qs(activeCounty)}>
             {countyDistricts.map((d) => (
               <PickerChip
                 key={d}
-                href={qs(activeCounty, d)}
+                query={qs(activeCounty, d)}
+                onSelect={pick(activeCounty, d)}
                 active={d === activeDistrict}
                 label={d.replace(activeCounty, "")}
                 count={byDistrict.get(d)!.length}
@@ -200,10 +199,10 @@ export function UpcomingRoster({
           {countyDistricts.map((d) => {
             const di = info.get(d);
             return (
-              <Link
+              <ClientLink
                 key={d}
-                href={qs(activeCounty, d)}
-                scroll={false}
+                query={qs(activeCounty, d)}
+                onSelect={pick(activeCounty, d)}
                 className="flex flex-col sm:flex-row sm:items-baseline gap-x-4 gap-y-0.5 px-4 py-3 hover:bg-ink/5"
               >
                 <span className="font-bold shrink-0 sm:w-28">{d.replace(activeCounty, "")}</span>
@@ -212,7 +211,7 @@ export function UpcomingRoster({
                   {di?.seats != null && ` · 應選 ${di.seats} 席`}
                 </span>
                 {di && <span className="text-sm text-ink-soft min-w-0">範圍：{di.area}</span>}
-              </Link>
+              </ClientLink>
             );
           })}
         </div>

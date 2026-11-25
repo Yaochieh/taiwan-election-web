@@ -21,6 +21,12 @@ import { PartyLink } from "@/components/entity-links";
 // 政見追蹤更新頻率較高，5 分鐘快取
 export const revalidate = 86400;
 
+// 回傳空陣列＝不在 build 時預先產生，但第一次被請求後就快取（ISR），
+// 不加這個的話動態路由每次請求都會重算（build 輸出標 ƒ）。
+export function generateStaticParams() {
+  return [];
+}
+
 const TYPE_ZH: Record<string, string> = {
   presidential: "總統",
   legislative: "立委",
@@ -240,7 +246,7 @@ export default async function PersonPage({
                         {p.from_date.slice(0, 4)}
                       </span>
                       <Link
-                        href={`/parties/${encodeURIComponent(p.party)}`}
+                        prefetch={false} href={`/parties/${encodeURIComponent(p.party)}`}
                         className="font-medium text-base hover:underline underline-offset-2"
                         style={{ color: c }}
                       >

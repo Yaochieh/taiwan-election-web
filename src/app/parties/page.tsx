@@ -161,7 +161,7 @@ export default async function PartiesPage() {
               <div className="grid sm:grid-cols-12 gap-6">
                 <div className="sm:col-span-4">
                   <Link
-                    href={`/parties/${encodeURIComponent(name)}`}
+                    prefetch={false} href={`/parties/${encodeURIComponent(name)}`}
                     className="block hover:opacity-80 transition"
                   >
                     <h2

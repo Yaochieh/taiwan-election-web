@@ -75,7 +75,7 @@ export async function CandidatePlatformCard({
           )}
           <h2 className="font-serif text-3xl sm:text-4xl font-bold leading-tight">
             <Link
-              href={`/people/${encodeURIComponent(status.candidate_name)}`}
+              prefetch={false} href={`/people/${encodeURIComponent(status.candidate_name)}`}
               className="hover:underline underline-offset-4"
               style={{ color }}
             >
@@ -92,7 +92,7 @@ export async function CandidatePlatformCard({
             <span className="text-sm text-ink-soft">
               · 副手{" "}
               <Link
-                href={`/people/${encodeURIComponent(runningMate.status.candidate_name)}`}
+                prefetch={false} href={`/people/${encodeURIComponent(runningMate.status.candidate_name)}`}
                 className="hover:underline underline-offset-4"
                 style={{ color }}
               >

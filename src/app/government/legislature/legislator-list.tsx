@@ -145,7 +145,7 @@ export function LegislatorList({
               <div className="col-span-5 sm:col-span-4">
                 {!isPlaceholder ? (
                   <Link
-                    href={`/people/${encodeURIComponent(m.candidate)}`}
+                    prefetch={false} href={`/people/${encodeURIComponent(m.candidate)}`}
                     onClick={(e) => e.stopPropagation()}
                     className="font-medium hover:underline underline-offset-4"
                     style={{ color }}
